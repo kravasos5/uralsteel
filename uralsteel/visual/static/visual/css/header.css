@@ -1,0 +1,50 @@
+/*HEADER*/
+header {
+    width: 100%;
+    max-height: 100px;
+    height: 100px;
+    background: linear-gradient(#2A80F7, #00ACFF);
+    font-size: 20px;
+    font-weight: normal;
+    letter-spacing: 0.02em;
+    overflow: auto;
+}
+
+header nav {
+    justify-content: space-between;
+    padding: 0 2%;
+}
+
+header nav a {
+    text-decoration: none;
+}
+
+.nav-central {
+    width: 60%;
+    display: flex;
+    justify-content: space-evenly
+}
+
+.nav-btn {
+    width: 150px;
+    line-height: 40px;
+    text-align: center;
+    border-radius: 20px;
+}
+
+.nav-common {
+    color: #A9E0FF;
+    background-color: #0F0080;
+
+    transition: 0.3s ease;
+}
+
+.nav-active {
+    color: #0F0080;
+    background-color: #A9E0FF;
+}
+
+.nav-common:hover {
+    background-color: #001A82;
+}
+/*HEADER-END*/

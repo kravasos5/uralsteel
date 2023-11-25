@@ -1,0 +1,21 @@
+{% load static %}
+
+<header>
+    <div class="container">
+        <nav class="flex-line-container">
+            <a class="nav-btn pointer{% if request.path == '/main/' %} nav-active{% else %} nav-common{% endif %}" href="{% url 'main' %}">Главная</a>
+            <div class="nav-central">
+                <a class="nav-btn pointer{% if request.path == '/*/' %} nav-active{% else %} nav-common{% endif %}" href="#">Ковши</a>
+                <a class="nav-btn pointer{% if request.path == '/*/' %} nav-active{% else %} nav-common{% endif %}" href="#">Краны</a>
+                <a class="nav-btn pointer{% if request.path == '/*/' %} nav-active{% else %} nav-common{% endif %}" href="#">Авария</a>
+            </div>
+            <a class="nav-profile pointer">
+                {% if request.path == '/*/' %}
+                    <img src="{% static 'visual/css/images/profile_active.png' %}">
+                {% else %}
+                    <img src="{% static 'visual/css/images/profile.png' %}">
+                {% endif %}
+            </a>
+        </nav>
+    <div>
+</header>
