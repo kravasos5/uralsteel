@@ -47,4 +47,9 @@ header nav a {
 .nav-common:hover {
     background-color: #001A82;
 }
+
+.nav-profile {
+    width: 150px;
+    text-align: end;
+}
 /*HEADER-END*/

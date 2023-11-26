@@ -3,10 +3,10 @@
 <header>
     <div class="container">
         <nav class="flex-line-container">
-            <a class="nav-btn pointer{% if request.path == '/main/' %} nav-active{% else %} nav-common{% endif %}" href="{% url 'main' %}">Главная</a>
+            <a class="nav-btn pointer{% if request.path == '/' %} nav-active{% else %} nav-common{% endif %}" href="{% url 'main' %}">Главная</a>
             <div class="nav-central">
-                <a class="nav-btn pointer{% if request.path == '/*/' %} nav-active{% else %} nav-common{% endif %}" href="#">Ковши</a>
-                <a class="nav-btn pointer{% if request.path == '/*/' %} nav-active{% else %} nav-common{% endif %}" href="#">Краны</a>
+                <a class="nav-btn pointer{% if request.path == '/ladles/' %} nav-active{% else %} nav-common{% endif %}" href="{% url 'ladles' %}">Ковши</a>
+                <a class="nav-btn pointer{% if request.path == '/cranes/' %} nav-active{% else %} nav-common{% endif %}" href="{% url 'cranes' %}">Краны</a>
                 <a class="nav-btn pointer{% if request.path == '/*/' %} nav-active{% else %} nav-common{% endif %}" href="#">Авария</a>
             </div>
             <a class="nav-profile pointer">

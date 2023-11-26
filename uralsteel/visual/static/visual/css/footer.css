@@ -50,6 +50,14 @@ footer::after {
     margin-right: 15%;
 }
 
+#footer-mail:hover > p {
+    color: #0F0080;
+}
+
+#footer-mail p {
+    transition: 0.3s ease;
+}
+
 .footer-container img {
     margin-right: 7%;
 }
@@ -61,4 +69,14 @@ footer::after {
 #second-author-name {
     margin-top: 5px;
 }
+
+.author {
+    transition: 0.3s ease;
+}
+
+.author:hover {
+    color: #0F0080;
+}
+
+
 /*FOOTER-END*/

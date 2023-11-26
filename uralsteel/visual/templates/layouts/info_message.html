@@ -3,13 +3,14 @@
 {% load static %}
 
 {% block links %}
+<link rel="stylesheet" href="{% static 'visual/css/info_message.css' %}">
 <link rel="stylesheet" href="{% static 'visual/css/footer.css' %}">
-<link rel="stylesheet" href="{% static 'visual/css/main.css' %}">
 {% endblock links %}
 
 {% block content %}
-<h1>Добро пожаловать!</h1>
-<h2>Этот сайт отображает актуальное положение кранов и ковшей в ЭСПЦ</h2>
+<h1>{% block message %}{% endblock message %}</h1>
+{% block addcontent %}
+{% endblock addcontent %}
 {% endblock content %}
 
 {% block footer %}

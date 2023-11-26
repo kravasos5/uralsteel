@@ -1,0 +1,19 @@
+{% extends 'layouts/basic.html' %}
+
+{% load static %}
+
+{% block links %}
+<link rel="stylesheet" href="{% static 'visual/css/schema.css' %}">
+{% block addlinks %}
+{% endblock addlinks %}
+{% endblock links %}
+
+{% block content %}
+{% block inputtime %}
+{% endblock inputtime %}
+<div class="center-container">
+    <canvas id="canvas">
+
+    </canvas>
+</div>
+{% endblock content %}
