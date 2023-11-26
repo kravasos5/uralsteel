@@ -1,0 +1,23 @@
+{% extends 'layouts/basic.html' %}
+
+{% load static %}
+
+{% block links %}
+<link rel="stylesheet" href="{% static 'visual/css/profile.css' %}">
+{% endblock links %}
+
+{% block content %}
+<h1>Профиль пользователя {{user.username}}</h1>
+<div class="info">
+    <div class="photo">
+        <img src="{{ user.photo.url }}">
+    </div>
+    <div class="text-info">
+        <p>{{ user.last_name }} {{ user.first_name }} {{ user.patronymic }}</p>
+        <p>{{ user.username }}</p>
+        <p>{{ user.email }}</p>
+        <p>{{ user.get_post_display }}</p>
+    </div>
+</div>
+<a class="secondary-btn change" href="#">Изменить</a>
+{% endblock content %}

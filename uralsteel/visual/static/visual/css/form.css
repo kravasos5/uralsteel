@@ -1,0 +1,44 @@
+.form-container {
+    background-color: #A9E0FF;
+    border-radius: 20px;
+    padding: 10px 20px 20px 20px;
+    margin-top: 10px;
+    width: 80%;
+}
+
+.form-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.content {
+    display: flex;
+    justify-content: center;
+}
+
+.form-data {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.form-data p {
+    width: 80%;
+    display: grid;
+    align-items: center;
+    margin: 0 0 15px 0;
+}
+
+p label {
+    margin-bottom: 10px;
+}
+
+p input {
+    border-style: none;
+    border-radius: 20px;
+    padding: 8px;
+}

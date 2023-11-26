@@ -9,8 +9,12 @@
                 <a class="nav-btn pointer{% if request.path == '/cranes/' %} nav-active{% else %} nav-common{% endif %}" href="{% url 'cranes' %}">Краны</a>
                 <a class="nav-btn pointer{% if request.path == '/*/' %} nav-active{% else %} nav-common{% endif %}" href="#">Авария</a>
             </div>
-            <a class="nav-profile pointer">
-                {% if request.path == '/*/' %}
+            {% if not user.is_authenticated %}
+            <a class="nav-profile pointer" href="{% url 'login' %}">
+            {% else %}
+            <a class="nav-profile pointer" href="{% url 'profile' slug=user.slug %}">
+            {% endif %}
+                {% if request.path == '/profile/' %}
                     <img src="{% static 'visual/css/images/profile_active.png' %}">
                 {% else %}
                     <img src="{% static 'visual/css/images/profile.png' %}">

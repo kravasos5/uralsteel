@@ -44,9 +44,7 @@ a {
 /*containers-end*/
 
 /*BUTTONS*/
-.primary-btn {
-    color: #A9E0FF;
-    background-color: #0F0080;
+.primary-btn, .secondary-btn, .secondary-form-btn {
     border-radius: 20px;
     border-style: none;
     line-height: 30px;
@@ -54,6 +52,11 @@ a {
     font-size: 0.875em;
 
     transition: 0.3s ease;
+}
+
+.primary-btn {
+    color: #A9E0FF;
+    background-color: #0F0080;
 }
 
 .primary-btn:hover {
@@ -63,16 +66,18 @@ a {
 .secondary-btn {
     color: #0F0080;
     background-color: #A9E0FF;
-    border-radius: 20px;
-    border-style: none;
-    line-height: 30px;
-    padding: 0px 15px;
-    font-size: 0.875em;
-
-    transition: 0.3s ease;
 }
 
 .secondary-btn:hover {
     background-color: #9EFAE7;
+}
+
+.secondary-form-btn {
+    color: #A9E0FF;
+    background-color: #007F99;
+}
+
+.secondary-form-btn:hover {
+    background-color: #00826C;
 }
 /*BUTTONS-END*/
