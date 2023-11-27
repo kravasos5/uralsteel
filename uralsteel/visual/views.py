@@ -51,12 +51,12 @@ class LogoutView(LoginRequiredMixin, LogoutView):
     '''Выход из аккаунта'''
     template_name = 'visual/main.html'
 
-class ChangeEmployeeInfoView(LoginRequiredMixin, UpdateView): #SuccessMessageMixin
+class ChangeEmployeeInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView): #
     '''Изменение данных пользователя'''
     model = Employees
     template_name = 'visual/change_employee_info.html'
     form_class = ChangeEmployeeInfoForm
-    # success_message = 'Данные изменены'
+    success_message = 'Данные изменены'
 
     def setup(self, request, *args, **kwargs):
         self.id = request.user.id
@@ -74,7 +74,6 @@ class ChangeEmployeeInfoView(LoginRequiredMixin, UpdateView): #SuccessMessageMix
     def form_valid(self, form):
         super().form_valid(form)
         return JsonResponse(data={'url': self.get_success_url()}, status=200)
-        # return HttpResponseRedirect(self.get_success_url())
 
 # Сброс пароля
 class PasswordReset(PasswordResetView):
