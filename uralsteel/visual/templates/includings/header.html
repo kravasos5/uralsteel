@@ -14,7 +14,7 @@
             {% else %}
             <a class="nav-profile pointer" href="{% url 'profile' slug=user.slug %}">
             {% endif %}
-                {% if request.path == '/profile/' %}
+                {% if '/profile/' in request.path  %}
                     <img src="{% static 'visual/css/images/profile_active.png' %}">
                 {% else %}
                     <img src="{% static 'visual/css/images/profile.png' %}">

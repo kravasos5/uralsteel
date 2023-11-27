@@ -19,5 +19,5 @@
         <p>{{ user.get_post_display }}</p>
     </div>
 </div>
-<a class="secondary-btn change" href="#">Изменить</a>
+<a class="secondary-btn change" href="{% url 'profile-change' slug=user.slug %}">Изменить</a>
 {% endblock content %}

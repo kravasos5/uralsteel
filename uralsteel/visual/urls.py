@@ -10,6 +10,7 @@ urlpatterns = [
     path('form/', Form.as_view(), name='form'),
     # маршрут профиля
     path('profile/<slug:slug>/', EmployeeProfile.as_view(), name='profile'),
+    path('profile/<slug:slug>/change/', ChangeEmployeeInfoView.as_view(), name='profile-change'),
     # маршруты входа/выхода
     path('profile/login/', LoginView.as_view(), name='login'),
     path('profile/logout/', LogoutView.as_view(), name='logout'),

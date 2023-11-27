@@ -8,7 +8,7 @@
 
 {% block content %}
 <div class="form-container center-container">
-    <h1>Введите данные:</h1>
+    <h1>{% block form_title %}Введите данные:{% endblock form_title %}</h1>
     <form {% block form_settings %}{% endblock form_settings %}>
         {% csrf_token %}
         <div class="form-data">

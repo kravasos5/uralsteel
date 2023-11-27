@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, \
     PasswordResetConfirmView, PasswordResetCompleteView
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, UpdateView
@@ -51,12 +51,12 @@ class LogoutView(LoginRequiredMixin, LogoutView):
     '''Выход из аккаунта'''
     template_name = 'visual/main.html'
 
-class ChangeEmployeeInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView):
+class ChangeEmployeeInfoView(LoginRequiredMixin, UpdateView): #SuccessMessageMixin
     '''Изменение данных пользователя'''
     model = Employees
     template_name = 'visual/change_employee_info.html'
     form_class = ChangeEmployeeInfoForm
-    success_message = 'Данные изменены'
+    # success_message = 'Данные изменены'
 
     def setup(self, request, *args, **kwargs):
         self.id = request.user.id
@@ -69,11 +69,12 @@ class ChangeEmployeeInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView
         return get_object_or_404(queryset, id=self.id)
 
     def get_success_url(self):
-        return reverse_lazy('visual:employee-profile', kwargs={'slug': self.slug})
+        return reverse_lazy('profile', kwargs={'slug': self.slug})
 
     def form_valid(self, form):
         super().form_valid(form)
-        return HttpResponseRedirect(self.get_success_url())
+        return JsonResponse(data={'url': self.get_success_url()}, status=200)
+        # return HttpResponseRedirect(self.get_success_url())
 
 # Сброс пароля
 class PasswordReset(PasswordResetView):
