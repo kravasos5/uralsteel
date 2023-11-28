@@ -40,5 +40,11 @@ p label {
 p input {
     border-style: none;
     border-radius: 20px;
-    padding: 8px;
+    padding: 8px 12px;;
 }
+
+/*form-errorlist*/
+.errorlist {
+    color: #E80000;
+}
+/*form-errorlist-end*/

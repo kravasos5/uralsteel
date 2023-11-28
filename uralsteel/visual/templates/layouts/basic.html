@@ -12,8 +12,11 @@
     <link rel="stylesheet" href="{% static 'visual/css/basic.css' %}">
     <link rel="stylesheet" href="{% static 'visual/css/header.css' %}">
     <script src="{% static 'visual/js/basic.js' %}"></script>
+    <script src="{% static 'visual/js/header.js' %}"></script>
     {% block links %}
     {% endblock links %}
+    {% block head %}
+    {% endblock head %}
     <title>{% block title %}Uralsite{% endblock title %}</title>
 </head>
 <body>

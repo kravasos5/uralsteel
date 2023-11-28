@@ -1,15 +1,12 @@
-import os
-
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, \
     PasswordResetConfirmView, PasswordResetCompleteView
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, UpdateView
 
-from uralsteel.settings import MEDIA_ROOT
 from visual.forms import ChangeEmployeeInfoForm
 from visual.models import Employees
 
@@ -30,24 +27,20 @@ class AccessDenied(TemplateView):
     '''Представление страницы с кранами'''
     template_name = 'visual/access_denied.html'
 
-class Form(TemplateView):
-    '''Представление страницы с кранами'''
-    template_name = 'layouts/form.html'
-
 ##############################################################################
 # Система разграничения доступа
 class EmployeeProfile(LoginRequiredMixin, TemplateView):
     '''Профиль пользователя'''
     template_name = 'visual/profile.html'
 
-class LoginView(LoginView):
+class EmployeeLoginView(LoginView):
     '''Вход в аккаунт'''
     template_name = 'visual/login.html'
 
     def get_success_url(self):
         return reverse_lazy('main')
 
-class LogoutView(LoginRequiredMixin, LogoutView):
+class EmployeeLogoutView(LoginRequiredMixin, LogoutView):
     '''Выход из аккаунта'''
     template_name = 'visual/main.html'
 
@@ -82,16 +75,16 @@ class PasswordReset(PasswordResetView):
     html_email_template_name = 'email/reset_letter_body.html'
     email_template_name = 'email/reset_letter_body.txt'
     subject_template_name = 'email/reset_letter_subject.txt'
-    success_url = reverse_lazy('visual:password-reset-starting')
+    success_url = reverse_lazy('pass-reset-starting')
 
 class PasswordResetStarting(PasswordResetDoneView):
     '''Оповещение о отправленном письме'''
     template_name = 'visual/password_reset_starting.html'
 
-class PasswordResetConfrim(PasswordResetConfirmView):
+class PasswordResetConfirm(PasswordResetConfirmView):
     '''Представление подтверждения сброса пароля (ввод нового пароля)'''
     template_name = 'visual/password_reset_confirm.html'
-    success_url = reverse_lazy('visual:password-reset-complete')
+    success_url = reverse_lazy('pass-reset-complete')
 
 class PasswordResetComplete(PasswordResetCompleteView):
     '''Пароль успешно сброшен'''

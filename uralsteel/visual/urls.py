@@ -7,17 +7,15 @@ urlpatterns = [
     path('ladles/', Ladles.as_view(), name='ladles'),
     path('cranes/', Cranes.as_view(), name='cranes'),
     path('access-denied/', AccessDenied.as_view(), name='access-denied'),
-    path('form/', Form.as_view(), name='form'),
-    # маршрут профиля
-    path('profile/<slug:slug>/', EmployeeProfile.as_view(), name='profile'),
-    path('profile/<slug:slug>/change/', ChangeEmployeeInfoView.as_view(), name='profile-change'),
-    # маршруты входа/выхода
-    path('profile/login/', LoginView.as_view(), name='login'),
-    path('profile/logout/', LogoutView.as_view(), name='logout'),
     # маршруты сброса пароля
+    path('profile/password/reset/confirm/<str:uidb64>/<str:token>/', PasswordResetConfirm.as_view(), name='pass-reset-confirm'),
     path('profile/password/reset/starting/', PasswordResetStarting.as_view(), name='pass-reset-starting'),
-    path('profile/password/reset/confirm/', PasswordResetConfrim.as_view(), name='pass-reset-confirm'),
     path('profile/password/reset/complete/', PasswordResetComplete.as_view(), name='pass-reset-complete'),
     path('profile/password/reset/', PasswordReset.as_view(), name='password-reset'),
-
+    # маршруты входа/выхода
+    path('profile/login/', EmployeeLoginView.as_view(), name='login'),
+    path('profile/logout/', EmployeeLogoutView.as_view(), name='logout'),
+    # маршрут профиля
+    path('profile/<slug:slug>/change/', ChangeEmployeeInfoView.as_view(), name='profile-change'),
+    path('profile/<slug:slug>/', EmployeeProfile.as_view(), name='profile'),
 ]
