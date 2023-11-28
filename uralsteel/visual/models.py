@@ -100,6 +100,18 @@ class Ladles(models.Model):
         verbose_name = 'Ковш'
         verbose_name_plural = 'Ковши'
 
+class BrandSteel(models.Model):
+    '''Модель марок стали'''
+
+    name = models.CharField(verbose_name="Марка стали", max_length=100)
+
+    def __str__(self):
+        return f'{self.name}'
+
+    class Meta:
+        verbose_name = 'Марка стали'
+        verbose_name_plural = 'Марки стали'
+
 class DynamicTable(models.Model):
     '''Основная таблица с информацией о перемещении ковшей в реальном времени'''
 
@@ -118,10 +130,6 @@ class DynamicTable(models.Model):
     class Meta:
         verbose_name = 'Плавка'
         verbose_name_plural = 'Плавки'
-
-class BrandSteel(models.Model):
-    '''Модель марок стали'''
-    pass
 
 class Accidents(models.Model):
     '''Модель происшествий'''
