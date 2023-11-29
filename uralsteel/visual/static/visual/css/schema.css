@@ -1,0 +1,24 @@
+#canvas {
+    width: 80%;
+    background-image: url('images/canvas_background.jpg');
+    background-size: cover;
+}
+
+#timeform {
+    margin: 0.5% 0.5% 1% 0.5%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80%;
+}
+
+#timeinput {
+    line-height: 20px;
+    margin-left: 1%;
+    border-radius: 20px;
+    border-style: none;
+    padding: 4px 8px;
+    background-color: #A9E0FF;
+    color: #0F0080;
+    font-size: 1em;
+}

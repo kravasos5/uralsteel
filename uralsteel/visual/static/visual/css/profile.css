@@ -1,0 +1,54 @@
+p, h1 {
+    color: #A9E0FF;
+}
+
+h1 {
+    text-align: center;
+}
+
+p {
+    font-size: 1.5em;
+}
+
+.photo {
+    width: 245px;
+    height: 245px;
+    margin-right: 5%;
+}
+
+.photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.info {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.text-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.text-info p {
+    margin: 0 0 5px 0;
+}
+
+.text-info p:first-child {
+    text-align: start;
+}
+
+.content {
+    text-align: start;
+}
+
+a.change {
+    display: block;
+    font-size: 1.5em;
+    width: 215px;
+    text-align: center;
+}

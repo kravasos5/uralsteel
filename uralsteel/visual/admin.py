@@ -2,7 +2,6 @@ from django.contrib import admin
 
 from visual.models import *
 
-
 class EmployeesAdmin(admin.ModelAdmin):
     '''Редактор ползователя'''
     list_display = ('__str__', 'date_joined')
@@ -57,7 +56,6 @@ class DynamicTableAdmin(admin.ModelAdmin):
 class AccidentsAdmin(admin.ModelAdmin):
     '''Редактор происшетсвий'''
     pass
-
 
 admin.site.register(Employees, EmployeesAdmin)
 admin.site.register(Aggregates, AggregatesAdmin)

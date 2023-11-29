@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
+from django.utils.deconstruct import deconstructible
 from django.utils.text import slugify
 
 
@@ -29,7 +31,7 @@ class Employees(AbstractUser):
     photo = models.ImageField(verbose_name='Фото работника',
                               upload_to=get_photo_path,
                               null=True)
-    post = models.CharField(max_length=2, choices=POSTS_CHOICES)
+    post = models.CharField(max_length=2, choices=POSTS_CHOICES, verbose_name='Должность')
     patronymic = models.CharField(max_length=100, null=True, blank=True, verbose_name='Отчество')
     slug = models.SlugField(max_length=200, unique=True, db_index=True,
                             verbose_name='Слаг')
@@ -42,10 +44,8 @@ class Employees(AbstractUser):
         return f'<{self.username}>'
 
     def get_absolute_url(self):
-        return reverse('visual:employee-profile', kwargs={'slug': self.slug})
-
-
-
+      # Формирование ссылки на профиль пользователя
+        return reverse('profile', kwargs={'slug': self.slug})
 
 class Aggregates(models.Model):
     '''Модель агрегатов (справочная информация)'''
@@ -131,14 +131,12 @@ class DynamicTable(models.Model):
         verbose_name = 'Плавка'
         verbose_name_plural = 'Плавки'
 
-
 class ArchiveDynamicManager(models.Manager):
     '''Менеджер модели ArchiveDynamicTable'''
 
     def get_queryset(self):
         # Выборка записей с заполненным полем "Фактическая дата завершения"
         return super().get_queryset().filter(actual_end__isnull=False)
-
 
 class ArchiveDynamicTable(DynamicTable):
     '''Модель архивных записей динамической таблицы'''
@@ -151,14 +149,12 @@ class ArchiveDynamicTable(DynamicTable):
         verbose_name_plural = 'Архивные плавки'
         ordering = ('-actual_end',)
 
-
 class ActiveDynamicManager(models.Manager):
     '''Менеджер модели ActiveDynamicTable'''
 
     def get_queryset(self):
         # Выборка записей с НЕ заполненным полем "Фактическая дата завершения"
         return super().get_queryset().filter(actual_end__isnull=True)
-
 
 class ActiveDynamicTable(DynamicTable):
     '''Модель активных записей динамической таблицы'''
@@ -170,8 +166,6 @@ class ActiveDynamicTable(DynamicTable):
         verbose_name = 'Активная плавка'
         verbose_name_plural = 'Активные плавки'
         ordering = ('-actual_end',)
-
-
 
 class Accidents(models.Model):
     '''Модель происшествий'''

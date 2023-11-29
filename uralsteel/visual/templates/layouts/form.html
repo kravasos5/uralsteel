@@ -1,0 +1,26 @@
+{% extends 'layouts/basic.html' %}
+
+{% load static %}
+
+{% block links %}
+<link rel="stylesheet" href="{% static 'visual/css/form.css' %}">
+{% endblock links %}
+
+{% block content %}
+<div class="form-container center-container">
+    <h1>{% block form_title %}Введите данные:{% endblock form_title %}</h1>
+    <form {% block form_settings %}{% endblock form_settings %}>
+        {% csrf_token %}
+        <div class="form-data">
+            {% block myform %}
+            {{ form.as_p }}
+            {% endblock myform %}
+        </div>
+        <div class="flex-line-container form-buttons">
+            {% block buttons %}
+            <input type="submit" class="primary-btn pointer" value="Отправить">
+            {% endblock buttons %}
+        </div>
+    </form>
+</div>
+{% endblock content %}

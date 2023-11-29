@@ -1,0 +1,18 @@
+{% extends 'layouts/basic.html' %}
+
+{% load static %}
+
+{% block links %}
+<link rel="stylesheet" href="{% static 'visual/css/info_message.css' %}">
+<link rel="stylesheet" href="{% static 'visual/css/footer.css' %}">
+{% endblock links %}
+
+{% block content %}
+<h1>{% block message %}{% endblock message %}</h1>
+{% block addcontent %}
+{% endblock addcontent %}
+{% endblock content %}
+
+{% block footer %}
+{% include 'includings/footer.html' %}
+{% endblock footer %}

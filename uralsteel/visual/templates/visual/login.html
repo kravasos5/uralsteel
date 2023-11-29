@@ -1,0 +1,10 @@
+{% extends 'layouts/form.html' %}
+
+{% load static %}
+
+{% block form_settings %}method="post"{% endblock form_settings %}
+
+{% block buttons %}
+    <a class="secondary-form-btn pointer" href="{% url 'password-reset' %}">Забыли пароль?</a>
+    <input type="submit" class="primary-btn pointer" value="Войти">
+{% endblock buttons %}
