@@ -1,0 +1,16 @@
+{% extends 'layouts/schema.html' %}
+
+{% load static %}
+
+{% block addlinks %}
+<script src="{% static 'visual/js/ladles.js' %}"></script>
+{% endblock addlinks %}
+
+{% block inputtime %}
+<div class="center-container">
+    <form type="post" id="timeform">
+        <input type="submit" value="Выбрать время" class="secondary-btn pointer">
+        <input id="timeinput" type="time">
+    </form>
+</div>
+{% endblock inputtime %}

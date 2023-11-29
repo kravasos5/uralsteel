@@ -1,0 +1,34 @@
+{% load static %}
+
+{% block head %}
+<script>
+    {% include 'scripts/user_is_authenticated.html' %}
+</script>
+{% endblock head %}
+
+<header>
+    <div class="container">
+        <nav class="flex-line-container">
+            <a class="nav-btn pointer{% if request.path == '/' %} nav-active{% else %} nav-common{% endif %}" href="{% url 'main' %}">Главная</a>
+            <div class="nav-central">
+                <a class="nav-btn pointer{% if request.path == '/ladles/' %} nav-active{% else %} nav-common{% endif %}" href="{% if user.is_authenticated %}{% url 'ladles' %}{% else %}{% url 'login' %}{% endif %}">Ковши</a>
+                <a class="nav-btn pointer{% if request.path == '/cranes/' %} nav-active{% else %} nav-common{% endif %}" href="{% if user.is_authenticated %}{% url 'cranes' %}{% else %}{% url 'login' %}{% endif %}">Краны</a>
+                <a class="nav-btn pointer{% if request.path == '/*/' %} nav-active{% else %} nav-common{% endif %}" href="{% if user.is_authenticated %}#{% else %}{% url 'login' %}{% endif %}">Авария</a>
+            </div>
+
+            <div class="nav-profile">
+                {% if '/profile/' in request.path  %}
+                    <img class="pointer" src="{% static 'visual/css/images/profile_active.png' %}">
+                {% else %}
+                    <img class="pointer" src="{% static 'visual/css/images/profile.png' %}">
+                {% endif %}
+                {% if user.is_authenticated %}
+                <div class="header-dropdown">
+                    <a class="header-drp-btn" href="{% url 'profile' slug=user.slug %}">Профиль</a>
+                    <a class="header-drp-btn" href="{% url 'logout' %}">Выйти</a>
+                </div>
+                {% endif %}
+            </div>
+        </nav>
+    <div>
+</header>

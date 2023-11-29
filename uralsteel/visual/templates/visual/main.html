@@ -1,0 +1,17 @@
+{% extends 'layouts/basic.html' %}
+
+{% load static %}
+
+{% block links %}
+<link rel="stylesheet" href="{% static 'visual/css/footer.css' %}">
+<link rel="stylesheet" href="{% static 'visual/css/main.css' %}">
+{% endblock links %}
+
+{% block content %}
+<h1>Добро пожаловать!</h1>
+<h2>Этот сайт отображает актуальное положение кранов и ковшей в ЭСПЦ</h2>
+{% endblock content %}
+
+{% block footer %}
+{% include 'includings/footer.html' %}
+{% endblock footer %}

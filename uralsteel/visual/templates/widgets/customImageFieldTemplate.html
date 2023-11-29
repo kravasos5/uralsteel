@@ -1,0 +1,21 @@
+{% if widget.name == 'photo' %}
+    <p>Текущее фото</p>
+
+    {% if widget.value %}
+        <div class="photo-image">
+            <img src="{{ widget.value.url }}" style="width: 200px; height: 200px; object-fit: cover;" class="photo-img">
+        </div>
+    {% else %}
+        <div style="max-height: 100%; max-width: 100%;">
+            <p>Сейчас у вас нет фото (выставлено стандартное)</p>
+        </div>
+    {% endif %}
+
+    <p>Новое фото</p>
+    <div class="photo-image-new" style="margin: 10px 0px 1em 0px; width: 50%; height: 50%; overflow: hidden; display: none;">
+        <img src="#" style="width: 100%; height: 100%; object-fit: cover; display: none;" class="photo-img-new">
+    </div>
+
+{% endif %}
+
+<p><input type="{{ widget.type }}" name="{{ widget.name }}"{% if widget.value %} value="{{ widget.value.url }}"{% endif %} id="{{ widget.attrs.id }}"></p>
