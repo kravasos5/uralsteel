@@ -18,8 +18,8 @@ class EmployeesAdmin(admin.ModelAdmin):
 
 class AggregatesAdmin(admin.ModelAdmin):
     '''Редактор агрегатов'''
-    list_display = '__str__'
-    search_fields = 'name'
+    list_display = ('__str__',)
+    search_fields = ('name',)
     fields = (('name', 'num_agg', 'num_pos'),
               ('coord_x', 'coord_y'),
               'stay_time',
@@ -27,27 +27,27 @@ class AggregatesAdmin(admin.ModelAdmin):
 
 class CranesAdmin(admin.ModelAdmin):
     '''Редактор кранов'''
-    list_display = '__str__'
-    search_fields = 'title'
+    list_display = ('__str__',)
+    search_fields = ('title',)
     fields = ('title',
               ('size_x', 'size_y'),
               'photo')
 
 class LadlesAdmin(admin.ModelAdmin):
     '''Редактор кранов'''
-    list_display = '__str__'
-    search_fields = 'name'
+    list_display = ('__str__',)
+    search_fields = ('name',)
     fields = ('name', 'is_active')
 
 class BrandSteelAdmin(admin.ModelAdmin):
     '''Редактор марок стали'''
-    list_display = '__str__'
-    search_fields = 'name'
-    fields = 'name'
+    list_display = ('__str__',)
+    search_fields = ('name',)
+    fields = ('name',)
 
 class DynamicTableAdmin(admin.ModelAdmin):
     '''Редактор динамической таблицы'''
-    list_display = '__str__'
+    list_display = ('__str__',)
     search_fields = ('ladle', 'num_melt', 'brand_steel', 'aggregate')
     fields = (('ladle', 'num_melt', 'brand_steel', 'aggregate'),
               ('plan_start', 'plan_end'),
