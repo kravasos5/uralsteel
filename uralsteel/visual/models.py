@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
+from django.utils.deconstruct import deconstructible
 from django.utils.text import slugify
 
 
@@ -42,4 +44,5 @@ class Employees(AbstractUser):
         return f'<{self.username}>'
 
     def get_absolute_url(self):
+        # Формирование ссылки на профиль пользователя
         return reverse('profile', kwargs={'slug': self.slug})

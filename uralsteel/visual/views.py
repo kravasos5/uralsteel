@@ -11,21 +11,25 @@ from visual.forms import ChangeEmployeeInfoForm
 from visual.models import Employees
 
 
-class Main(TemplateView):
+class MainView(TemplateView):
     '''Представление главной страницы'''
     template_name = 'visual/main.html'
 
-class Ladles(TemplateView):
+class LadlesView(TemplateView):
     '''Представление страницы с ковшами'''
     template_name = 'visual/ladles.html'
 
-class Cranes(TemplateView):
+class CranesView(TemplateView):
     '''Представление страницы с кранами'''
     template_name = 'visual/cranes.html'
 
-class AccessDenied(TemplateView):
+class AccessDeniedView(TemplateView):
     '''Представление страницы с кранами'''
     template_name = 'visual/access_denied.html'
+
+class AccidentView(TemplateView):
+    '''Представление страницы с проишествиями'''
+    template_name = 'visual/accident.html'
 
 ##############################################################################
 # Система разграничения доступа
