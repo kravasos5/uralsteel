@@ -131,6 +131,48 @@ class DynamicTable(models.Model):
         verbose_name = 'Плавка'
         verbose_name_plural = 'Плавки'
 
+
+class ArchiveDynamicManager(models.Manager):
+    '''Менеджер модели ArchiveDynamicTable'''
+
+    def get_queryset(self):
+        # Выборка записей с заполненным полем "Фактическая дата завершения"
+        return super().get_queryset().filter(actual_end__isnull=False)
+
+
+class ArchiveDynamicTable(DynamicTable):
+    '''Модель архивных записей динамической таблицы'''
+
+    objects = ArchiveDynamicManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Архивная плавка'
+        verbose_name_plural = 'Архивные плавки'
+        ordering = ('-actual_end',)
+
+
+class ActiveDynamicManager(models.Manager):
+    '''Менеджер модели ActiveDynamicTable'''
+
+    def get_queryset(self):
+        # Выборка записей с НЕ заполненным полем "Фактическая дата завершения"
+        return super().get_queryset().filter(actual_end__isnull=True)
+
+
+class ActiveDynamicTable(DynamicTable):
+    '''Модель активных записей динамической таблицы'''
+
+    objects = ActiveDynamicManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Активная плавка'
+        verbose_name_plural = 'Активные плавки'
+        ordering = ('-actual_end',)
+
+
+
 class Accidents(models.Model):
     '''Модель происшествий'''
     pass

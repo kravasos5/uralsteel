@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from visual.models import Employees, Aggregates, Cranes, Ladles, BrandSteel, DynamicTable, Accidents
+from visual.models import *
 
 
 class EmployeesAdmin(admin.ModelAdmin):
@@ -65,4 +65,6 @@ admin.site.register(Cranes, CranesAdmin)
 admin.site.register(Ladles, LadlesAdmin)
 admin.site.register(BrandSteel, BrandSteelAdmin)
 admin.site.register(DynamicTable, DynamicTableAdmin)
+admin.site.register(ArchiveDynamicTable, DynamicTableAdmin)
+admin.site.register(ActiveDynamicTable, DynamicTableAdmin)
 admin.site.register(Accidents, AccidentsAdmin)
