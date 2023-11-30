@@ -2,7 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, \
     PasswordResetConfirmView, PasswordResetCompleteView
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, UpdateView
@@ -70,7 +70,15 @@ class ChangeEmployeeInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView
 
     def form_valid(self, form):
         super().form_valid(form)
-        return JsonResponse(data={'url': self.get_success_url()}, status=200)
+        # проверяю добавил ли пользователь новое фото, если да, то
+        # is_crop_photo = True
+        is_crop_photo = str(form.cleaned_data.get('photo')) == 'photo.png'
+        # и если пользователь добавил фото, то отправляю ссылку для перехода
+        if is_crop_photo:
+            return JsonResponse(data={'url': self.get_success_url()}, status=200)
+        # если пользователь не добавлял новое фото, то отправляется
+        # стандартный ответ
+        return HttpResponseRedirect(self.get_success_url())
 
 # Сброс пароля
 class PasswordReset(PasswordResetView):

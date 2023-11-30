@@ -10,7 +10,11 @@
 <h1>Профиль пользователя {{user.username}}</h1>
 <div class="info">
     <div class="photo">
+        {% if user.photo.url %}
         <img src="{{ user.photo.url }}">
+        {% else %}
+        <img src="{% static 'visual/css/images/no_photo.png' %}">
+        {% endif %}
     </div>
     <div class="text-info">
         <p>{{ user.last_name }} {{ user.first_name }} {{ user.patronymic }}</p>
