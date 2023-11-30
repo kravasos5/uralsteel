@@ -41,8 +41,6 @@ window.addEventListener("load", (event) => {
                             enctype: 'multipart/form-data',
                             data: fd,
                             success: function(response) {
-                            console.log(response[0]);
-                            console.log(response.href);
                                 window.location.href = response.url;
                             },
                             error: function(error) {
