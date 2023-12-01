@@ -2,13 +2,15 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, \
     PasswordResetConfirmView, PasswordResetCompleteView
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db import IntegrityError
 from django.http import JsonResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import TemplateView, UpdateView
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse_lazy, reverse
+from django.views.generic import TemplateView, UpdateView, CreateView
 
-from visual.forms import ChangeEmployeeInfoForm
-from visual.models import Employees
+from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, AggregatAccidentForm, \
+    LadlesAccidentDetailForm, CranesAccidentDetailForm, AggregatAccidentDetailForm, AccidentStartingForm
+from visual.models import Employees, CranesAccident, LadlesAccident, AggregatAccident, Ladles, Cranes, Aggregates
 
 
 class MainView(TemplateView):
@@ -27,9 +29,182 @@ class AccessDeniedView(TemplateView):
     '''Представление страницы с кранами'''
     template_name = 'visual/access_denied.html'
 
-class AccidentView(TemplateView):
+##############################################################################
+# Проишествия
+
+class AccidentStartingView(TemplateView):
+    '''Представление начала отчёта об аварии/проишествии'''
+    template_name = 'visual/accident_starting.html'
+
+    def get(self, request, *args, **kwargs):
+        '''Вывод формы'''
+        context = super().get_context_data(*args, **kwargs)
+        form = AccidentStartingForm()
+        context['form'] = form
+        return render(request, self.template_name, context=context)
+
+    def post(self, request, *args, **kwargs):
+        '''Обработка ответа формы'''
+        form = AccidentStartingForm(request.POST)
+        if form.is_valid():
+            # получаю тип поломанного объекта (кран, ковш или агрегат)
+            accident_type = form.cleaned_data['accident_type']
+            # в зависимости от типа объекта возвращаю соответствующую страницу
+            if accident_type == 'cr':
+                # краны
+                return HttpResponseRedirect(reverse('accident-crane'))
+            elif accident_type == 'la':
+                # ковши
+                return HttpResponseRedirect(reverse('accident-ladle'))
+            elif accident_type == 'ag':
+                # агрегаты
+                return HttpResponseRedirect(reverse('accident-aggregate'))
+        else:
+            return render(request, self.template_name, context={'form': form})
+
+class AccidentViewBase(CreateView):
     '''Представление страницы с проишествиями'''
     template_name = 'visual/accident.html'
+    # необходимо задать form_class, model, check_model
+    # (check_model нужна для проверки зарегистрирована ли в бд такая поломка)
+    # success_url
+    # также необходимо определить метод form_invalid, вызывающий
+    # исключение, если предмет жалобы уже отмечен, как неисправный
+
+    def is_exists(self, instance):
+        # Проверяет зарегистрирована ли такая поломка
+        if self.check_model.objects.filter(id=instance.object.id, is_broken=True).exists():
+            return True
+        return False
+
+    def form_invalid(self, form, *args, **kwargs):
+        # Если такая поломка зарегистрирована
+        if kwargs.get('is_exist'):
+            form.add_error(None, 'Этот объект уже отмечен, как сломанный')
+        else:
+            form.add_error(None, 'Ошибка при отправке отчёта')
+        return super().form_invalid(form)
+
+    def form_valid(self, form, *args, **kwargs):
+        # задаю автора отчёта
+        form.instance.author = self.request.user
+        # проверка не зарегистрирована ли такая поломка
+        if self.is_exists(form.instance):
+            return self.form_invalid(form, is_exist=True, *args, **kwargs)
+        try:
+            return super().form_valid(form)
+        except IntegrityError:
+            return self.form_invalid(form, *args, **kwargs)
+
+class AccidentDetailStartingViewBase(TemplateView):
+    '''
+    Представление детального комментария отчёта об аварии/поломке
+    Метод get_success_url нужно переопределить, а метод get_context_data
+    расширить
+    '''
+    template_name = 'visual/accident_detail_starting.html'
+
+class AccidentDetailViewBase(UpdateView):
+    '''Представление страницы с проишествиями'''
+    template_name = 'visual/accident_detail.html'
+    success_url = reverse_lazy('main')
+    # необходимо задать form_class, model
+
+class LadleAccidentView(AccidentViewBase):
+    '''Представление обработчик проишествия ковша'''
+    form_class = LadlesAccidentForm
+    model = LadlesAccident
+    check_model = Ladles
+
+    def get_success_url(self, *agrs, **kwargs):
+        return reverse_lazy('accident-ladle-detail-starting', kwargs={'pk': self.object.id})
+
+class LadleAccidentDetailStartingView(AccidentDetailStartingViewBase):
+    '''
+    Представление начала написания дополнительного
+    комментария при проишествии с ковшом
+    '''
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data()
+        url = reverse('accident-ladle-detail', kwargs={'pk': kwargs.get('pk')})
+        context['detail_url'] = url
+        return context
+
+    def get_success_url(self, *args, **kwargs):
+        return reverse_lazy('accident-ladle-detail', kwargs={'pk': kwargs.get('pk')})
+
+class LadleAccidentDetailView(AccidentDetailViewBase):
+    '''
+    Представление обработчик написания дополнительного
+    комментария при проишествии с ковшом
+    '''
+    form_class = LadlesAccidentDetailForm
+    model = LadlesAccident
+
+class CraneAccidentView(AccidentViewBase):
+    '''Представление обработчик проишествия крана'''
+    form_class = CranesAccidentForm
+    model = CranesAccident
+    check_model = Cranes
+
+    def get_success_url(self, *agrs, **kwargs):
+        return reverse_lazy('accident-crane-detail-starting', kwargs={'pk': self.object.id})
+
+class CraneAccidentDetailStartingView(AccidentDetailStartingViewBase):
+    '''
+    Представление начала написания дополнительного
+    комментария при проишествии с краном
+    '''
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data()
+        url = reverse('accident-crane-detail', kwargs={'pk': kwargs.get('pk')})
+        context['detail_url'] = url
+        return context
+
+    def get_success_url(self, *args, **kwargs):
+        return reverse_lazy('accident-crane-detail', kwargs={'pk': kwargs.get('pk')})
+
+class CraneAccidentDetailView(AccidentDetailViewBase):
+    '''
+    Представление обработчик написания дополнительного
+    комментария при проишествии с краном
+    '''
+    form_class = CranesAccidentDetailForm
+    model = CranesAccident
+
+class AggregateAccidentView(AccidentViewBase):
+    '''Представление обработчик проишествия агрегата'''
+    form_class = AggregatAccidentForm
+    model = AggregatAccident
+    check_model = Aggregates
+
+    def get_success_url(self, *agrs, **kwargs):
+        return reverse_lazy('accident-aggregate-detail-starting', kwargs={'pk': self.object.id})
+
+class AggregateAccidentDetailStartingView(AccidentDetailStartingViewBase):
+    '''
+    Представление начала написания дополнительного
+    комментария при проишествии с агрегатом
+    '''
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data()
+        url = reverse('accident-aggregate-detail', kwargs={'pk': kwargs.get('pk')})
+        context['detail_url'] = url
+        return context
+
+    def get_success_url(self, *args, **kwargs):
+        return reverse_lazy('accident-aggregate-detail', kwargs={'pk': kwargs.get('pk')})
+
+class AggregateAccidentDetailView(AccidentDetailViewBase):
+    '''
+    Представление обработчик написания дополнительного
+    комментария при проишествии с агрегатом
+    '''
+    form_class = AggregatAccidentDetailForm
+    model = AggregatAccident
 
 ##############################################################################
 # Система разграничения доступа
@@ -48,7 +223,7 @@ class EmployeeLogoutView(LoginRequiredMixin, LogoutView):
     '''Выход из аккаунта'''
     template_name = 'visual/main.html'
 
-class ChangeEmployeeInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView): #
+class ChangeEmployeeInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView):
     '''Изменение данных пользователя'''
     model = Employees
     template_name = 'visual/change_employee_info.html'

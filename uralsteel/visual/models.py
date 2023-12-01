@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.deconstruct import deconstructible
 from django.utils.text import slugify
@@ -61,6 +63,8 @@ class Aggregates(models.Model):
     coord_y = models.SmallIntegerField(verbose_name="Координата по У")
     stay_time = models.DateTimeField(verbose_name="Время пребывания на агрегате")
     photo = models.ImageField(upload_to=get_photo_path, verbose_name="Фото ковша на агрегате")
+    is_broken = models.BooleanField(default=False, null=False, blank=False,
+                                    verbose_name="Сломан ли агрегат")
 
     def __str__(self):
         return f'{self.name} {self.num_agg} {self.num_pos}'
@@ -80,6 +84,8 @@ class Cranes(models.Model):
     size_x = models.SmallIntegerField(verbose_name="Размер по Х")
     size_y = models.SmallIntegerField(verbose_name="Размер по У")
     photo = models.ImageField(upload_to="", verbose_name="Фото крана или каретки")
+    is_broken = models.BooleanField(default=False, null=False, blank=False,
+                                    verbose_name="Сломан ли кран")
 
     def __str__(self):
         return f'{self.title}'
@@ -92,7 +98,11 @@ class Ladles(models.Model):
     '''Модель ковшей'''
 
     name = models.CharField(verbose_name="Название ковша", max_length=100)
-    is_active = models.BooleanField(default=False, verbose_name="Активен ли ковш")
+    is_active = models.BooleanField(default=False, null=False, blank=False,
+                                    verbose_name="Активен ли ковш")
+    is_broken = models.BooleanField(default=False, null=False, blank=False,
+                                    verbose_name="Сломан ли ковш")
+
     def __str__(self):
         return f'{self.name}'
 
@@ -167,6 +177,91 @@ class ActiveDynamicTable(DynamicTable):
         verbose_name_plural = 'Активные плавки'
         ordering = ('-actual_end',)
 
-class Accidents(models.Model):
+@deconstructible
+class WordCountValidator(object):
+    '''Валидатор количества слова'''
+    def __init__(self, count):
+        self.count = count
+
+    def __call__(self, val):
+        # Проверка оличества слов
+        if len(str(val).split(' ')) < self.count :
+            raise ValidationError('Отчёт должен содержать как ' +
+                        'минимум %(count)s слов',
+                        code='not_enough_words',
+                        params={'count': self.count})
+
+    def __eq__(self, other):
+        return self.count == other.count
+
+class AccidentsAbstract(models.Model):
     '''Модель происшествий'''
-    pass
+
+    author = models.ForeignKey(Employees, on_delete=models.SET_NULL,
+                               null=True, blank=False,
+                               verbose_name='Автор отчёта')
+    report = models.CharField(max_length=800, validators=[WordCountValidator(10)],
+                              null=True, blank=False, default=None,
+                              verbose_name='Подробное описание проблемы')
+    created_at = models.DateTimeField(auto_now_add=True,
+                                      verbose_name='Дата создания отчёта')
+
+    class Meta:
+        abstract = True
+
+def accident_pre_save_dispatcher(sender, **kwargs):
+    '''Диспетчер выполняющийся перед созданием нового проишествия'''
+    instance = kwargs['instance']
+    object = instance.object
+    # отмечаю кран/ковш/агрегат как сломанный
+    object.is_broken = True
+    object.save()
+    # дальнейшая обработка перестроения маршрутов
+
+class LadlesAccident(AccidentsAbstract):
+    '''Модель проишествий ковшей'''
+    object = models.ForeignKey(Ladles, on_delete=models.SET_NULL,
+                              null=True, blank=False,
+                              verbose_name='Ковш')
+
+    def __str__(self):
+        return f'Отчёт ковш №{self.object.id} - {self.created_at}'
+
+    class Meta:
+        verbose_name = 'Прошествия с ковшом'
+        verbose_name_plural = 'Прошествия с ковшами'
+        ordering = ('-created_at',)
+
+pre_save.connect(accident_pre_save_dispatcher, sender=LadlesAccident)
+
+class CranesAccident(AccidentsAbstract):
+    '''Модель проишествий кранов'''
+    object = models.ForeignKey(Cranes, on_delete=models.SET_NULL,
+                              null=True, blank=False,
+                              verbose_name='Кран')
+
+    def __str__(self):
+        return f'Отчёт кран №{self.object.id} - {self.created_at}'
+
+    class Meta:
+        verbose_name = 'Прошествия с краном'
+        verbose_name_plural = 'Прошествия с кранами'
+        ordering = ('-created_at',)
+
+pre_save.connect(accident_pre_save_dispatcher, sender=CranesAccident)
+
+class AggregatAccident(AccidentsAbstract):
+    '''Модель проишествий агрегатов'''
+    object = models.ForeignKey(Aggregates, on_delete=models.SET_NULL,
+                              null=True, blank=False,
+                               verbose_name='Агрегат')
+
+    def __str__(self):
+        return f'Отчёт агрегат №{self.object.id} - {self.created_at}'
+
+    class Meta:
+        verbose_name = 'Прошествия с агрегатом'
+        verbose_name_plural = 'Прошествия с агрегатами'
+        ordering = ('-created_at',)
+
+pre_save.connect(accident_pre_save_dispatcher, sender=AggregatAccident)

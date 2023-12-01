@@ -21,7 +21,7 @@ class AggregatesAdmin(admin.ModelAdmin):
     list_display = ('__str__',)
     search_fields = ('name',)
     fields = (('name', 'num_agg', 'num_pos'),
-              ('coord_x', 'coord_y'),
+              ('coord_x', 'coord_y'), 'is_broken',
               'stay_time',
               'photo')
 
@@ -31,13 +31,13 @@ class CranesAdmin(admin.ModelAdmin):
     search_fields = ('title',)
     fields = ('title',
               ('size_x', 'size_y'),
-              'photo')
+              'photo', 'is_broken')
 
 class LadlesAdmin(admin.ModelAdmin):
     '''Редактор кранов'''
     list_display = ('__str__',)
     search_fields = ('name',)
-    fields = ('name', 'is_active')
+    fields = ('name', 'is_active', 'is_broken')
 
 class BrandSteelAdmin(admin.ModelAdmin):
     '''Редактор марок стали'''
@@ -53,9 +53,12 @@ class DynamicTableAdmin(admin.ModelAdmin):
               ('plan_start', 'plan_end'),
               ('actual_start', 'actual_end'))
 
-class AccidentsAdmin(admin.ModelAdmin):
+class AccidentAdmin(admin.ModelAdmin):
     '''Редактор происшетсвий'''
-    pass
+    list_display = ('__str__',)
+    search_fields = ('author', 'object', 'created_at')
+    fields = ('object', 'author', 'report', 'created_at')
+    readonly_fields = ('author', 'created_at')
 
 admin.site.register(Employees, EmployeesAdmin)
 admin.site.register(Aggregates, AggregatesAdmin)
@@ -65,4 +68,6 @@ admin.site.register(BrandSteel, BrandSteelAdmin)
 admin.site.register(DynamicTable, DynamicTableAdmin)
 admin.site.register(ArchiveDynamicTable, DynamicTableAdmin)
 admin.site.register(ActiveDynamicTable, DynamicTableAdmin)
-admin.site.register(Accidents, AccidentsAdmin)
+admin.site.register(LadlesAccident, AccidentAdmin)
+admin.site.register(CranesAccident, AccidentAdmin)
+admin.site.register(AggregatAccident, AccidentAdmin)
