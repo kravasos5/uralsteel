@@ -13,7 +13,7 @@
             <div class="nav-central">
                 <a class="nav-btn pointer{% if request.path == '/ladles/' %} nav-active{% else %} nav-common{% endif %}" href="{% if user.is_authenticated %}{% url 'ladles' %}{% else %}{% url 'login' %}{% endif %}">Ковши</a>
                 <a class="nav-btn pointer{% if request.path == '/cranes/' %} nav-active{% else %} nav-common{% endif %}" href="{% if user.is_authenticated %}{% url 'cranes' %}{% else %}{% url 'login' %}{% endif %}">Краны</a>
-                <a class="nav-btn pointer{% if request.path == '/*/' %} nav-active{% else %} nav-common{% endif %}" href="{% if user.is_authenticated %}#{% else %}{% url 'login' %}{% endif %}">Авария</a>
+                <a class="nav-btn pointer{% if request.path == '/accident/starting/' %} nav-active{% else %} nav-common{% endif %}" href="{% if user.is_authenticated %}{% url 'accident-starting' %}{% else %}{% url 'login' %}{% endif %}">Авария</a>
             </div>
 
             <div class="nav-profile">

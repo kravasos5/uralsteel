@@ -1,0 +1,14 @@
+{% extends 'layouts/info_message.html' %}
+
+{% load static %}
+
+{% block message %}
+Хотите ли вы написать подробное описание проблемы ?
+{% endblock message %}
+
+{% block addcontent %}
+<div class="flex-line-center">
+    <a href="{% url 'main' %}" class="secondary-btn pointer">Нет</a>
+    <a href="{{ detail_url }}" class="primary-btn pointer">Да</a>
+</div>
+{% endblock addcontent %}
