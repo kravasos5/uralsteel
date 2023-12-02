@@ -105,7 +105,7 @@ class AccidentDetailStartingViewBase(TemplateView):
     template_name = 'visual/accident_detail_starting.html'
 
 class AccidentDetailViewBase(UpdateView):
-    '''Представление страницы с проишествиями'''
+    '''Представление страницы с формой заполнения подробного описания проишествия'''
     template_name = 'visual/accident_detail.html'
     success_url = reverse_lazy('main')
     # необходимо задать form_class, model
