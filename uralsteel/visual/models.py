@@ -56,22 +56,65 @@ class Aggregates(models.Model):
         # получения пути сохранения фото
         return f'photos/aggregates/{filename}'
 
-    name = models.CharField(verbose_name="Название агрегата", max_length=100)
+    title = models.CharField(verbose_name="Название агрегата", max_length=100)
     num_agg = models.CharField(verbose_name="Номер агрегата", max_length=100)
     num_pos = models.CharField(verbose_name="Номер позиции", max_length=100)
     coord_x = models.SmallIntegerField(verbose_name="Координата по Х")
     coord_y = models.SmallIntegerField(verbose_name="Координата по У")
-    stay_time = models.DateTimeField(verbose_name="Время пребывания на агрегате")
+    stay_time = models.TimeField(verbose_name="Время пребывания на агрегате")
     photo = models.ImageField(upload_to=get_photo_path, verbose_name="Фото ковша на агрегате")
     is_broken = models.BooleanField(default=False, null=False, blank=False,
                                     verbose_name="Сломан ли агрегат")
 
     def __str__(self):
-        return f'{self.name} {self.num_agg} {self.num_pos}'
+        return f'{self.title} {self.num_agg} {self.num_pos}'
 
     class Meta:
         verbose_name = 'Агрегат'
         verbose_name_plural = 'Агрегаты'
+
+class AggregatesGMP(Aggregates):
+    '''Модель агрегатов ГМП'''
+
+    class Meta:
+        verbose_name = 'Агрегат ГМП'
+        verbose_name_plural = 'Агрегаты ГМП'
+
+class AggregatesUKP(Aggregates):
+    '''Модель агрегатов УКП'''
+
+    class Meta:
+        verbose_name = 'Агрегат УКП'
+        verbose_name_plural = 'Агрегаты УКП'
+
+class AggregatesUVS(Aggregates):
+    '''Модель агрегатов УВС'''
+
+    class Meta:
+        verbose_name = 'Агрегат УВС'
+        verbose_name_plural = 'Агрегаты УВС'
+
+class AggregatesMNLZ(Aggregates):
+    '''Модель агрегатов МНЛЗ'''
+
+    class Meta:
+        verbose_name = 'Агрегат МНЛЗ'
+        verbose_name_plural = 'Агрегаты МНЛЗ'
+
+class Routes(models.Model):
+    '''Модель маршрутов'''
+
+    aggregate_1 = models.ForeignKey('AggregatesGMP', on_delete=models.PROTECT, verbose_name='Номер ГМП')
+    aggregate_2 = models.ForeignKey('AggregatesUKP', on_delete=models.PROTECT, verbose_name='Номер УКП')
+    aggregate_3 = models.ForeignKey('AggregatesUVS', on_delete=models.PROTECT, verbose_name='Номер УВС')
+    aggregate_4 = models.ForeignKey('AggregatesMNLZ', on_delete=models.PROTECT, verbose_name='Номер МНЛЗ')
+
+    def __str__(self):
+        return f'{self.aggregate_1}, {self.aggregate_2}, {self.aggregate_3}, {self.aggregate_4}'
+
+    class Meta:
+        verbose_name = 'Маршрут'
+        verbose_name_plural = 'Маршруты'
 
 class Cranes(models.Model):
     '''Модель кранов'''
@@ -97,14 +140,14 @@ class Cranes(models.Model):
 class Ladles(models.Model):
     '''Модель ковшей'''
 
-    name = models.CharField(verbose_name="Название ковша", max_length=100)
+    title = models.CharField(verbose_name="Название ковша", max_length=100)
     is_active = models.BooleanField(default=False, null=False, blank=False,
                                     verbose_name="Активен ли ковш")
     is_broken = models.BooleanField(default=False, null=False, blank=False,
                                     verbose_name="Сломан ли ковш")
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{self.title}'
 
     class Meta:
         verbose_name = 'Ковш'
@@ -113,21 +156,22 @@ class Ladles(models.Model):
 class BrandSteel(models.Model):
     '''Модель марок стали'''
 
-    name = models.CharField(verbose_name="Марка стали", max_length=100)
+    title = models.CharField(verbose_name="Марка стали", max_length=100)
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{self.title}'
 
     class Meta:
         verbose_name = 'Марка стали'
         verbose_name_plural = 'Марки стали'
 
-class DynamicTable(models.Model):
+class DynamicTableAbstract(models.Model):
     '''Основная таблица с информацией о перемещении ковшей в реальном времени'''
 
     ladle = models.ForeignKey('Ladles', on_delete=models.PROTECT, verbose_name='Ковш')
     num_melt = models.CharField(max_length=100, unique=True, verbose_name='Номер плавки')
     brand_steel = models.CharField(max_length=100, verbose_name='Марка стали')
+    route = models.ForeignKey('Routes', on_delete=models.PROTECT, verbose_name='Маршрурт')
     aggregate = models.ForeignKey('Aggregates', on_delete=models.PROTECT, verbose_name='Агрегат')
     plan_start = models.DateTimeField(verbose_name='Плановая дата начала')
     plan_end = models.DateTimeField(verbose_name='Плановая дата завершения')
@@ -138,41 +182,26 @@ class DynamicTable(models.Model):
         return f'{self.num_melt}'
 
     class Meta:
-        verbose_name = 'Плавка'
-        verbose_name_plural = 'Плавки'
+        abstract = True
 
-class ArchiveDynamicManager(models.Manager):
-    '''Менеджер модели ArchiveDynamicTable'''
-
-    def get_queryset(self):
-        # Выборка записей с заполненным полем "Фактическая дата завершения"
-        return super().get_queryset().filter(actual_end__isnull=False)
-
-class ArchiveDynamicTable(DynamicTable):
+class ArchiveDynamicTable(DynamicTableAbstract):
     '''Модель архивных записей динамической таблицы'''
 
-    objects = ArchiveDynamicManager()
+    def __str__(self):
+        return f'Архивная плавка №{self.num_melt}'
 
     class Meta:
-        proxy = True
         verbose_name = 'Архивная плавка'
         verbose_name_plural = 'Архивные плавки'
         ordering = ('-actual_end',)
 
-class ActiveDynamicManager(models.Manager):
-    '''Менеджер модели ActiveDynamicTable'''
-
-    def get_queryset(self):
-        # Выборка записей с НЕ заполненным полем "Фактическая дата завершения"
-        return super().get_queryset().filter(actual_end__isnull=True)
-
-class ActiveDynamicTable(DynamicTable):
+class ActiveDynamicTable(DynamicTableAbstract):
     '''Модель активных записей динамической таблицы'''
 
-    objects = ActiveDynamicManager()
+    def __str__(self):
+        return f'Активная плавка №{self.num_melt}'
 
     class Meta:
-        proxy = True
         verbose_name = 'Активная плавка'
         verbose_name_plural = 'Активные плавки'
         ordering = ('-actual_end',)
