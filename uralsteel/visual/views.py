@@ -21,9 +21,24 @@ class LadlesView(TemplateView):
     '''Представление страницы с ковшами'''
     template_name = 'visual/ladles.html'
 
+    def post(self, request, *args, **kwargs):
+        '''Обработка post-запроса'''
+        # получение времени
+        time = request.POST.get('time')
+        print(time)
+        # формирование ответа
+        data: dict = {'answer': 'received'}
+        return JsonResponse(data=data, status=200)
+
 class CranesView(TemplateView):
     '''Представление страницы с кранами'''
     template_name = 'visual/cranes.html'
+
+    def post(self, request, *args, **kwargs):
+        '''Обработка post-запроса'''
+        # формирование ответа
+        data: dict = {'answer': 'received'}
+        return JsonResponse(data=data, status=200)
 
 class AccessDeniedView(TemplateView):
     '''Представление страницы с кранами'''
