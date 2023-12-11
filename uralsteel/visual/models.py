@@ -67,7 +67,7 @@ class Aggregates(models.Model):
                                     verbose_name="Сломан ли агрегат")
 
     def __str__(self):
-        return f'{self.title} {self.num_agg} {self.num_pos}'
+        return f'{self.title}-{self.num_agg}-{self.num_pos}'
 
     class Meta:
         verbose_name = 'Агрегат'
@@ -169,8 +169,8 @@ class DynamicTableAbstract(models.Model):
     '''Основная таблица с информацией о перемещении ковшей в реальном времени'''
 
     ladle = models.ForeignKey('Ladles', on_delete=models.PROTECT, verbose_name='Ковш')
-    num_melt = models.CharField(max_length=100, unique=True, verbose_name='Номер плавки')
-    brand_steel = models.CharField(max_length=100, verbose_name='Марка стали')
+    num_melt = models.CharField(max_length=100, verbose_name='Номер плавки')
+    brand_steel = models.ForeignKey('BrandSteel', on_delete=models.PROTECT, max_length=100, verbose_name='Марка стали')
     route = models.ForeignKey('Routes', on_delete=models.PROTECT, verbose_name='Маршрурт')
     aggregate = models.ForeignKey('Aggregates', on_delete=models.PROTECT, verbose_name='Агрегат')
     plan_start = models.DateTimeField(verbose_name='Плановая дата начала')
