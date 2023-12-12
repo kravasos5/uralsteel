@@ -1,5 +1,7 @@
-from typing import Tuple, List
+import os, json
+from typing import List
 
+import glob2
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, \
     PasswordResetConfirmView, PasswordResetCompleteView
@@ -51,8 +53,48 @@ class CranesView(TemplateView):
     def post(self, request, *args, **kwargs):
         '''Обработка post-запроса'''
         # формирование ответа
-        data: dict = {'answer': 'received'}
+        data: dict = {}
+        data['cranes_pos'] = CranesView.get_cranes_pos()
+        data['cranes_info'] = CranesView.get_cranes_info()
         return JsonResponse(data=data, status=200)
+
+    @staticmethod
+    def get_cranes_pos() -> dict:
+        '''
+        Функция, распаковывующая json-данные в рамках модуляции
+        с помощью pygame интерфейса
+        '''
+        path = os.path.join(os.getcwd(), 'visual\\static\\visual\\jsons')
+        files = glob2.glob(path + '\\*.json')
+        data: dict = {}
+        for file in files:
+            with open(file, 'r') as f:
+                crane_data = json.load(f)
+            for key, value in crane_data.items():
+                new_value = {}
+                new_value['x'] = value[0][0]
+                new_value['y'] = value[0][-1]
+                new_value['is_ladle'] = value[1]
+                data[str(key)] = new_value
+        return data
+
+    @staticmethod
+    def get_cranes_info() -> dict:
+        '''Функция, возвращающая фото кранов и кареток'''
+        # получаю информацию
+        cranes = Cranes.objects.all()
+        cranes_dict: dict = {}
+        # формирую словарь
+        # информация ниже это размеры фото и само фото,
+        # корпуса или каретки крана например
+        for elem in cranes:
+            cranes_dict[f'{elem.title}'] = {
+                'size_x': elem.size_x,
+                'size_y': elem.size_y,
+                'photo': elem.photo.url
+            }
+        return cranes_dict
+
 
 class AccessDeniedView(TemplateView):
     '''Представление страницы с кранами'''

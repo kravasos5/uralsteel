@@ -159,7 +159,7 @@ while True:
             shadows[i].laddle = cranes[i].laddle
             shadows[i].move(*pos, eval(f'field_{cranes[i].number}'))
             with open(f'K:/python/python/uralsteel/uralsteel/visual/static/visual/jsons/crane_{cranes[i].number}.json', 'w', encoding='utf-8') as f:
-                json.dump({cranes[i].number: [shadows[i].get_pos(), cranes[i].laddle]}, f)
+                json.dump({f'Crane_{cranes[i].number}': [shadows[i].get_pos(), cranes[i].laddle]}, f)
             flag = True
     if flag:
         time.sleep(0.5)
