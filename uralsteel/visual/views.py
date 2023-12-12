@@ -1,3 +1,5 @@
+from typing import Tuple, List
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, \
     PasswordResetConfirmView, PasswordResetCompleteView
@@ -24,11 +26,23 @@ class LadlesView(TemplateView):
     def post(self, request, *args, **kwargs):
         '''Обработка post-запроса'''
         # получение времени
-        time = request.POST.get('time')
-        print(time)
+        time_hours, time_minutes = LadlesView.time_convert(request.POST.get('time'))
         # формирование ответа
         data: dict = {'answer': 'received'}
         return JsonResponse(data=data, status=200)
+
+    @staticmethod
+    def time_convert(time: str) -> tuple[int, int]:
+        '''Метод, переводящий время в удобный формат'''
+        t: List[str, str] = time.split(':')
+        hours: int = int(t[0])
+        minutes: int = int(t[1])
+        # если минуты не кратны 5, например 37, то увеличиваю их, пока
+        # они не станут кратны 5, в этом примере - 40
+        while minutes % 5 != 0:
+            minutes += 1
+        return (hours, minutes)
+
 
 class CranesView(TemplateView):
     '''Представление страницы с кранами'''
