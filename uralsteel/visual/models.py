@@ -101,6 +101,20 @@ class AggregatesMNLZ(Aggregates):
         verbose_name = 'Агрегат МНЛЗ'
         verbose_name_plural = 'Агрегаты МНЛЗ'
 
+class AggregatesL(Aggregates):
+    '''Модель лежек'''
+
+    class Meta:
+        verbose_name = 'Лежка'
+        verbose_name_plural = 'Лежки'
+
+class AggregatesBurner(Aggregates):
+    '''Модель горелок'''
+
+    class Meta:
+        verbose_name = 'Горелка'
+        verbose_name_plural = 'Горелки'
+
 class Routes(models.Model):
     '''Модель маршрутов'''
 
