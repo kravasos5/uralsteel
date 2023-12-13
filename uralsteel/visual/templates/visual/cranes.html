@@ -4,4 +4,7 @@
 
 {% block addlinks %}
 <script src="{% static 'visual/js/cranes.js' %}"></script>
+<script>
+    {% include 'scripts/csrf_html.html' %}
+</script>
 {% endblock addlinks %}
