@@ -2,7 +2,6 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import pre_save
-from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.deconstruct import deconstructible
 from django.utils.text import slugify
@@ -140,7 +139,7 @@ class Cranes(models.Model):
     title = models.CharField(verbose_name="Название крана или каретки", max_length=100)
     size_x = models.SmallIntegerField(verbose_name="Размер по Х")
     size_y = models.SmallIntegerField(verbose_name="Размер по У")
-    photo = models.ImageField(upload_to="", verbose_name="Фото крана или каретки")
+    photo = models.ImageField(upload_to=get_photo_path, verbose_name="Фото крана или каретки")
     is_broken = models.BooleanField(default=False, null=False, blank=False,
                                     verbose_name="Сломан ли кран")
 
