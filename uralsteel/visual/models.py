@@ -188,8 +188,8 @@ class DynamicTableAbstract(models.Model):
     aggregate = models.ForeignKey('Aggregates', on_delete=models.PROTECT, verbose_name='Агрегат')
     plan_start = models.DateTimeField(verbose_name='Плановая дата начала')
     plan_end = models.DateTimeField(verbose_name='Плановая дата завершения')
-    actual_start = models.DateTimeField(verbose_name='Фактическая дата начала')
-    actual_end = models.DateTimeField(verbose_name='Фактическая дата завершения')
+    actual_start = models.DateTimeField(null=True, verbose_name='Фактическая дата начала')
+    actual_end = models.DateTimeField(null=True, verbose_name='Фактическая дата завершения')
 
     def __str__(self):
         return f'{self.num_melt}'
