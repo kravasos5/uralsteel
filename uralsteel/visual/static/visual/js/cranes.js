@@ -13,11 +13,6 @@ window.addEventListener("load", (event) => {
     var canvas = document.getElementById('canvas');
     var canvas_context = canvas.getContext('2d');
 
-    function clear_canvas() {
-        // Функция, очищающая canvas
-        canvas_context.clearRect(0, 0, canvas.width, canvas.height);
-    };
-
     function draw_crane(crane, crane_info, cranes_info) {
         // Функция, рисующая краны
         // получаю координаты крана в точках

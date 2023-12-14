@@ -259,6 +259,7 @@ def accident_pre_save_dispatcher(sender, **kwargs):
     object.is_broken = True
     object.save()
     # дальнейшая обработка перестроения маршрутов
+    ...
 
 class LadlesAccident(AccidentsAbstract):
     '''Модель проишествий ковшей'''

@@ -1,4 +1,11 @@
 window.addEventListener("load", (event) => {
+
+    function draw_ladlde(ladle, ladle_info) {
+        // Функция, рисующая ковши
+        console.log(ladle);
+        console.log(ladle_info);
+    };
+
     $('#timeform').submit(function(event) {
         // Обработка отправки формы
         event.preventDefault();
@@ -14,6 +21,11 @@ window.addEventListener("load", (event) => {
             data_type: 'json',
             success: function(response) {
                 console.log(response);
+                // Очищаю canvas
+                clear_canvas();
+                for (let ladle in response) {
+                    draw_ladlde(ladle, response[ladle]);
+                };
             },
             error: function(error) {
             },
