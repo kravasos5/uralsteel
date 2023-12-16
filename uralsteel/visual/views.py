@@ -14,6 +14,7 @@ from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.views.generic import TemplateView, UpdateView, CreateView
 
+from uralsteel.settings import BASE_DIR
 from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, AggregatAccidentForm, \
     LadlesAccidentDetailForm, CranesAccidentDetailForm, AggregatAccidentDetailForm, AccidentStartingForm
 from visual.models import Employees, CranesAccident, LadlesAccident, AggregatAccident, Ladles, Cranes, Aggregates, \
@@ -106,7 +107,6 @@ class LadlesView(TemplateView):
         '''
         for elem in ladles_queryset:
             ladles_info[f'{elem.ladle.id}'] = {
-                'id': {elem.id},
                 'ladle_title': f'{elem.ladle.title}',
                 'x': elem.aggregate.coord_x,
                 'y': elem.aggregate.coord_y,
@@ -128,7 +128,7 @@ class LadlesView(TemplateView):
 
             if is_plan:
                 # для "начинающих" ковшей
-                ladles_info[f'{elem.ladle.id}']['photo'] = 'ФОТО ДЛЯ НЕ НАЧАВШИХ ОПЕРАЦИЮ'
+                ladles_info[f'{elem.ladle.id}']['photo'] = '/media/photos/aggregates/starting_ladle.png'
             else:
                 # для "транспортируемых" и "ожидающих"
                 ladles_info[f'{elem.ladle.id}']['photo'] = f'{elem.aggregate.photo.url}'
@@ -151,9 +151,9 @@ class LadlesView(TemplateView):
                 ladles_info[f'{elem.ladle.id}']['next_aggregate'] = f'{next_elem.aggregate.title}'
                 ladles_info[f'{elem.ladle.id}']['next_plan_start'] = f'{next_elem.plan_start.astimezone(timezone.get_default_timezone())}'
                 ladles_info[f'{elem.ladle.id}']['next_plan_end'] = f'{next_elem.plan_end.astimezone(timezone.get_default_timezone())}'
-                ladles_info[f'{elem.ladle.id}']['next_x'] = {next_elem.aggregate.coord_x}
-                ladles_info[f'{elem.ladle.id}']['next_y'] = {next_elem.aggregate.coord_y}
-                ladles_info[f'{elem.ladle.id}']['next_id'] = {next_elem.id}
+                ladles_info[f'{elem.ladle.id}']['next_x'] = next_elem.aggregate.coord_x
+                ladles_info[f'{elem.ladle.id}']['next_y'] = next_elem.aggregate.coord_y
+                ladles_info[f'{elem.ladle.id}']['next_id'] = next_elem.id
 
         return ladles_info
 

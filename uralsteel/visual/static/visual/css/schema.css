@@ -22,3 +22,7 @@
     color: #0F0080;
     font-size: 1em;
 }
+
+.modal-body {
+    text-align: left;
+}
