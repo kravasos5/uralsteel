@@ -1,7 +1,7 @@
 window.addEventListener("load", (event) => {
     var ladles_old;
     var lines = [];
-    // модификаторы размеров на сколько размер canvas больше начального,
+    // модификаторы размеров, на сколько размер canvas больше начального,
     // то есть 1280x640
     var x_modificator;
     var y_modificator;
@@ -56,6 +56,7 @@ window.addEventListener("load", (event) => {
     };
 
     function get_modificator() {
+        // Функция, обновляющая модификаторы на странице
         x_modificator = canvas.offsetWidth/canvas.width;
 		y_modificator = canvas.offsetHeight/canvas.height;
     };
@@ -77,7 +78,7 @@ window.addEventListener("load", (event) => {
         form_data['time'] = $(this).find('input#timeinput').val();
 
         if (!form_data['time']) {
-            // ничего не делать
+            // ничего не делать, если форма времени не заполнена
         } else {
             $.ajax({
                 type: 'POST',
@@ -106,8 +107,8 @@ window.addEventListener("load", (event) => {
         };
     });
 
-    function lmc_handler(event) {
-        // Функция, обрабатывающая клик ЛКМ на canvas
+    function isClickOnladles(event) {
+        // Функция, определяющая нажал пользователь на ковш или нет
         // получаю координаты клика пользователя
         const clientX = event.clientX;
         const clientY = event.clientY;
@@ -116,21 +117,88 @@ window.addEventListener("load", (event) => {
         let x_slide = canvas_rect.x;
         let y_slide = canvas_rect.y;
         // проверяю был ли клик по ковшу
-        console.log(ladles_old);
         for (let ladle in ladles_old) {
-        	let diff_x = clientX - ladles_old[ladle].x*x_modificator - x_slide;
-        	let diff_y = clientY - ladles_old[ladle].y*y_modificator - y_slide;
-        	if ((diff_x <= 41 && diff_x >= 0) && (diff_y <= 46 && diff_y >= 0)) {
-        		console.log('Ковш №' + ladle);
-        		info_output(ladle, ladles_old[ladle]);
-        		break;
-        	};
+            let diff_x = clientX - ladles_old[ladle].x*x_modificator - x_slide;
+            let diff_y = clientY - ladles_old[ladle].y*y_modificator - y_slide;
+            if ((diff_x <= 41 && diff_x >= 0) && (diff_y <= 46 && diff_y >= 0)) {
+                console.log('Ковш №' + ladle);
+                return {'ladle': ladle, 'ladle_info': ladles_old[ladle]};
+            };
+        };
+        return null
+    };
+
+    function lmc_handler(event) {
+        // Функция, обрабатывающая клик ЛКМ на canvas
+        // Узнаю результат клика по canvas
+        let click_result = isClickOnladles(event);
+        if (click_result) {
+            // Если кликнули по ковшу, иначе ничего не делать
+            let ladle = click_result['ladle'];
+            let ladle_info = click_result['ladle_info'];
+            // Отображаю модальное окно
+            info_output(ladle, ladle_info);
         };
     };
 
     function rmc_handler(event) {
         // Функция обработчик нажатия ПКМ по canvas
+        // Узнаю результат клика по canvas
+        let click_result = isClickOnladles(event);
+        if (click_result) {
+            // Если кликнули по ковшу, иначе ничего не делать
+            let ladle = click_result['ladle'];
+            let ladle_info = click_result['ladle_info'];
+            console.log('right click on ladle №' + ladle);
+            // Вызываю специальное контекстное меню
+            canvas_context_menu(ladle, ladle_info);
+        };
+    };
 
+    function canvas_context_menu(ladle, ladle_info) {
+        // Функция, выводящая специальное контекстное меню
+        // Определяю тип операции и id операции
+        let operation = {};
+        let info_message = '';
+        if (ladle_info['is_transporting']) {
+            operation['operation_type'] = 'transporting';
+            info_message = 'Подтвердить перемещение ковша?'
+        } else if (ladle_info['is_starting']) {
+            operation['operation_type'] = 'starting';
+            info_message = 'Подтвердить начало операции?'
+        } else if (!ladle_info['is_starting'] && !ladle_info['is_transporting']) {
+            operation['operation_type'] = 'ending';
+            info_message = 'Подтвердить конец операции?'
+        };
+        operation['id'] = ladle_info['operation_id'];
+        // Меняю информационное сообщение
+        document.getElementById('ladlesDispatcherModalLabel').textContent = info_message;
+        // Перепривязываю обработчик выполнения операции
+        document.getElementById('btn-operation-execute').addEventListener('click', function() {dispatcher_operation_execute(operation)});
+        // Открываю модальное окно
+        let btn = document.getElementById('modal-dispatcher-button');
+        btn.click();
+    };
+
+    function dispatcher_operation_execute(operation) {
+        // Функция, выполняющаяся при нажатии диспетчером на кнопку выполнения
+        // какой-либо операции с ковшами
+        // Формирую form_data
+        let form_data = {};
+        form_data['csrfmiddlewaretoken'] = csrf_token;
+        form_data['operation_type'] = operation['operation_type'];
+        form_data['operation_id'] = operation['id'];
+        form_data['time'] = $('#timeform').find('input#timeinput').val();
+        $.ajax({
+            type: 'POST',
+            url: '',
+            data: form_data,
+            data_type: 'json',
+            success: function(response) {
+                $('#timeform').submit();
+            },
+            error: function(response) {},
+        });
     };
 
     function info_output(ladle, ladle_info) {
@@ -152,5 +220,6 @@ window.addEventListener("load", (event) => {
 
     canvas.addEventListener('contextmenu', function(event) {
         event.preventDefault();
+        rmc_handler(event);
     });
 });
