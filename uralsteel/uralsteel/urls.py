@@ -23,6 +23,7 @@ from uralsteel import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('visual.urls')),
+    path('', include('simulator.urls')),
 ]
 
 if settings.DEBUG:

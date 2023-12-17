@@ -1,0 +1,7 @@
+.canvas {
+    background-image: url('images/workshop.png');
+    width: 1126px;
+    height: 194px;
+    display: block;
+    margin: 0 auto;
+}
