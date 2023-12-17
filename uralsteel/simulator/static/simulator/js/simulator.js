@@ -112,25 +112,75 @@ window.addEventListener("load", function(){
 
         // проверяем каждую фигуру, чтобы увидеть, находится ли внутри мышь
         dragok = false;
-        for (let i = 0; i < cases.length; i++){
-            for (let k = 0; k < carriages.length; k++){
-                cas = cases[i]
-                car = carriages[k]
-                const dx = car.x - mx;
-                const dy = car.y - my;
-                // проверяем, находится ли внутри мышь
-                if (!dragok &&
-                    dx * dx + dy * dy < car.r * car.r &&
-                    mx > cas.x &&
-                    mx < cas.x + cas.width &&
-                    my > cas.y &&
-                    my < cas.y + cas.height) {
 
-                    dragok = true;
-                    car.isDragging = true;
-                    cas.isDragging = true;
-                }
-            }
+        case1 = cases[0]
+        case2 = cases[1]
+        case3 = cases[2]
+        case4 = cases[3]
+
+        carriage1 = carriages[0]
+        carriage2 = carriages[1]
+        carriage3 = carriages[2]
+        carriage4 = carriages[3]
+
+        const d1x = carriage1.x - mx;
+        const d1y = carriage1.y - my;
+
+        if (!dragok &&
+            d1x * d1x + d1y * d1y < carriage1.r * carriage1.r &&
+            mx > case1.x &&
+            mx < case1.x + case1.width &&
+            my > case1.y &&
+            my < case1.y + case1.height) {
+
+            dragok = true;
+            carriage1.isDragging = true;
+            case1.isDragging = true;
+        }
+
+        const d2x = carriage2.x - mx;
+        const d2y = carriage2.y - my;
+
+        if (!dragok &&
+            d2x * d2x + d2y * d2y < carriage2.r * carriage2.r &&
+            mx > case2.x &&
+            mx < case2.x + case2.width &&
+            my > case2.y &&
+            my < case2.y + case2.height) {
+
+            dragok = true;
+            carriage2.isDragging = true;
+            case2.isDragging = true;
+        }
+
+        const d3x = carriage3.x - mx;
+        const d3y = carriage3.y - my;
+
+        if (!dragok &&
+            d3x * d3x + d3y * d3y < carriage3.r * carriage3.r &&
+            mx > case3.x &&
+            mx < case3.x + case3.width &&
+            my > case3.y &&
+            my < case3.y + case3.height) {
+
+            dragok = true;
+            carriage3.isDragging = true;
+            case3.isDragging = true;
+        }
+
+        const d4x = carriage4.x - mx;
+        const d4y = carriage4.y - my;
+
+        if (!dragok &&
+            d4x * d4x + d4y * d4y < carriage4.r * carriage4.r &&
+            mx > case4.x &&
+            mx < case4.x + case4.width &&
+            my > case4.y &&
+            my < case4.y + case4.height) {
+
+            dragok = true;
+            carriage4.isDragging = true;
+            case4.isDragging = true;
         }
 
         // сохраняем текущую позицию мыши
@@ -174,39 +224,88 @@ window.addEventListener("load", function(){
             // перемещаем каждый прямоугольник, который является перетаскиванием
             // по расстоянию, на которое переместилась мышь
             // с момента последнего перемещения мыши
-            for (let i = 0; i < cases.length; i++) {
-                const cas = cases[i];
-                if (cas.isDragging) {
-                    cas.x += dx;
-                }
-                // ограничения движений
-                let crane1 = cases[0];
-                let crane2 = cases[1];
-                let crane3 = cases[2];
-                let crane4 = cases[3];
-                if (crane1.x < 0) {crane1.x = 0}
-                if (crane1.x + 20 > crane2.x) {crane1.x = crane2.x - 20}
 
-                if (crane2.x < crane1.x + 20) {crane2.x = crane1.x}
-                if (crane2.x + 20 > crane3.x) {crane2.x = crane3.x - 20}
+            case1 = cases[0]
+            case2 = cases[1]
+            case3 = cases[2]
+            case4 = cases[3]
 
+            carriage1 = carriages[0]
+            carriage2 = carriages[1]
+            carriage3 = carriages[2]
+            carriage4 = carriages[3]
 
-                if (crane3.x + 20 > crane4.x) {crane3.x = crane4.x - 20}
-
-                if (crane4.x + 20 > WIDTH) {crane4.x = WIDTH - 20}
-
+            if (case1.isDragging) {
+                case1.x += dx;
             }
-            for (let k = 0; k < carriages.length; k++) {
-                const car = carriages[k];
-                if (car.isDragging){
-                    car.x += dx;
-                    car.y += dy;
-                }
-                if (car.x + 10 > WIDTH) {car.x = WIDTH - 10}
-                if (car.x < 10) {car.x = 10}
-                if (car.y + 10 > 151) {car.y = 151 - 10}
-                if (car.y < 12) {car.y = 12}
+            if (case2.isDragging) {
+                case2.x += dx;
             }
+            if (case3.isDragging) {
+                case3.x += dx;
+            }
+            if (case4.isDragging) {
+                case4.x += dx;
+            }
+
+            // ограничения движений
+
+            if (case1.x < 0) {case1.x = 0}
+            if (case1.x + 20 > case2.x && case1.isDragging == true) {case1.x = case2.x - 20}
+
+            if (case2.x < case1.x + 20) {case2.x = case1.x + 20}
+            if (case2.x + 20 > case3.x && case2.isDragging == true) {case2.x = case3.x - 20}
+
+            if (case3.x < case2.x + 20) {case3.x = case2.x + 20}
+            if (case3.x + 20 > case4.x && case3.isDragging == true) {case3.x = case4.x - 20}
+
+            if (case4.x < case3.x + 20) {case4.x = case3.x + 20}
+            if (case4.x + 20 > WIDTH) {case4.x = WIDTH - 20}
+
+
+
+
+
+            if (carriage1.isDragging){
+                carriage1.x += dx;
+                carriage1.y += dy;
+            }
+            if (carriage2.isDragging){
+                carriage2.x += dx;
+                carriage2.y += dy;
+            }
+            if (carriage3.isDragging){
+                carriage3.x += dx;
+                carriage3.y += dy;
+            }
+            if (carriage4.isDragging){
+                carriage4.x += dx;
+                carriage4.y += dy;
+            }
+
+            if (carriage1.x < 10) {carriage1.x = 10}
+            if (carriage1.y + 10 > 151) {carriage1.y = 151 - 10}
+            if (carriage1.y < 12) {carriage1.y = 12}
+
+            if (carriage2.y + 10 > 151) {carriage2.y = 151 - 10}
+            if (carriage2.y < 12) {carriage2.y = 12}
+
+            if (carriage3.y + 10 > 151) {carriage3.y = 151 - 10}
+            if (carriage3.y < 12) {carriage3.y = 12}
+
+            if (carriage4.x + 10 > WIDTH) {carriage4.x = WIDTH - 10}
+            if (carriage4.y + 10 > 151) {carriage4.y = 151 - 10}
+            if (carriage4.y < 12) {carriage4.y = 12}
+
+            if (carriage1.x + 20 > carriage2.x && carriage1.isDragging == true) {carriage1.x = carriage2.x - 20}
+
+            if (carriage2.x < carriage1.x + 20) {carriage2.x = carriage1.x + 20}
+            if (carriage2.x + 20 > carriage3.x && carriage2.isDragging == true) {carriage2.x = carriage3.x - 20}
+
+            if (carriage3.x < carriage2.x + 20) {carriage3.x = carriage2.x + 20}
+            if (carriage3.x + 20 > carriage4.x && carriage3.isDragging == true) {carriage3.x = carriage4.x - 20}
+
+            if (carriage4.x < carriage3.x + 20) {carriage4.x = carriage3.x + 20}
 
             // перерисовываем сцену с новыми позициями прямоугольников
             draw();
