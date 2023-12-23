@@ -1,8 +1,9 @@
 import datetime
 import os, json
-from typing import List
+from typing import List, Type
 
 import glob2
+import pytz
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, \
     PasswordResetConfirmView, PasswordResetCompleteView
@@ -14,7 +15,7 @@ from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.views.generic import TemplateView, UpdateView, CreateView
 
-from uralsteel.settings import BASE_DIR
+from uralsteel.settings import BASE_DIR, TIME_ZONE
 from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, AggregatAccidentForm, \
     LadlesAccidentDetailForm, CranesAccidentDetailForm, AggregatAccidentDetailForm, AccidentStartingForm
 from visual.models import Employees, CranesAccident, LadlesAccident, AggregatAccident, Ladles, Cranes, Aggregates, \
@@ -47,18 +48,7 @@ class LadlesView(TemplateView):
                 case 'transporting':
                     # если ковш "транспортируемый"
                     # перезаписываю запись в архивную таблицу
-                    ArchiveDynamicTable.objects.create(
-                        ladle=operation.ladle,
-                        num_melt=operation.num_melt,
-                        brand_steel=operation.brand_steel,
-                        route=operation.route,
-                        aggregate=operation.aggregate,
-                        plan_start=operation.plan_start,
-                        plan_end=operation.plan_end,
-                        actual_start=operation.actual_start,
-                        actual_end=operation.actual_end)
-                    # удаляю запись из активной таблицы
-                    operation.delete()
+                    LadlesView.from_active_to_archive(operation)
                     data: dict = {'st': 'перемещён в архив'}
                 case 'starting':
                     # если ковш "начинающий"
@@ -94,12 +84,17 @@ class LadlesView(TemplateView):
         t: List[str, str] = time.split(':')
         hours: int = int(t[0])
         minutes: int = int(t[1])
-        # в будущем здесь может быть любая дата, но будет текущий день
-        # так что нужно прописать логику извлечения сегодняшней даты
         # получаю "наивную дату"
         naive_datetime = datetime.datetime(2023, 12, 11, hours, minutes)
         # преобразую её в "осведомлённую", то есть знающую часовой пояс
         aware_datetime = timezone.make_aware(naive_datetime, timezone.get_default_timezone())
+        ############
+        # в будущем здесь может быть любая дата, но будет текущий день
+        # получаю текущий часовой пояс
+        # current_timezone = pytz.timezone(TIME_ZONE)
+        # получаю сегодняшнюю дату
+        # today = timezone.now().astimezone(current_timezone)
+        ############
         return aware_datetime
 
     @staticmethod
@@ -130,7 +125,8 @@ class LadlesView(TemplateView):
         ladles_queryset = ActiveDynamicTable.objects \
             .select_related('ladle', 'brand_steel', 'aggregate') \
             .filter(actual_start__isnull=False, actual_end__isnull=False,
-                    actual_start__lte=date, actual_end__gte=date)
+                    actual_start__lte=date)
+                    # actual_start__lte=date, actual_end__gte=date)
         # добавляю всю нужную информацию в словарь
         ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info, is_transporting=True)
         # Извлекаю "ожидающие" ковши
@@ -157,6 +153,8 @@ class LadlesView(TemplateView):
         ковшей, передаваемых фронту.
         '''
         for elem in ladles_queryset:
+            if str(elem.ladle.id) in ladles_info:
+                continue
             ladles_info[f'{elem.ladle.id}'] = {
                 'ladle_title': f'{elem.ladle.title}',
                 'x': elem.aggregate.coord_x,
@@ -208,9 +206,33 @@ class LadlesView(TemplateView):
                 ladles_info[f'{elem.ladle.id}']['next_x'] = next_elem.aggregate.coord_x
                 ladles_info[f'{elem.ladle.id}']['next_y'] = next_elem.aggregate.coord_y
                 ladles_info[f'{elem.ladle.id}']['next_id'] = next_elem.id
+            elif next_elems.exists() == False and ladles_info[str(elem.ladle.id)]['is_transporting'] == True:
+                # если ковш отмечен, как транспортируемый и у него нет следующей позиции
+                # то такой ковш завершил свою последнюю операцию, а значит
+                # его нужно переписать в архивную таблицу и удалить из активной
+                # удаляю из словаря, чтобы ковш не отображался на сайте
+                del ladles_info[str(elem.ladle.id)]
+                # переписываю запись из активной таблицы в архивную
+                LadlesView.from_active_to_archive(elem)
 
         return ladles_info
 
+    @staticmethod
+    def from_active_to_archive(operation: Type[ActiveDynamicTable]) -> None:
+        '''Метод, переписывающий ковш из активной таблицы в архив'''
+        # перезаписываю запись в архивную таблицу
+        ArchiveDynamicTable.objects.create(
+            ladle=operation.ladle,
+            num_melt=operation.num_melt,
+            brand_steel=operation.brand_steel,
+            route=operation.route,
+            aggregate=operation.aggregate,
+            plan_start=operation.plan_start,
+            plan_end=operation.plan_end,
+            actual_start=operation.actual_start,
+            actual_end=operation.actual_end)
+        # удаляю запись из активной таблицы
+        operation.delete()
 
 class CranesView(TemplateView):
     '''Представление страницы с кранами'''

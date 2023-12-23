@@ -5,6 +5,8 @@ window.addEventListener("load", (event) => {
     // то есть 1280x640
     var x_modificator;
     var y_modificator;
+    // это нужно для перерисовывания ковшей при изменении окна
+    var window_is_changing = false;
 
     function draw_ladlde(ladle, ladle_info) {
         // Функция, рисующая ковши
@@ -69,6 +71,22 @@ window.addEventListener("load", (event) => {
         lines = [];
     };
 
+    function draw_all_ladles(response) {
+        // Функция, отрисовывующая все ковши
+        // Очищаю canvas
+        clear_canvas();
+        // удаляю стрелки
+        clear_lines();
+        setTimeout(() => {
+            // получаю модификатор
+            get_modificator();
+            ladles_old = {};
+            for (let ladle in response) {
+                draw_ladlde(ladle, response[ladle]);
+            };
+        }, 100);
+    };
+
     $('#timeform').submit(function(event) {
         // Обработка отправки формы
         event.preventDefault();
@@ -87,19 +105,8 @@ window.addEventListener("load", (event) => {
                 data_type: 'json',
                 success: function(response) {
                     console.log(response);
-                    ladles_old = response;
-                    // Очищаю canvas
-                    clear_canvas();
-                    // удаляю стрелки
-                    clear_lines();
-                    setTimeout(() => {
-                        // получаю модификатор
-                        get_modificator();
-                        ladles_old = {};
-                        for (let ladle in response) {
-                            draw_ladlde(ladle, response[ladle]);
-                        };
-                    }, 100);
+                    // отрисовываю все ковши
+                    draw_all_ladles(response);
                 },
                 error: function(error) {
                 },
@@ -121,7 +128,7 @@ window.addEventListener("load", (event) => {
             let diff_x = clientX - ladles_old[ladle].x*x_modificator - x_slide;
             let diff_y = clientY - ladles_old[ladle].y*y_modificator - y_slide;
             if ((diff_x <= 41 && diff_x >= 0) && (diff_y <= 46 && diff_y >= 0)) {
-                console.log('Ковш №' + ladle);
+//                console.log('Ковш №' + ladle);
                 return {'ladle': ladle, 'ladle_info': ladles_old[ladle]};
             };
         };
@@ -149,7 +156,7 @@ window.addEventListener("load", (event) => {
             // Если кликнули по ковшу, иначе ничего не делать
             let ladle = click_result['ladle'];
             let ladle_info = click_result['ladle_info'];
-            console.log('right click on ladle №' + ladle);
+//            console.log('right click on ladle №' + ladle);
             // Вызываю специальное контекстное меню
             canvas_context_menu(ladle, ladle_info);
         };
@@ -173,7 +180,15 @@ window.addEventListener("load", (event) => {
         operation['id'] = ladle_info['operation_id'];
         // Меняю информационное сообщение
         document.getElementById('ladlesDispatcherModalLabel').textContent = info_message;
-        // Перепривязываю обработчик выполнения операции
+        // сразу нужно удалить все обработчики уже привязанные к кнопке выполнения операции
+        // нахожу родителя кнопки
+        let btn_parent = document.getElementById('btn-operation-execute').parentNode;
+        // клонирую кнопку
+        let btn_o_e = document.getElementById('btn-operation-execute').cloneNode(true);
+        // пересоздаю кнопку
+        btn_parent.removeChild(document.getElementById('btn-operation-execute'));
+        btn_parent.appendChild(btn_o_e);
+        // Привязываю обработчик выполнения операции
         document.getElementById('btn-operation-execute').addEventListener('click', function() {dispatcher_operation_execute(operation)});
         // Открываю модальное окно
         let btn = document.getElementById('modal-dispatcher-button');
@@ -216,10 +231,32 @@ window.addEventListener("load", (event) => {
         btn.click();
     };
 
+    // клик по канвасу ЛКМ
     canvas.addEventListener('click', lmc_handler);
 
     canvas.addEventListener('contextmenu', function(event) {
+        // клик по канвасу ПКМ
         event.preventDefault();
         rmc_handler(event);
+    });
+
+    function resize_handler(response) {
+        // Функция обработчик изменения размеров окна
+        setTimeout(() => {
+            // отмечаем, что окно больше не изменяется
+            window_is_changing = false;
+            // и только через 2 секунды перерисовываем ковши
+            // это убережёт от перенагрузки
+            draw_all_ladles(response);
+        }, 2000);
+    };
+
+    // при изменении размеров окна нужно перерисовывать краны, так как
+    // перестанут работать корректно обработчики кликов по canvas
+    window.addEventListener('resize', function() {
+        if (!window_is_changing) {
+            window_is_changing = true;
+            resize_handler(ladles_old);
+        };
     });
 });
