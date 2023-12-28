@@ -1,7 +1,9 @@
+import datetime
 import os, json
-from typing import List
+from typing import List, Type
 
 import glob2
+import pytz
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, \
     PasswordResetConfirmView, PasswordResetCompleteView
@@ -10,11 +12,14 @@ from django.db import IntegrityError
 from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy, reverse
+from django.utils import timezone
 from django.views.generic import TemplateView, UpdateView, CreateView
 
+from uralsteel.settings import BASE_DIR, TIME_ZONE
 from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, AggregatAccidentForm, \
     LadlesAccidentDetailForm, CranesAccidentDetailForm, AggregatAccidentDetailForm, AccidentStartingForm
-from visual.models import Employees, CranesAccident, LadlesAccident, AggregatAccident, Ladles, Cranes, Aggregates
+from visual.models import Employees, CranesAccident, LadlesAccident, AggregatAccident, Ladles, Cranes, Aggregates, \
+    ActiveDynamicTable, ArchiveDynamicTable
 
 
 class MainView(TemplateView):
@@ -27,24 +32,207 @@ class LadlesView(TemplateView):
 
     def post(self, request, *args, **kwargs):
         '''Обработка post-запроса'''
-        # получение времени
-        time_hours, time_minutes = LadlesView.time_convert(request.POST.get('time'))
-        # формирование ответа
-        data: dict = {'answer': 'received'}
-        return JsonResponse(data=data, status=200)
+        if request.POST.get('operation_id'):
+            # если запрос диспетчера, то есть подтвердили перемещение
+            # ковша или начало операции или подтвердили завершение операции
+            # получаю id объекта модели ActiveDynamicTable
+            operation_id: int = int(request.POST.get('operation_id'))
+            # получаю тип операции
+            operation_type: str = str(request.POST.get('operation_type'))
+            # получаю объект операции или 404
+            operation = get_object_or_404(ActiveDynamicTable, id=operation_id)
+            # получаю время
+            time = LadlesView.time_convert(request.POST.get('time'))
+            status: int = 200
+            match operation_type:
+                case 'transporting':
+                    # если ковш "транспортируемый"
+                    # перезаписываю запись в архивную таблицу
+                    LadlesView.from_active_to_archive(operation)
+                    data: dict = {'st': 'перемещён в архив'}
+                case 'starting':
+                    # если ковш "начинающий"
+                    # перезаписываю дату в операции Активной Таблицы,
+                    # то есть теперь ковш стаёт "ожидающим"
+                    operation.actual_start = time
+                    operation.save()
+                    data: dict = {'st': 'теперь ковш ожидающим'}
+                case 'ending':
+                    # если ковш "ожидающий"
+                    # перезаписываю дату в операции Активной Таблицы,
+                    # то есть теперь ковш стаёт "транспортируемым"
+                    operation.actual_end = time
+                    operation.save()
+                    data: dict = {'st': 'теперь ковш транспортируемый'}
+                case _:
+                    # в таком случае status=400, то есть пользователь
+                    # клиент неверно указал operation_type
+                    data: dict = {'st': 'неверно указан operation_type'}
+                    status: int = 400
+        else:
+            # если нужно отобразить ковши
+            # получение времени
+            date = LadlesView.time_convert(request.POST.get('time'))
+            # получаю ковши и формирую ответ
+            data: dict = LadlesView.get_ladles_info(date)
+            status: int = 200
+        return JsonResponse(data=data, status=status)
 
     @staticmethod
-    def time_convert(time: str) -> tuple[int, int]:
+    def time_convert(time: str) -> datetime:
         '''Метод, переводящий время в удобный формат'''
         t: List[str, str] = time.split(':')
         hours: int = int(t[0])
         minutes: int = int(t[1])
-        # если минуты не кратны 5, например 37, то увеличиваю их, пока
-        # они не станут кратны 5, в этом примере - 40
-        while minutes % 5 != 0:
-            minutes += 1
-        return (hours, minutes)
+        # получаю "наивную дату"
+        naive_datetime = datetime.datetime(2023, 12, 11, hours, minutes)
+        # преобразую её в "осведомлённую", то есть знающую часовой пояс
+        aware_datetime = timezone.make_aware(naive_datetime, timezone.get_default_timezone())
+        ############
+        # в будущем здесь может быть любая дата, но будет текущий день
+        # получаю текущий часовой пояс
+        # current_timezone = pytz.timezone(TIME_ZONE)
+        # получаю сегодняшнюю дату
+        # today = timezone.now().astimezone(current_timezone)
+        ############
+        return aware_datetime
 
+    @staticmethod
+    def get_ladles_info(date: datetime) -> dict:
+        '''Функция, извлекающая из БД информацию по положениям ковшей'''
+        ladles_info: dict = {}
+        # получаю все ковши, находящиеся в цеху в момент времени date
+        # использую select_related, чтобы получить сразу в одном запросе
+        # всю нужную информацию, по ковшу, по марке стали, по агрегату
+        # На мнемосхеме будет отображаться "3 типа ковшей".
+        # 1) Первый тип - "начинающий" операцию ковш,
+        # у которого actual_start == null,
+        # при этом предыдущая операция уже перенесена в архивную таблицу.
+        # Такой ковш будет отображаться заштрихованным и только после
+        # подтверждения начала операции диспетчером он станет
+        # "ожидающим" ковшом.
+        # 2) "Ожидающий" завершение операции ковш - ковш,
+        # у которого actual_end == null,
+        # то есть текущая операция не завершена, когда диспетчер отметит
+        # что текущая операция завершена, то в БД автоматически запишется
+        # actual_end и ковш перейдёт в состояние "транспортируемого".
+        # 3) "Транспортируемый ковш" - ковш у которого actual_start
+        # и actual_end == null. Этот ковш сейчас транспортируется
+        # на следующую позицию и как только диспетчер подтвердит, что
+        # ковш приехал, то текущая запись перенесётся в архивную таблицу,
+        # а из активной будет удалена
+        # Извлекаю "транспортируемые" ковши
+        ladles_queryset = ActiveDynamicTable.objects \
+            .select_related('ladle', 'brand_steel', 'aggregate') \
+            .filter(actual_start__isnull=False, actual_end__isnull=False,
+                    actual_start__lte=date)
+                    # actual_start__lte=date, actual_end__gte=date)
+        # добавляю всю нужную информацию в словарь
+        ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info, is_transporting=True)
+        # Извлекаю "ожидающие" ковши
+        ladles_queryset = ActiveDynamicTable.objects \
+            .select_related('ladle', 'brand_steel', 'aggregate') \
+            .filter(actual_start__isnull=False, actual_end__isnull=True,
+                    actual_start__lte=date)
+        # добавляю всю нужную информацию в словарь
+        ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info)
+        # Извлекаю "начинающие" ковши
+        ladles_queryset = ActiveDynamicTable.objects \
+            .select_related('ladle', 'brand_steel', 'aggregate') \
+            .filter(actual_start__isnull=True, actual_end__isnull=True,
+                    plan_start__lt=date, plan_end__gt=date)
+        # добавляю всю нужную информацию в словарь
+        ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info, is_plan=True)
+        return ladles_info
+
+    @staticmethod
+    def cranes_into_dict(ladles_queryset, ladles_info: dict, is_transporting:bool=False, is_plan:bool=False) -> dict:
+        '''
+        Метод, преобразующий queryset ковшей в dict.
+        Этот метод создаёт единый фундамент для всех видов
+        ковшей, передаваемых фронту.
+        '''
+        for elem in ladles_queryset:
+            if str(elem.ladle.id) in ladles_info:
+                continue
+            ladles_info[f'{elem.ladle.id}'] = {
+                'ladle_title': f'{elem.ladle.title}',
+                'x': elem.aggregate.coord_x,
+                'y': elem.aggregate.coord_y,
+                'num_melt': f'{elem.num_melt}',
+                'brand_steel': f'{elem.brand_steel.title}',
+                'aggregate': f'{elem.aggregate.title}',
+                'plan_start': f'{elem.plan_start.astimezone(timezone.get_default_timezone())}',
+                'plan_end': f'{elem.plan_end.astimezone(timezone.get_default_timezone())}',
+                'next_aggregate': '-',
+                'next_plan_start': '-',
+                'next_plan_end': '-',
+                'operation_id': elem.id
+            }
+            if is_transporting:
+                # если ковш едет на следующую позицию, то есть
+                # он "транспортируемый", то is_transporting=True
+                ladles_info[f'{elem.ladle.id}']['is_transporting'] = True
+            else:
+                ladles_info[f'{elem.ladle.id}']['is_transporting'] = False
+
+            if is_plan:
+                # для "начинающих" ковшей
+                ladles_info[f'{elem.ladle.id}']['photo'] = '/media/photos/aggregates/starting_ladle.png'
+                ladles_info[f'{elem.ladle.id}']['is_starting'] = True
+            else:
+                # для "транспортируемых" и "ожидающих"
+                ladles_info[f'{elem.ladle.id}']['photo'] = f'{elem.aggregate.photo.url}'
+                ladles_info[f'{elem.ladle.id}']['is_starting'] = False
+
+            # нахожу следующую позицию текущего ковша в БД
+            next_elems = ActiveDynamicTable.objects \
+                .select_related('aggregate') \
+                .filter(ladle=elem.ladle, route=elem.route,
+                        brand_steel=elem.brand_steel,
+                        num_melt=elem.num_melt,
+                        plan_start__gt=elem.plan_end) \
+                .order_by('plan_start')
+            # если следующая позиция присутствует, то обновляю
+            # соответствующие поля словаря
+            if next_elems.exists():
+                # получаю следующую позицию ковша
+                # это первый элемент next_elems, так как next_elems
+                # отсортирован по plan_start
+                next_elem = next_elems[0]
+                ladles_info[f'{elem.ladle.id}']['next_aggregate'] = f'{next_elem.aggregate.title}'
+                ladles_info[f'{elem.ladle.id}']['next_plan_start'] = f'{next_elem.plan_start.astimezone(timezone.get_default_timezone())}'
+                ladles_info[f'{elem.ladle.id}']['next_plan_end'] = f'{next_elem.plan_end.astimezone(timezone.get_default_timezone())}'
+                ladles_info[f'{elem.ladle.id}']['next_x'] = next_elem.aggregate.coord_x
+                ladles_info[f'{elem.ladle.id}']['next_y'] = next_elem.aggregate.coord_y
+                ladles_info[f'{elem.ladle.id}']['next_id'] = next_elem.id
+            elif next_elems.exists() == False and ladles_info[str(elem.ladle.id)]['is_transporting'] == True:
+                # если ковш отмечен, как транспортируемый и у него нет следующей позиции
+                # то такой ковш завершил свою последнюю операцию, а значит
+                # его нужно переписать в архивную таблицу и удалить из активной
+                # удаляю из словаря, чтобы ковш не отображался на сайте
+                del ladles_info[str(elem.ladle.id)]
+                # переписываю запись из активной таблицы в архивную
+                LadlesView.from_active_to_archive(elem)
+
+        return ladles_info
+
+    @staticmethod
+    def from_active_to_archive(operation: Type[ActiveDynamicTable]) -> None:
+        '''Метод, переписывающий ковш из активной таблицы в архив'''
+        # перезаписываю запись в архивную таблицу
+        ArchiveDynamicTable.objects.create(
+            ladle=operation.ladle,
+            num_melt=operation.num_melt,
+            brand_steel=operation.brand_steel,
+            route=operation.route,
+            aggregate=operation.aggregate,
+            plan_start=operation.plan_start,
+            plan_end=operation.plan_end,
+            actual_start=operation.actual_start,
+            actual_end=operation.actual_end)
+        # удаляю запись из активной таблицы
+        operation.delete()
 
 class CranesView(TemplateView):
     '''Представление страницы с кранами'''

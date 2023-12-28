@@ -4,6 +4,12 @@
 
 {% block addlinks %}
 <script src="{% static 'visual/js/ladles.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leader-line/1.0.7/leader-line.min.js" integrity="sha512-0dNdzMjpT6pJdFGF1DwybFCfm3K/lzHhxaMXC/92J9/DZujHlqYFqmhTOAoD0o+LkeEsVK2ar/ESs7/Q2B6wJg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<script>
+    {% include 'scripts/csrf_html.html' %}
+</script>
 {% endblock addlinks %}
 
 {% block inputtime %}
@@ -15,3 +21,74 @@
     </form>
 </div>
 {% endblock inputtime %}
+
+{% block modal %}
+<div class="modal fade" id="ladlesModal" tabindex="-1" aria-labelledby="ladlesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="ladlesModalLabel">Информация о ковше</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col">Номер ковша:</div>
+                    <div class="col" id="ladle-num"></div>
+                </div>
+                <div class="row">
+                    <div class="col">Номер плавки:</div>
+                    <div class="col" id="num-melt"></div>
+                </div>
+                <div class="row">
+                    <div class="col">Марка стали:</div>
+                    <div class="col" id="brand"></div>
+                </div>
+                <div class="row">
+                    <div class="col">Текущий агрегат:</div>
+                    <div class="col" id="aggregate"></div>
+                </div>
+                <div class="row">
+                    <div class="col">Следующий агрегат:</div>
+                    <div class="col" id="next-aggregate"></div>
+                </div>
+                <div class="row">
+                    <div class="col">Плановое начало операции:</div>
+                    <div class="col" id="operation-start"></div>
+                </div>
+                <div class="row">
+                    <div class="col">Плановый конец операции:</div>
+                    <div class="col" id="operation-end"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button type="button" class="btn btn-primary" id="modal-button" data-bs-toggle="modal" data-bs-target="#ladlesModal" hidden>Открыть модальное окно</button>
+
+<div class="modal fade" id="ladlesDispatcherModal" tabindex="-1" aria-labelledby="ladlesDispatcherModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="ladlesDispatcherModalLabel">Информационное сообщение</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-footer">
+                <div class="row container-fluid">
+                    <div class="col">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="btn-operation-execute">Подтвердить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button type="button" class="btn btn-primary" id="modal-dispatcher-button" data-bs-toggle="modal" data-bs-target="#ladlesDispatcherModal" hidden>Открыть модальное окно диспетчера</button>
+{% endblock modal %}
