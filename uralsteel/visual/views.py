@@ -1,9 +1,8 @@
-import datetime
-import os, json
+import datetime, os, json
 from typing import List, Type
 
-import glob2
-import pytz
+import glob2, redis
+from redis.commands.json.path import Path
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, \
     PasswordResetConfirmView, PasswordResetCompleteView
@@ -122,6 +121,15 @@ class LadlesView(TemplateView):
         # ковш приехал, то текущая запись перенесётся в архивную таблицу,
         # а из активной будет удалена
         # Извлекаю "транспортируемые" ковши
+        # получаю имя ключа, которое используется при кэшировании
+        key_name: str = f"ltime:{date.strftime('%H-%M')}"
+        # проверка наличия ключа в redis-cache
+        with redis.Redis(host='localhost', port=6379) as redis_client:
+            ladles_info_cached = redis_client.json().get(key_name)
+            if ladles_info_cached is not None:
+                return ladles_info_cached
+        # если ключа нет, то брать информацию из базы данных,
+        # она автоматически добавится в кэш в конце этого метода, перед return
         ladles_queryset = ActiveDynamicTable.objects \
             .select_related('ladle', 'brand_steel', 'aggregate') \
             .filter(actual_start__isnull=False, actual_end__isnull=False,
@@ -143,6 +151,11 @@ class LadlesView(TemplateView):
                     plan_start__lt=date, plan_end__gt=date)
         # добавляю всю нужную информацию в словарь
         ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info, is_plan=True)
+        # добавление ключа в redis
+        with redis.Redis(host='localhost', port=6379) as redis_client:
+            redis_client.json().set(key_name, Path.root_path(), ladles_info)
+            # даю время жизни кэшу 5 минут
+            redis_client.expire(key_name, 300)
         return ladles_info
 
     @staticmethod
