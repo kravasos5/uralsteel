@@ -17,7 +17,7 @@
     <form type="post" id="timeform">
         {% csrf_token %}
         <input type="submit" value="Выбрать время" class="secondary-btn pointer">
-        <input id="timeinput" type="time">
+        <input id="timeinput" type="time" {% if timeformvalue %}value="{{timeformvalue}}"{% endif %}>
     </form>
 </div>
 {% endblock inputtime %}

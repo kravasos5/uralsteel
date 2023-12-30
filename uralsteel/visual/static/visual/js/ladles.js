@@ -7,6 +7,8 @@ window.addEventListener("load", (event) => {
     var y_modificator;
     // это нужно для перерисовывания ковшей при изменении окна
     var window_is_changing = false;
+    // При открытии окна нужно отрисовать фон canvas
+    clear_canvas();
 
     function draw_ladlde(ladle, ladle_info) {
         // Функция, рисующая ковши
@@ -259,4 +261,7 @@ window.addEventListener("load", (event) => {
             resize_handler(ladles_old);
         };
     });
+
+    // При открытии страницы следует отправить форму, если есть кэш времени
+    let timeinput = document.getElementById('timeform').querySelector('input.secondary-btn').click();
 });
