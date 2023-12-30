@@ -77,6 +77,8 @@ CACHES = {
         "LOCATION": "redis://127.0.0.1:6379",
     }
 }
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

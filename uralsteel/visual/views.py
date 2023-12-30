@@ -1,5 +1,5 @@
 import datetime, os, json
-from typing import List, Type
+from typing import List, Type, Optional
 
 import glob2, redis
 from redis.commands.json.path import Path
@@ -17,6 +17,7 @@ from django.views.generic import TemplateView, UpdateView, CreateView
 from uralsteel.settings import BASE_DIR, TIME_ZONE
 from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, AggregatAccidentForm, \
     LadlesAccidentDetailForm, CranesAccidentDetailForm, AggregatAccidentDetailForm, AccidentStartingForm
+from visual.mixins import RedisCacheMixin
 from visual.models import Employees, CranesAccident, LadlesAccident, AggregatAccident, Ladles, Cranes, Aggregates, \
     ActiveDynamicTable, ArchiveDynamicTable
 
@@ -25,9 +26,18 @@ class MainView(TemplateView):
     '''Представление главной страницы'''
     template_name = 'visual/main.html'
 
-class LadlesView(TemplateView):
+class LadlesView(RedisCacheMixin, TemplateView):
     '''Представление страницы с ковшами'''
     template_name = 'visual/ladles.html'
+
+    def get(self, request, *args, **kwargs):
+        '''Обработка get-запроса'''
+        context = {}
+        # проверяю нет ли в redis ключа-времени
+        result: str = LadlesView.get_key_redis('ltimeform')
+        if result is not None:
+            context['timeformvalue'] = result.decode()
+        return render(request, self.template_name, context=context)
 
     def post(self, request, *args, **kwargs):
         '''Обработка post-запроса'''
@@ -83,6 +93,8 @@ class LadlesView(TemplateView):
         t: List[str, str] = time.split(':')
         hours: int = int(t[0])
         minutes: int = int(t[1])
+        # записываю время в redis-cache
+        LadlesView.set_key_redis('ltimeform', f'{hours}:{minutes}', 120)
         # получаю "наивную дату"
         naive_datetime = datetime.datetime(2023, 12, 11, hours, minutes)
         # преобразую её в "осведомлённую", то есть знающую часовой пояс
@@ -124,10 +136,9 @@ class LadlesView(TemplateView):
         # получаю имя ключа, которое используется при кэшировании
         key_name: str = f"ltime:{date.strftime('%H-%M')}"
         # проверка наличия ключа в redis-cache
-        with redis.Redis(host='localhost', port=6379) as redis_client:
-            ladles_info_cached = redis_client.json().get(key_name)
-            if ladles_info_cached is not None:
-                return ladles_info_cached
+        result: Optional[dict] = LadlesView.get_key_redis_json(key_name)
+        if result is not None:
+            return result
         # если ключа нет, то брать информацию из базы данных,
         # она автоматически добавится в кэш в конце этого метода, перед return
         ladles_queryset = ActiveDynamicTable.objects \
@@ -152,10 +163,7 @@ class LadlesView(TemplateView):
         # добавляю всю нужную информацию в словарь
         ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info, is_plan=True)
         # добавление ключа в redis
-        with redis.Redis(host='localhost', port=6379) as redis_client:
-            redis_client.json().set(key_name, Path.root_path(), ladles_info)
-            # даю время жизни кэшу 5 минут
-            redis_client.expire(key_name, 300)
+        LadlesView.set_key_redis_json(key_name, ladles_info, 300)
         return ladles_info
 
     @staticmethod
@@ -247,7 +255,7 @@ class LadlesView(TemplateView):
         # удаляю запись из активной таблицы
         operation.delete()
 
-class CranesView(TemplateView):
+class CranesView(RedisCacheMixin, TemplateView):
     '''Представление страницы с кранами'''
     template_name = 'visual/cranes.html'
 
@@ -265,6 +273,12 @@ class CranesView(TemplateView):
         Функция, распаковывующая json-данные в рамках модуляции
         с помощью pygame интерфейса
         '''
+        # ключ для redis
+        key_name = 'cranes_pos:1'
+        # проверяю нет ли этой информации в redis
+        result: Optional[dict] = CranesView.get_key_redis_json(key_name)
+        if result is not None:
+            return result
         path = os.path.join(os.getcwd(), 'visual\\static\\visual\\jsons')
         files = glob2.glob(path + '\\*.json')
         data: dict = {}
@@ -277,11 +291,19 @@ class CranesView(TemplateView):
                 new_value['y'] = value[0][-1]
                 new_value['is_ladle'] = value[1]
                 data[str(key)] = new_value
+        # если в redis нет такого ключа, то запишу его, время жизни 10 секунд
+        CranesView.set_key_redis_json(key_name, data, 10)
         return data
 
     @staticmethod
     def get_cranes_info() -> dict:
         '''Функция, возвращающая фото кранов и кареток'''
+        # имя ключа в redis
+        key_name = 'cranes_info:1'
+        # проверяю нет ли этой информации в redis
+        result: Optional[dict] = CranesView.get_key_redis_json(key_name)
+        if result is not None:
+            return result
         # получаю информацию
         cranes = Cranes.objects.all()
         cranes_dict: dict = {}
@@ -294,6 +316,8 @@ class CranesView(TemplateView):
                 'size_y': elem.size_y,
                 'photo': elem.photo.url
             }
+        # если в redis нет такого ключа, то запишу его, время жизни 10 секунд
+        CranesView.set_key_redis_json(key_name, cranes_dict, 3600)
         return cranes_dict
 
 
