@@ -132,3 +132,21 @@ EMAIL_HOST_PASSWORD = email_host_pass
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# redis-cache
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379',
+    }
+}
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+
+# Celery settings
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
+CELERY_CACHE_BACKEND = 'default'
+CELERY_RESULT_BACKENDS = [
+    'redis://127.0.0.1:6379',
+    'db://default',
+]
