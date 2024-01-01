@@ -41,15 +41,15 @@ class RedisCacheMixin:
             redis_client.expire(key_name, ttl)
 
     @staticmethod
-    def get_key_redis(key_name: str) -> str:
+    def get_key_redis(key_name: str) -> Optional[str]:
         '''
         Функция, извлекающая ключ из redis, если такого ключа нет,
         то вернёт None
         '''
         with redis.Redis(host=REDIS_HOST, port=REDIS_PORT) as redis_client:
-            result = redis_client.get(key_name)
+            result: bytes = redis_client.get(key_name)
         if result is not None:
-            return result
+            return result.decode()
 
     @staticmethod
     def set_key_redis(key_name: str, data: str, ttl: int) -> None:
@@ -59,3 +59,20 @@ class RedisCacheMixin:
             redis_client.set(key_name, data)
             # даю время жизни кэшу ttl секунд
             redis_client.expire(key_name, ttl)
+
+    @staticmethod
+    def delete_key_redis(key_name: str) -> None:
+        '''Функция, удаляющая ключ из хранилища'''
+        with redis.Redis(host=REDIS_HOST, port=REDIS_PORT) as redis_client:
+            # удаляю ключ
+            redis_client.delete(key_name)
+
+    @staticmethod
+    def delete_keyy_redis(pattern: str) -> None:
+        '''Функция, удаляющая ключи из хранилища по паттерну'''
+        with redis.Redis() as redis_client:
+            # получаю все ключи по паттерну
+            all_keys: list = redis_client.keys(pattern)
+            for key in all_keys:
+                # удаляю ключ
+                redis_client.delete(key)

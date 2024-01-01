@@ -1,8 +1,7 @@
 import datetime, os, json
 from typing import List, Type, Optional
 
-import glob2, redis
-from redis.commands.json.path import Path
+import glob2
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, \
     PasswordResetConfirmView, PasswordResetCompleteView
@@ -14,7 +13,6 @@ from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.views.generic import TemplateView, UpdateView, CreateView
 
-from uralsteel.settings import BASE_DIR, TIME_ZONE
 from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, AggregatAccidentForm, \
     LadlesAccidentDetailForm, CranesAccidentDetailForm, AggregatAccidentDetailForm, AccidentStartingForm
 from visual.mixins import RedisCacheMixin
@@ -36,7 +34,7 @@ class LadlesView(RedisCacheMixin, TemplateView):
         # проверяю нет ли в redis ключа-времени
         result: str = LadlesView.get_key_redis('ltimeform')
         if result is not None:
-            context['timeformvalue'] = result.decode()
+            context['timeformvalue'] = result
         return render(request, self.template_name, context=context)
 
     def post(self, request, *args, **kwargs):
@@ -52,6 +50,8 @@ class LadlesView(RedisCacheMixin, TemplateView):
             operation = get_object_or_404(ActiveDynamicTable, id=operation_id)
             # получаю время
             time = LadlesView.time_convert(request.POST.get('time'))
+            # удаляю старые ключи из хранилища redis
+            LadlesView.delete_keyy_redis('*ltime:*')
             status: int = 200
             match operation_type:
                 case 'transporting':
