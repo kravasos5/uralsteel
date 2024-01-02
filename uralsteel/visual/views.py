@@ -18,11 +18,22 @@ from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccid
 from visual.mixins import RedisCacheMixin
 from visual.models import Employees, CranesAccident, LadlesAccident, AggregatAccident, Ladles, Cranes, Aggregates, \
     ActiveDynamicTable, ArchiveDynamicTable
+from visual.utilities import archive_report_signal
 
 
 class MainView(TemplateView):
     '''Представление главной страницы'''
     template_name = 'visual/main.html'
+
+class ArchiveReportMessage(TemplateView):
+    '''Представление уведомления об отправке письма с отчётом на почту'''
+    template_name = 'visual/archive_report_message.html'
+
+    def get(self, request, *args, **kwargs):
+        '''Обработка get-запроса'''
+        # вызов сигнала отправки отчёта
+        archive_report_signal.send(ArchiveReportMessage, user=request.user)
+        return render(request, self.template_name)
 
 class LadlesView(RedisCacheMixin, TemplateView):
     '''Представление страницы с ковшами'''

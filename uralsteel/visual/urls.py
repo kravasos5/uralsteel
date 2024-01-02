@@ -37,4 +37,6 @@ urlpatterns = [
     # маршрут профиля
     path('profile/<slug:slug>/change/', ChangeEmployeeInfoView.as_view(), name='profile-change'),
     path('profile/<slug:slug>/', EmployeeProfile.as_view(), name='profile'),
+    # маршрут уведомления об отправке архивного отчёта на почту
+    path('archive-report/', ArchiveReportMessage.as_view(), name='archive-report'),
 ]
