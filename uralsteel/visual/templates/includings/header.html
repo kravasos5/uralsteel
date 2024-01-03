@@ -25,6 +25,7 @@
                 {% if user.is_authenticated %}
                 <div class="header-dropdown">
                     <a class="header-drp-btn" href="{% url 'profile' slug=user.slug %}">Профиль</a>
+                    <a class="header-drp-btn" href="{% url 'archive-report' %}">Архивный отчёт</a>
                     <a class="header-drp-btn" href="{% url 'logout' %}">Выйти</a>
                 </div>
                 {% endif %}
