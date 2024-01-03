@@ -1,19 +1,21 @@
-import os, time
+import os
+import time
 
 import pandas
 from celery import shared_task
 from django.core.mail import EmailMessage
 from uralsteel.settings import MEDIA_ROOT
-from .models import ArchiveDynamicTable
+from visual.models import ArchiveDynamicTable
+
 
 @shared_task()
-def archive_report_handler(user_first_name, user_email):
-    '''Функция отправки архивного отчёта на почту по запросу пользователя'''
+def archive_report_handler(user_first_name: str, user_email: str):
+    """Функция отправки архивного отчёта на почту по запросу пользователя"""
     mail = EmailMessage(
-        "Письмо с отчётом",
-        f"Здравствуйте, {user_first_name}, вы запросили отчёт, вот он:",
-        "uralsteel@gmail.com",
-        [f"{user_email}"],
+        'Письмо с отчётом',
+        f'Здравствуйте, {user_first_name}, вы запросили отчёт, вот он: ',
+        'uralsteel@gmail.com',
+        [f'{user_email}'],
     )
     # извлекаю дату из БД
     data = ArchiveDynamicTable.objects.all().values('id')
@@ -23,7 +25,8 @@ def archive_report_handler(user_first_name, user_email):
     df.to_excel(path_to_file, sheet_name='Archive-Report', index=False)
     # прикрепляю xlsx-документ
     with open(path_to_file, 'rb') as excel_file:
-        mail.attach(path_to_file, excel_file.read(), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        mail.attach(path_to_file, excel_file.read(),
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     # эмулирую долгую операцию
     time.sleep(10)
     # отправляю письмо

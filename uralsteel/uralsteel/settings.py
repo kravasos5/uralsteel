@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'visual.apps.VisualConfig',
     'debug_toolbar',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -82,7 +83,11 @@ REDIS_PORT = 6379
 
 # Celery settings
 CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379'
+CELERY_CACHE_BACKEND = 'default'
+CELERY_RESULT_BACKENDS = [
+    'redis://127.0.0.1:6379',
+    'db://default',
+]
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

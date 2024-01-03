@@ -22,25 +22,27 @@ from visual.utilities import archive_report_signal
 
 
 class MainView(TemplateView):
-    '''Представление главной страницы'''
+    """Представление главной страницы"""
     template_name = 'visual/main.html'
 
+
 class ArchiveReportMessage(TemplateView):
-    '''Представление уведомления об отправке письма с отчётом на почту'''
+    """Представление уведомления об отправке письма с отчётом на почту"""
     template_name = 'visual/archive_report_message.html'
 
     def get(self, request, *args, **kwargs):
-        '''Обработка get-запроса'''
+        """Обработка get-запроса"""
         # вызов сигнала отправки отчёта
         archive_report_signal.send(ArchiveReportMessage, user=request.user)
         return render(request, self.template_name)
 
+
 class LadlesView(RedisCacheMixin, TemplateView):
-    '''Представление страницы с ковшами'''
+    """Представление страницы с ковшами"""
     template_name = 'visual/ladles.html'
 
     def get(self, request, *args, **kwargs):
-        '''Обработка get-запроса'''
+        """Обработка get-запроса"""
         context = {}
         # проверяю нет ли в redis ключа-времени
         result: str = LadlesView.get_key_redis('ltimeform')
@@ -49,7 +51,7 @@ class LadlesView(RedisCacheMixin, TemplateView):
         return render(request, self.template_name, context=context)
 
     def post(self, request, *args, **kwargs):
-        '''Обработка post-запроса'''
+        """Обработка post-запроса"""
         if request.POST.get('operation_id'):
             # если запрос диспетчера, то есть подтвердили перемещение
             # ковша или начало операции или подтвердили завершение операции
@@ -100,7 +102,7 @@ class LadlesView(RedisCacheMixin, TemplateView):
 
     @staticmethod
     def time_convert(time: str) -> datetime:
-        '''Метод, переводящий время в удобный формат'''
+        """Метод, переводящий время в удобный формат"""
         t: List[str, str] = time.split(':')
         hours: int = int(t[0])
         minutes: int = int(t[1])
@@ -121,7 +123,7 @@ class LadlesView(RedisCacheMixin, TemplateView):
 
     @staticmethod
     def get_ladles_info(date: datetime) -> dict:
-        '''Функция, извлекающая из БД информацию по положениям ковшей'''
+        """Функция, извлекающая из БД информацию по положениям ковшей"""
         ladles_info: dict = {}
         # получаю все ковши, находящиеся в цеху в момент времени date
         # использую select_related, чтобы получить сразу в одном запросе
@@ -156,7 +158,7 @@ class LadlesView(RedisCacheMixin, TemplateView):
             .select_related('ladle', 'brand_steel', 'aggregate') \
             .filter(actual_start__isnull=False, actual_end__isnull=False,
                     actual_start__lte=date)
-                    # actual_start__lte=date, actual_end__gte=date)
+        # actual_start__lte=date, actual_end__gte=date)
         # добавляю всю нужную информацию в словарь
         ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info, is_transporting=True)
         # Извлекаю "ожидающие" ковши
@@ -178,12 +180,13 @@ class LadlesView(RedisCacheMixin, TemplateView):
         return ladles_info
 
     @staticmethod
-    def cranes_into_dict(ladles_queryset, ladles_info: dict, is_transporting:bool=False, is_plan:bool=False) -> dict:
-        '''
+    def cranes_into_dict(ladles_queryset, ladles_info: dict, is_transporting: bool = False,
+                         is_plan: bool = False) -> dict:
+        """
         Метод, преобразующий queryset ковшей в dict.
         Этот метод создаёт единый фундамент для всех видов
         ковшей, передаваемых фронту.
-        '''
+        """
         for elem in ladles_queryset:
             if str(elem.ladle.id) in ladles_info:
                 continue
@@ -233,8 +236,10 @@ class LadlesView(RedisCacheMixin, TemplateView):
                 # отсортирован по plan_start
                 next_elem = next_elems[0]
                 ladles_info[f'{elem.ladle.id}']['next_aggregate'] = f'{next_elem.aggregate.title}'
-                ladles_info[f'{elem.ladle.id}']['next_plan_start'] = f'{next_elem.plan_start.astimezone(timezone.get_default_timezone())}'
-                ladles_info[f'{elem.ladle.id}']['next_plan_end'] = f'{next_elem.plan_end.astimezone(timezone.get_default_timezone())}'
+                ladles_info[f'{elem.ladle.id}'][
+                    'next_plan_start'] = f'{next_elem.plan_start.astimezone(timezone.get_default_timezone())}'
+                ladles_info[f'{elem.ladle.id}'][
+                    'next_plan_end'] = f'{next_elem.plan_end.astimezone(timezone.get_default_timezone())}'
                 ladles_info[f'{elem.ladle.id}']['next_x'] = next_elem.aggregate.coord_x
                 ladles_info[f'{elem.ladle.id}']['next_y'] = next_elem.aggregate.coord_y
                 ladles_info[f'{elem.ladle.id}']['next_id'] = next_elem.id
@@ -251,7 +256,7 @@ class LadlesView(RedisCacheMixin, TemplateView):
 
     @staticmethod
     def from_active_to_archive(operation: Type[ActiveDynamicTable]) -> None:
-        '''Метод, переписывающий ковш из активной таблицы в архив'''
+        """Метод, переписывающий ковш из активной таблицы в архив"""
         # перезаписываю запись в архивную таблицу
         ArchiveDynamicTable.objects.create(
             ladle=operation.ladle,
@@ -266,12 +271,13 @@ class LadlesView(RedisCacheMixin, TemplateView):
         # удаляю запись из активной таблицы
         operation.delete()
 
+
 class CranesView(RedisCacheMixin, TemplateView):
-    '''Представление страницы с кранами'''
+    """Представление страницы с кранами"""
     template_name = 'visual/cranes.html'
 
     def post(self, request, *args, **kwargs):
-        '''Обработка post-запроса'''
+        """Обработка post-запроса"""
         # формирование ответа
         data: dict = {}
         data['cranes_pos'] = CranesView.get_cranes_pos()
@@ -280,10 +286,10 @@ class CranesView(RedisCacheMixin, TemplateView):
 
     @staticmethod
     def get_cranes_pos() -> dict:
-        '''
+        """
         Функция, распаковывующая json-данные в рамках модуляции
         с помощью pygame интерфейса
-        '''
+        """
         # ключ для redis
         key_name = 'cranes_pos:1'
         # проверяю нет ли этой информации в redis
@@ -308,7 +314,7 @@ class CranesView(RedisCacheMixin, TemplateView):
 
     @staticmethod
     def get_cranes_info() -> dict:
-        '''Функция, возвращающая фото кранов и кареток'''
+        """Функция, возвращающая фото кранов и кареток"""
         # имя ключа в redis
         key_name = 'cranes_info:1'
         # проверяю нет ли этой информации в redis
@@ -333,25 +339,26 @@ class CranesView(RedisCacheMixin, TemplateView):
 
 
 class AccessDeniedView(TemplateView):
-    '''Представление страницы с кранами'''
+    """Представление страницы с кранами"""
     template_name = 'visual/access_denied.html'
+
 
 ##############################################################################
 # Проишествия
 
 class AccidentStartingView(TemplateView):
-    '''Представление начала отчёта об аварии/проишествии'''
+    """Представление начала отчёта об аварии/проишествии"""
     template_name = 'visual/accident_starting.html'
 
     def get(self, request, *args, **kwargs):
-        '''Вывод формы'''
+        """Вывод формы"""
         context = super().get_context_data(*args, **kwargs)
         form = AccidentStartingForm()
         context['form'] = form
         return render(request, self.template_name, context=context)
 
     def post(self, request, *args, **kwargs):
-        '''Обработка ответа формы'''
+        """Обработка ответа формы"""
         form = AccidentStartingForm(request.POST)
         if form.is_valid():
             # получаю тип поломанного объекта (кран, ковш или агрегат)
@@ -369,9 +376,11 @@ class AccidentStartingView(TemplateView):
         else:
             return render(request, self.template_name, context={'form': form})
 
+
 class AccidentViewBase(CreateView):
-    '''Представление страницы с проишествиями'''
+    """Представление страницы с проишествиями"""
     template_name = 'visual/accident.html'
+
     # необходимо задать form_class, model, check_model
     # (check_model нужна для проверки зарегистрирована ли в бд такая поломка)
     # success_url
@@ -403,22 +412,25 @@ class AccidentViewBase(CreateView):
         except IntegrityError:
             return self.form_invalid(form, *args, **kwargs)
 
+
 class AccidentDetailStartingViewBase(TemplateView):
-    '''
+    """
     Представление детального комментария отчёта об аварии/поломке
     Метод get_success_url нужно переопределить, а метод get_context_data
     расширить
-    '''
+    """
     template_name = 'visual/accident_detail_starting.html'
 
+
 class AccidentDetailViewBase(UpdateView):
-    '''Представление страницы с формой заполнения подробного описания проишествия'''
+    """Представление страницы с формой заполнения подробного описания проишествия"""
     template_name = 'visual/accident_detail.html'
     success_url = reverse_lazy('main')
     # необходимо задать form_class, model
 
+
 class LadleAccidentView(AccidentViewBase):
-    '''Представление обработчик проишествия ковша'''
+    """Представление обработчик проишествия ковша"""
     form_class = LadlesAccidentForm
     model = LadlesAccident
     check_model = Ladles
@@ -426,11 +438,12 @@ class LadleAccidentView(AccidentViewBase):
     def get_success_url(self, *agrs, **kwargs):
         return reverse_lazy('accident-ladle-detail-starting', kwargs={'pk': self.object.id})
 
+
 class LadleAccidentDetailStartingView(AccidentDetailStartingViewBase):
-    '''
+    """
     Представление начала написания дополнительного
     комментария при проишествии с ковшом
-    '''
+    """
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data()
@@ -441,16 +454,18 @@ class LadleAccidentDetailStartingView(AccidentDetailStartingViewBase):
     def get_success_url(self, *args, **kwargs):
         return reverse_lazy('accident-ladle-detail', kwargs={'pk': kwargs.get('pk')})
 
+
 class LadleAccidentDetailView(AccidentDetailViewBase):
-    '''
+    """
     Представление обработчик написания дополнительного
     комментария при проишествии с ковшом
-    '''
+    """
     form_class = LadlesAccidentDetailForm
     model = LadlesAccident
 
+
 class CraneAccidentView(AccidentViewBase):
-    '''Представление обработчик проишествия крана'''
+    """Представление обработчик проишествия крана"""
     form_class = CranesAccidentForm
     model = CranesAccident
     check_model = Cranes
@@ -458,11 +473,12 @@ class CraneAccidentView(AccidentViewBase):
     def get_success_url(self, *agrs, **kwargs):
         return reverse_lazy('accident-crane-detail-starting', kwargs={'pk': self.object.id})
 
+
 class CraneAccidentDetailStartingView(AccidentDetailStartingViewBase):
-    '''
+    """
     Представление начала написания дополнительного
     комментария при проишествии с краном
-    '''
+    """
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data()
@@ -473,16 +489,18 @@ class CraneAccidentDetailStartingView(AccidentDetailStartingViewBase):
     def get_success_url(self, *args, **kwargs):
         return reverse_lazy('accident-crane-detail', kwargs={'pk': kwargs.get('pk')})
 
+
 class CraneAccidentDetailView(AccidentDetailViewBase):
-    '''
+    """
     Представление обработчик написания дополнительного
     комментария при проишествии с краном
-    '''
+    """
     form_class = CranesAccidentDetailForm
     model = CranesAccident
 
+
 class AggregateAccidentView(AccidentViewBase):
-    '''Представление обработчик проишествия агрегата'''
+    """Представление обработчик проишествия агрегата"""
     form_class = AggregatAccidentForm
     model = AggregatAccident
     check_model = Aggregates
@@ -490,11 +508,12 @@ class AggregateAccidentView(AccidentViewBase):
     def get_success_url(self, *agrs, **kwargs):
         return reverse_lazy('accident-aggregate-detail-starting', kwargs={'pk': self.object.id})
 
+
 class AggregateAccidentDetailStartingView(AccidentDetailStartingViewBase):
-    '''
+    """
     Представление начала написания дополнительного
     комментария при проишествии с агрегатом
-    '''
+    """
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data()
@@ -505,33 +524,38 @@ class AggregateAccidentDetailStartingView(AccidentDetailStartingViewBase):
     def get_success_url(self, *args, **kwargs):
         return reverse_lazy('accident-aggregate-detail', kwargs={'pk': kwargs.get('pk')})
 
+
 class AggregateAccidentDetailView(AccidentDetailViewBase):
-    '''
+    """
     Представление обработчик написания дополнительного
     комментария при проишествии с агрегатом
-    '''
+    """
     form_class = AggregatAccidentDetailForm
     model = AggregatAccident
+
 
 ##############################################################################
 # Система разграничения доступа
 class EmployeeProfile(LoginRequiredMixin, TemplateView):
-    '''Профиль пользователя'''
+    """Профиль пользователя"""
     template_name = 'visual/profile.html'
 
+
 class EmployeeLoginView(LoginView):
-    '''Вход в аккаунт'''
+    """Вход в аккаунт"""
     template_name = 'visual/login.html'
 
     def get_success_url(self):
         return reverse_lazy('main')
 
+
 class EmployeeLogoutView(LoginRequiredMixin, LogoutView):
-    '''Выход из аккаунта'''
+    """Выход из аккаунта"""
     template_name = 'visual/main.html'
 
+
 class ChangeEmployeeInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView):
-    '''Изменение данных пользователя'''
+    """Изменение данных пользователя"""
     model = Employees
     template_name = 'visual/change_employee_info.html'
     form_class = ChangeEmployeeInfoForm
@@ -562,24 +586,28 @@ class ChangeEmployeeInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView
         # стандартный ответ
         return HttpResponseRedirect(self.get_success_url())
 
+
 # Сброс пароля
 class PasswordReset(PasswordResetView):
-    '''Представление сброса пароля'''
+    """Представление сброса пароля"""
     template_name = 'visual/password_reset.html'
     html_email_template_name = 'email/reset_letter_body.html'
     email_template_name = 'email/reset_letter_body.txt'
     subject_template_name = 'email/reset_letter_subject.txt'
     success_url = reverse_lazy('pass-reset-starting')
 
+
 class PasswordResetStarting(PasswordResetDoneView):
-    '''Оповещение о отправленном письме'''
+    """Оповещение о отправленном письме"""
     template_name = 'visual/password_reset_starting.html'
 
+
 class PasswordResetConfirm(PasswordResetConfirmView):
-    '''Представление подтверждения сброса пароля (ввод нового пароля)'''
+    """Представление подтверждения сброса пароля (ввод нового пароля)"""
     template_name = 'visual/password_reset_confirm.html'
     success_url = reverse_lazy('pass-reset-complete')
 
+
 class PasswordResetComplete(PasswordResetCompleteView):
-    '''Пароль успешно сброшен'''
+    """Пароль успешно сброшен"""
     template_name = 'visual/password_reset_complete.html'
