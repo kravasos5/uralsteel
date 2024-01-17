@@ -15,17 +15,18 @@ class CsrfMixin:
         context['csrf_token'] = csrf_token
         return context
 
+
 class RedisCacheMixin:
-    '''
+    """
     Миксин, проверяющий есть ли в redis какой-то ключ
     и добавляющий новый
-    '''
+    """
     @staticmethod
     def get_key_redis_json(key_name: str) -> Optional[dict]:
-        '''
+        """
         Функция, извлекающая ключ из redis, если такого ключа нет,
         то вернёт None. Работает только с json
-        '''
+        """
         with redis.Redis(host=REDIS_HOST, port=REDIS_PORT) as redis_client:
             result = redis_client.json().get(key_name)
         if result is not None:
@@ -33,7 +34,7 @@ class RedisCacheMixin:
 
     @staticmethod
     def set_key_redis_json(key_name: str, data: dict, ttl: int) -> None:
-        '''Функция, задающая ключ в храниилище. Работает только с json'''
+        """Функция, задающая ключ в храниилище. Работает только с json"""
         with redis.Redis(host=REDIS_HOST, port=REDIS_PORT) as redis_client:
             # сохраняю ключ и данные
             redis_client.json().set(key_name, Path.root_path(), data)
@@ -42,10 +43,10 @@ class RedisCacheMixin:
 
     @staticmethod
     def get_key_redis(key_name: str) -> Optional[str]:
-        '''
+        """
         Функция, извлекающая ключ из redis, если такого ключа нет,
         то вернёт None
-        '''
+        """
         with redis.Redis(host=REDIS_HOST, port=REDIS_PORT) as redis_client:
             result: bytes = redis_client.get(key_name)
         if result is not None:
@@ -53,7 +54,7 @@ class RedisCacheMixin:
 
     @staticmethod
     def set_key_redis(key_name: str, data: str, ttl: int) -> None:
-        '''Функция, задающая ключ в храниилище'''
+        """Функция, задающая ключ в храниилище"""
         with redis.Redis(host=REDIS_HOST, port=REDIS_PORT) as redis_client:
             # сохраняю ключ и данные
             redis_client.set(key_name, data)
@@ -62,14 +63,14 @@ class RedisCacheMixin:
 
     @staticmethod
     def delete_key_redis(key_name: str) -> None:
-        '''Функция, удаляющая ключ из хранилища'''
+        """Функция, удаляющая ключ из хранилища"""
         with redis.Redis(host=REDIS_HOST, port=REDIS_PORT) as redis_client:
             # удаляю ключ
             redis_client.delete(key_name)
 
     @staticmethod
     def delete_keyy_redis(pattern: str) -> None:
-        '''Функция, удаляющая ключи из хранилища по паттерну'''
+        """Функция, удаляющая ключи из хранилища по паттерну"""
         with redis.Redis() as redis_client:
             # получаю все ключи по паттерну
             all_keys: list = redis_client.keys(pattern)

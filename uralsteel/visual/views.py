@@ -46,7 +46,7 @@ class LadlesView(RedisCacheMixin, TemplateView):
         context = {}
         # проверяю нет ли в redis ключа-времени
         result: str = LadlesView.get_key_redis('ltimeform')
-        if result is not None:
+        if result:
             context['timeformvalue'] = result
         return render(request, self.template_name, context=context)
 
@@ -293,7 +293,7 @@ class CranesView(RedisCacheMixin, TemplateView):
         # ключ для redis
         key_name = 'cranes_pos:1'
         # проверяю нет ли этой информации в redis
-        result: Optional[dict] = CranesView.get_key_redis_json(key_name)
+        result: dict | None = CranesView.get_key_redis_json(key_name)
         if result is not None:
             return result
         path = os.path.join(os.getcwd(), 'visual\\static\\visual\\jsons')
