@@ -1,5 +1,5 @@
 from django import forms
-from visual.models import Employees, LadlesAccident, CranesAccident, AggregatAccident
+from visual.models import Employees, LadlesAccident, CranesAccident, AggregateAccident
 
 
 class CustomClearableFileInputCU(forms.ClearableFileInput):
@@ -69,12 +69,12 @@ class CranesAccidentDetailForm(AccidentDetailForm):
     class Meta(AccidentDetailForm.Meta):
         model = CranesAccident
 
-class AggregatAccidentForm(AccidentForm):
+class AggregateAccidentForm(AccidentForm):
     '''Форма проишествий с агрегатами'''
     class Meta(AccidentForm.Meta):
-        model = AggregatAccident
+        model = AggregateAccident
 
-class AggregatAccidentDetailForm(AccidentDetailForm):
+class AggregateAccidentDetailForm(AccidentDetailForm):
     '''Форма проишествий с агрегатами (подробная)'''
     class Meta(AccidentDetailForm.Meta):
-        model = AggregatAccident
+        model = AggregateAccident

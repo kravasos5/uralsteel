@@ -13,10 +13,10 @@ from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.views.generic import TemplateView, UpdateView, CreateView
 
-from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, AggregatAccidentForm, \
-    LadlesAccidentDetailForm, CranesAccidentDetailForm, AggregatAccidentDetailForm, AccidentStartingForm
+from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, AggregateAccidentForm, \
+    LadlesAccidentDetailForm, CranesAccidentDetailForm, AggregateAccidentDetailForm, AccidentStartingForm
 from visual.mixins import RedisCacheMixin
-from visual.models import Employees, CranesAccident, LadlesAccident, AggregatAccident, Ladles, Cranes, Aggregates, \
+from visual.models import Employees, CranesAccident, LadlesAccident, AggregateAccident, Ladles, Cranes, Aggregates, \
     ActiveDynamicTable, ArchiveDynamicTable
 from visual.utilities import archive_report_signal
 
@@ -501,8 +501,8 @@ class CraneAccidentDetailView(AccidentDetailViewBase):
 
 class AggregateAccidentView(AccidentViewBase):
     """Представление обработчик проишествия агрегата"""
-    form_class = AggregatAccidentForm
-    model = AggregatAccident
+    form_class = AggregateAccidentForm
+    model = AggregateAccident
     check_model = Aggregates
 
     def get_success_url(self, *agrs, **kwargs):
@@ -530,8 +530,8 @@ class AggregateAccidentDetailView(AccidentDetailViewBase):
     Представление обработчик написания дополнительного
     комментария при проишествии с агрегатом
     """
-    form_class = AggregatAccidentDetailForm
-    model = AggregatAccident
+    form_class = AggregateAccidentDetailForm
+    model = AggregateAccident
 
 
 ##############################################################################
