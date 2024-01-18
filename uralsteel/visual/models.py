@@ -236,7 +236,7 @@ class ActiveDynamicTable(DynamicTableAbstract):
 
 @deconstructible
 class WordCountValidator(object):
-    """Валидатор количества слова"""
+    """Валидатор количества слов"""
 
     def __init__(self, count):
         self.count = count
@@ -316,7 +316,7 @@ class CranesAccident(AccidentsAbstract):
 pre_save.connect(accident_pre_save_dispatcher, sender=CranesAccident)
 
 
-class AggregatAccident(AccidentsAbstract):
+class AggregateAccident(AccidentsAbstract):
     """Модель проишествий агрегатов"""
     object = models.ForeignKey(Aggregates, on_delete=models.SET_NULL,
                                null=True, blank=False,
@@ -331,4 +331,4 @@ class AggregatAccident(AccidentsAbstract):
         ordering = ('-created_at',)
 
 
-pre_save.connect(accident_pre_save_dispatcher, sender=AggregatAccident)
+pre_save.connect(accident_pre_save_dispatcher, sender=AggregateAccident)
