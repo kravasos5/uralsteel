@@ -8,6 +8,30 @@ window.addEventListener("load", function(){
     const WIDTH = canvas.width;
     const HEIGHT = canvas.height;
 
+    // получаем кнопки
+
+    const down_button_1 = document.querySelector('.down__button__1');
+    const down_button_2 = document.querySelector('.down__button__2');
+    const down_button_3 = document.querySelector('.down__button__3');
+    const down_button_4 = document.querySelector('.down__button__4');
+
+    const take_ladle_1 = document.querySelector('.take__ladle__1');
+    const take_ladle_2 = document.querySelector('.take__ladle__2');
+    const take_ladle_3 = document.querySelector('.take__ladle__3');
+    const take_ladle_4 = document.querySelector('.take__ladle__4');
+
+
+    // получаем текстовые элементы
+
+    const span_1 = document.querySelector('.span__1');
+    const span_2 = document.querySelector('.span__2');
+    const span_3 = document.querySelector('.span__3');
+    const span_4 = document.querySelector('.span__4');
+    const span_5 = document.querySelector('.span__5');
+    const span_6 = document.querySelector('.span__6');
+    const span_7 = document.querySelector('.span__7');
+    const span_8 = document.querySelector('.span__8');
+
     // переменные, связанные с перетаскиванием
     let dragok = false;
     let startX;
@@ -52,11 +76,20 @@ window.addEventListener("load", function(){
     });
 
     // определяем 4 круга
-    carriages.push({ x: 160, y: 100, r: 10, fill: "#ffffff", isDragging: false });
-    carriages.push({ x: 460, y: 100, r: 10, fill: "#ffffff", isDragging: false });
-    carriages.push({ x: 510, y: 100, r: 10, fill: "#ffffff", isDragging: false });
-    carriages.push({ x: 910, y: 100, r: 10, fill: "#ffffff", isDragging: false });
+    carriages.push({ x: 160, y: 100, r: 10, fill: "#ffffff", isDragging: false, is_upper: true, with_ladle: false });
+    carriages.push({ x: 460, y: 100, r: 10, fill: "#ffffff", isDragging: false, is_upper: true, with_ladle: false });
+    carriages.push({ x: 510, y: 100, r: 10, fill: "#ffffff", isDragging: false, is_upper: true, with_ladle: false });
+    carriages.push({ x: 910, y: 100, r: 10, fill: "#ffffff", isDragging: false, is_upper: true, with_ladle: false });
 
+    const case1 = cases[0];
+    const case2 = cases[1];
+    const case3 = cases[2];
+    const case4 = cases[3];
+
+    const carriage1 = carriages[0];
+    const carriage2 = carriages[1];
+    const carriage3 = carriages[2];
+    const carriage4 = carriages[3];
 
     // слушаем события мыши
     canvas.onmousedown = myDown;
@@ -113,15 +146,6 @@ window.addEventListener("load", function(){
         // проверяем каждую фигуру, чтобы увидеть, находится ли внутри мышь
         dragok = false;
 
-        case1 = cases[0]
-        case2 = cases[1]
-        case3 = cases[2]
-        case4 = cases[3]
-
-        carriage1 = carriages[0]
-        carriage2 = carriages[1]
-        carriage3 = carriages[2]
-        carriage4 = carriages[3]
 
         const d1x = carriage1.x - mx;
         const d1y = carriage1.y - my;
@@ -225,16 +249,6 @@ window.addEventListener("load", function(){
             // по расстоянию, на которое переместилась мышь
             // с момента последнего перемещения мыши
 
-            case1 = cases[0]
-            case2 = cases[1]
-            case3 = cases[2]
-            case4 = cases[3]
-
-            carriage1 = carriages[0]
-            carriage2 = carriages[1]
-            carriage3 = carriages[2]
-            carriage4 = carriages[3]
-
             if (case1.isDragging) {
                 case1.x += dx;
             }
@@ -250,21 +264,17 @@ window.addEventListener("load", function(){
 
             // ограничения движений
 
-            if (case1.x < 0) {case1.x = 0}
-            if (case1.x + 20 > case2.x && case1.isDragging == true) {case1.x = case2.x - 20}
+            if (case1.x < 0) {case1.x = 0};
+            if (case1.x + 20 > case2.x && case1.isDragging == true) {case1.x = case2.x - 20};
 
-            if (case2.x < case1.x + 20) {case2.x = case1.x + 20}
-            if (case2.x + 20 > case3.x && case2.isDragging == true) {case2.x = case3.x - 20}
+            if (case2.x < case1.x + 20) {case2.x = case1.x + 20};
+            if (case2.x + 20 > case3.x && case2.isDragging == true) {case2.x = case3.x - 20};
 
-            if (case3.x < case2.x + 20) {case3.x = case2.x + 20}
-            if (case3.x + 20 > case4.x && case3.isDragging == true) {case3.x = case4.x - 20}
+            if (case3.x < case2.x + 20) {case3.x = case2.x + 20};
+            if (case3.x + 20 > case4.x && case3.isDragging == true) {case3.x = case4.x - 20};
 
-            if (case4.x < case3.x + 20) {case4.x = case3.x + 20}
-            if (case4.x + 20 > WIDTH) {case4.x = WIDTH - 20}
-
-
-
-
+            if (case4.x < case3.x + 20) {case4.x = case3.x + 20};
+            if (case4.x + 20 > WIDTH) {case4.x = WIDTH - 20};
 
             if (carriage1.isDragging){
                 carriage1.x += dx;
@@ -283,29 +293,30 @@ window.addEventListener("load", function(){
                 carriage4.y += dy;
             }
 
-            if (carriage1.x < 10) {carriage1.x = 10}
-            if (carriage1.y + 10 > 151) {carriage1.y = 151 - 10}
-            if (carriage1.y < 12) {carriage1.y = 12}
+            if (carriage1.x < 10) {carriage1.x = 10};
+            if (carriage1.y + 10 > 138) {carriage1.y = 138 - 10};
+            if (carriage1.y < 24) {carriage1.y = 24};
 
-            if (carriage2.y + 10 > 151) {carriage2.y = 151 - 10}
-            if (carriage2.y < 12) {carriage2.y = 12}
+            if (carriage2.y + 10 > 138) {carriage2.y = 138 - 10};
+            if (carriage2.y < 24) {carriage2.y = 24};
 
-            if (carriage3.y + 10 > 151) {carriage3.y = 151 - 10}
-            if (carriage3.y < 12) {carriage3.y = 12}
+            if (carriage3.y + 10 > 138) {carriage3.y = 138 - 10};
+            if (carriage3.y < 24) {carriage3.y = 24};
 
-            if (carriage4.x + 10 > WIDTH) {carriage4.x = WIDTH - 10}
-            if (carriage4.y + 10 > 151) {carriage4.y = 151 - 10}
-            if (carriage4.y < 12) {carriage4.y = 12}
+            if (carriage4.x + 10 > WIDTH) {carriage4.x = WIDTH - 10};
+            if (carriage4.y + 10 > 138) {carriage4.y = 138 - 10};
+            if (carriage4.y < 24) {carriage4.y = 24};
 
-            if (carriage1.x + 20 > carriage2.x && carriage1.isDragging == true) {carriage1.x = carriage2.x - 20}
+            if (carriage1.x + 20 > carriage2.x && carriage1.isDragging == true) {carriage1.x = carriage2.x - 20};
 
-            if (carriage2.x < carriage1.x + 20) {carriage2.x = carriage1.x + 20}
-            if (carriage2.x + 20 > carriage3.x && carriage2.isDragging == true) {carriage2.x = carriage3.x - 20}
+            if (carriage2.x < carriage1.x + 20) {carriage2.x = carriage1.x + 20};
+            if (carriage2.x + 20 > carriage3.x && carriage2.isDragging == true) {carriage2.x = carriage3.x - 20};
 
-            if (carriage3.x < carriage2.x + 20) {carriage3.x = carriage2.x + 20}
-            if (carriage3.x + 20 > carriage4.x && carriage3.isDragging == true) {carriage3.x = carriage4.x - 20}
+            if (carriage3.x < carriage2.x + 20) {carriage3.x = carriage2.x + 20};
+            if (carriage3.x + 20 > carriage4.x && carriage3.isDragging == true) {carriage3.x = carriage4.x - 20};
 
-            if (carriage4.x < carriage3.x + 20) {carriage4.x = carriage3.x + 20}
+            if (carriage4.x < carriage3.x + 20) {carriage4.x = carriage3.x + 20};
+
 
             // перерисовываем сцену с новыми позициями прямоугольников
             draw();
@@ -315,4 +326,157 @@ window.addEventListener("load", function(){
             startY = my;
         }
     }
+
+    // функции опускания кареток кранов
+
+    down_button_1.onclick = function(){
+        if (carriage1.is_upper){
+            carriage1.is_upper = false;
+            down_button_1.textContent = 'Поднять';
+            span_1.textContent = 'опущенном\u00A0';
+            span_1.style.color = '#FF0000';
+        } else {
+            carriage1.is_upper = true;
+            down_button_1.textContent = 'Опустить';
+            span_1.textContent = 'поднятом\u00A0';
+            span_1.style.color = '#0000FF';
+        }
+    }
+    down_button_2.onclick = function(){
+        if (carriage2.is_upper){
+            carriage2.is_upper = false;
+            down_button_2.textContent = 'Поднять';
+            span_3.textContent = 'опущенном\u00A0';
+            span_3.style.color = '#FF0000';
+        } else {
+            carriage2.is_upper = true;
+            down_button_2.textContent = 'Опустить';
+            span_3.textContent = 'поднятом\u00A0';
+            span_3.style.color = '#0000FF';
+        }
+    }
+    down_button_3.onclick = function(){
+        if (carriage3.is_upper){
+            carriage3.is_upper = false;
+            down_button_3.textContent = 'Поднять';
+            span_5.textContent = 'опущенном\u00A0';
+            span_5.style.color = '#FF0000';
+        } else {
+            carriage3.is_upper = true;
+            down_button_3.textContent = 'Опустить';
+            span_5.textContent = 'поднятом\u00A0';
+            span_5.style.color = '#0000FF';
+        }
+    }
+    down_button_4.onclick = function(){
+        if (carriage4.is_upper){
+            carriage4.is_upper = false;
+            down_button_4.textContent = 'Поднять';
+            span_7.textContent = 'опущенном\u00A0';
+            span_7.style.color = '#FF0000';
+        } else {
+            carriage4.is_upper = true;
+            down_button_4.textContent = 'Опустить';
+            span_7.textContent = 'поднятом\u00A0';
+            span_7.style.color = '#0000FF';
+        }
+    }
+
+    // функции подцепливания ковша кранами
+
+    take_ladle_1.onclick = function(){
+        if (carriage1.with_ladle && !carriage1.is_upper){
+            carriage1.with_ladle = false;
+            take_ladle_1.textContent = 'Подцепить ковш';
+            span_2.textContent = 'разгружен';
+            span_2.style.color = '#0000ff';
+        } else if (!carriage1.with_ladle && !carriage1.is_upper){
+            carriage1.with_ladle = true;
+            take_ladle_1.textContent = 'Отцепить ковш';
+            span_2.textContent = 'загружен';
+            span_2.style.color = '#ff0000';
+        }
+    }
+    take_ladle_2.onclick = function(){
+        if (carriage2.with_ladle && !carriage2.is_upper){
+            carriage2.with_ladle = false;
+            take_ladle_2.textContent = 'Подцепить ковш';
+            span_4.textContent = 'разгружен';
+            span_4.style.color = '#0000ff';
+        } else if (!carriage2.with_ladle && !carriage2.is_upper){
+            carriage2.with_ladle = true;
+            take_ladle_2.textContent = 'Отцепить ковш';
+            span_4.textContent = 'загружен';
+            span_4.style.color = '#ff0000';
+        }
+    }
+    take_ladle_3.onclick = function(){
+        if (carriage3.with_ladle && !carriage3.is_upper){
+            carriage3.with_ladle = false;
+            take_ladle_3.textContent = 'Подцепить ковш';
+            span_6.textContent = 'разгружен';
+            span_6.style.color = '#0000ff';
+        } else if (!carriage3.with_ladle && !carriage3.is_upper){
+            carriage3.with_ladle = true;
+            take_ladle_3.textContent = 'Отцепить ковш';
+            span_6.textContent = 'загружен';
+            span_6.style.color = '#ff0000';
+        }
+    }
+    take_ladle_4.onclick = function(){
+        if (carriage4.with_ladle && !carriage4.is_upper){
+            carriage4.with_ladle = false;
+            take_ladle_4.textContent = 'Подцепить ковш';
+            span_8.textContent = 'разгружен';
+            span_8.style.color = '#0000ff';
+        } else if (!carriage4.with_ladle && !carriage4.is_upper){
+            carriage4.with_ladle = true;
+            take_ladle_4.textContent = 'Отцепить ковш';
+            span_8.textContent = 'загружен';
+            span_8.style.color = '#ff0000';
+        }
+    }
+
+    const createData = setInterval(function() {
+        var data = `
+        {
+            "cranes_pos":
+                {
+	                "Crane_7": {
+                        "position_x": ${Math.round(carriage1.x/18)},
+                        "position_y": ${Math.round((carriage1.y-10)/18)},
+                        "with_ladle": ${carriage1.with_ladle},
+                        "is_upper":   ${carriage1.is_upper}
+                    },
+                    "Crane_8": {
+                        "position_x": ${Math.round(carriage2.x/18)},
+                        "position_y": ${Math.round((carriage2.y-10)/18)},
+                        "with_ladle": ${carriage2.with_ladle},
+                        "is_upper":   ${carriage2.is_upper}
+                    },
+                    "Crane_9": {
+                        "position_x": ${Math.round(carriage3.x/18)},
+                        "position_y": ${(carriage3.y-10)/18},
+                        "with_ladle": ${carriage3.with_ladle},
+                        "is_upper":   ${carriage3.is_upper}
+                    },
+                    "Crane_10": {
+                        "position_x": ${Math.round(carriage4.x/18)},
+                        "position_y": ${Math.round((carriage4.y-10)/18)},
+                        "with_ladle": ${carriage4.with_ladle},
+                        "is_upper":   ${carriage4.is_upper}
+                    },
+                },
+            "cranes_info":
+                {
+                    "тут информация из базы данных, из модели Cranes, а именно картинки кранов и ковшей, их габариты": "например",
+                    "aggregate_title": {
+                        "size_x": 338,
+                        "size_y": 22,
+                        "photo": "photo_url"
+                    },
+                },
+        }`
+        console.log(data)
+    }, 1000)
 });
