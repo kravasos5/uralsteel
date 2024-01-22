@@ -13,7 +13,9 @@ class IdMixin(Base):
     id = Column(BigInteger, primary_key=True)
 
 
-class Posts(Enum):
+###################################################################
+# Модели Employees(пользователя или же работника)
+class Posts(str, Enum):
     """Класс, содержащий должности"""
     MASTER = 'MS'
     MECHANIC = 'MH'
@@ -43,6 +45,8 @@ class Employees(IdMixin):
     reports = relationship('AccidentsMixin', back_populates='author_info')
 
 
+###################################################################
+# Модели агрегатов
 class Aggregates(IdMixin):
     """Модель агрегатов (справочная информация)"""
     __tablename__ = "visual_aggregates"
@@ -110,6 +114,8 @@ class AggregatesBurner(AggregatesBaseMixin):
     __tablename__ = 'visual_aggregatesburner'
 
 
+###################################################################
+# Модели маршрутов
 class Routes(IdMixin):
     """Модель маршрутов"""
     __tablename__ = 'visual_routes'
@@ -130,6 +136,8 @@ class Routes(IdMixin):
     dynamic_table = relationship('DynamicTableMixin', back_populates='route_info')
 
 
+###################################################################
+# Модели кранов
 class Cranes(IdMixin):
     """Модель кранов"""
     __tablename__ = 'visual_cranes'
@@ -143,6 +151,8 @@ class Cranes(IdMixin):
     accidents = relationship('CranesAccident', back_populates='object_info')
 
 
+###################################################################
+# Модели ковшей
 class Ladles(IdMixin):
     """Модель ковшей"""
     __tablename__ = 'visual_ladles'
@@ -155,6 +165,8 @@ class Ladles(IdMixin):
     accidents = relationship('LadlesAccident', back_populates='object_info')
 
 
+###################################################################
+# Модели марок стали
 class BrandSteel(IdMixin):
     """Модель марок стали"""
     __tablename__ = 'visual_brandsteel'
@@ -164,6 +176,8 @@ class BrandSteel(IdMixin):
     dynamic_table = relationship('DynamicTableMixin', back_populates='brand_steel_info')
 
 
+###################################################################
+# Модели динамических таблиц
 class DynamicTableMixin(Base):
     """Основная таблица с информацией о перемещении ковшей в реальном времени"""
     __abstract__ = True
@@ -199,6 +213,8 @@ class ActiveDynamicTable(DynamicTableMixin):
     __tablename__ = 'visual_activedynamictable'
 
 
+###################################################################
+# Модели проишествий
 class AccidentsMixin(Base):
     """Модель происшествий"""
     __abstract__ = True
