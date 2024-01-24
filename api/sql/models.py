@@ -245,7 +245,7 @@ class CranesAccident(AccidentsMixin):
     object_info = relationship('Cranes', back_populates='accidents')
 
 
-class AggregateAccident(AccidentsMixin):
+class AggregatesAccident(AccidentsMixin):
     """Модель проишествий агрегатов"""
     __tablename__ = 'visual_aggregataccident'
 
