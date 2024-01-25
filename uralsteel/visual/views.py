@@ -64,7 +64,7 @@ class LadlesView(RedisCacheMixin, TemplateView):
             # получаю время
             time = LadlesView.time_convert(request.POST.get('time'))
             # удаляю старые ключи из хранилища redis
-            LadlesView.delete_keyy_redis('*ltime:*')
+            LadlesView.delete_keys_redis('*ltime:*')
             status: int = 200
             match operation_type:
                 case 'transporting':
@@ -279,9 +279,10 @@ class CranesView(RedisCacheMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         """Обработка post-запроса"""
         # формирование ответа
-        data: dict = {}
-        data['cranes_pos'] = CranesView.get_cranes_pos()
-        data['cranes_info'] = CranesView.get_cranes_info()
+        data: dict = {
+            'cranes_pos': CranesView.get_cranes_pos(),
+            'cranes_info': CranesView.get_cranes_info()
+        }
         return JsonResponse(data=data, status=200)
 
     @staticmethod

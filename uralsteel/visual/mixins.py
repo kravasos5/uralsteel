@@ -22,7 +22,7 @@ class RedisCacheMixin:
     и добавляющий новый
     """
     @staticmethod
-    def get_key_redis_json(key_name: str) -> Optional[dict]:
+    def get_key_redis_json(key_name: str) -> dict | None:
         """
         Функция, извлекающая ключ из redis, если такого ключа нет,
         то вернёт None. Работает только с json
@@ -69,7 +69,7 @@ class RedisCacheMixin:
             redis_client.delete(key_name)
 
     @staticmethod
-    def delete_keyy_redis(pattern: str) -> None:
+    def delete_keys_redis(pattern: str) -> None:
         """Функция, удаляющая ключи из хранилища по паттерну"""
         with redis.Redis() as redis_client:
             # получаю все ключи по паттерну
