@@ -149,7 +149,7 @@ class LadlesView(RedisCacheMixin, TemplateView):
         # получаю имя ключа, которое используется при кэшировании
         key_name: str = f"ltime:{date.strftime('%H-%M')}"
         # проверка наличия ключа в redis-cache
-        result: Optional[dict] = LadlesView.get_key_redis_json(key_name)
+        result: dict | None = LadlesView.get_key_redis_json(key_name)
         if result is not None:
             return result
         # если ключа нет, то брать информацию из базы данных,
