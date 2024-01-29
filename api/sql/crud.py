@@ -54,9 +54,9 @@ def delete_from_db(db: Session, obj) -> None:
 
 def update_obj(db: Session, obj, obj_info, http_method: HTTPMethods):
     """Обновление объекта методом PUT или PATCH"""
-    if http_method == HTTPMethods.put:
+    if http_method is HTTPMethods.put:
         return update_obj_put_patch(db, obj, obj_info)
-    elif http_method == HTTPMethods.patch:
+    elif http_method is HTTPMethods.patch:
         return update_obj_put_patch(db, obj, obj_info, exclude_unset=True)
 
 
