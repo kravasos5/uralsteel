@@ -4,9 +4,13 @@ from http import HTTPStatus
 from typing import Type
 
 import pytz
+from django.contrib.auth.hashers import make_password
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session, selectinload
+from django.utils.text import slugify
 
 from uralsteel.settings import TIME_ZONE
+from visual.tasks import archive_report_handler
 from . import models, schemas
 from ...uralsteel.visual.views import CranesView, LadlesView, LadleOperationTypes
 
@@ -63,11 +67,19 @@ def update_obj_put_patch(db: Session, obj, obj_info, exclude_unset: bool = False
     return commit_refresh(db, obj)
 
 
+def hash_password(password: str) -> str:
+    # Создаю объект CryptContext для хэширования пароля
+    password_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+    # Используем passlib для хеширования пароля
+    hashed_password = password_context.hash(password)
+    return hashed_password
+
+
 ###################################################################
 # Контроллеры пользователя (Employees)
 def get_user_by_id(db: Session, user_id: int):
     """Получение пользователя по id"""
-    return db.query(models.Employees).get(id=user_id)
+    return db.query(models.Employees).filter_by(id=user_id).first()
 
 
 def get_users(db: Session, skip: int = 0, limit: int = 100):
@@ -75,25 +87,40 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Employees).offset(skip).limit(limit).all()
 
 
-def update_user_put(db: Session, user_id: int, user_info: schemas.EmployeesUpdateSchema):
+def update_user(
+    db: Session,
+    user_id: int,
+    user_info: schemas.EmployeesUpdateSchema,
+    http_method: HTTPMethods
+):
     """Изменение пользователя"""
     user_db = get_user_by_id(db, user_id)
     if user_db:
-        return update_obj(db, user_db, user_info, HTTPMethods.put)
+        return update_obj(db, user_db, user_info, http_method)
 
 
-def update_user_patch(db: Session, user_id: int, user_info: schemas.EmployeesUpdateSchema):
-    """Изменение одного атрибута пользователя"""
+def delete_user(db: Session, user_id: int):
+    """Удаление пользователя"""
     user_db = get_user_by_id(db, user_id)
-    if user_db:
-        return update_obj(db, user_db, user_info, HTTPMethods.patch)
+    delete_from_db(db, user_db)
+    return HTTPStatus.NO_CONTENT
+
+
+def create_user(db: Session, user_info: schemas.EmployeesCreateSchema):
+    """Создание нового пользователя"""
+    user_dict: dict = user_info.model_dump()
+    password: str = user_dict.get('password')
+    hashed_password: str = hash_password(password)
+    slug = slugify(f'{user_dict.get("username")}')
+    user_db = models.Employees(**user_dict, password=make_password(hashed_password), slug=slug)
+    return create_in_db(db, user_db)
 
 
 ###################################################################
 # Контроллеры отчёта пользователя
 def get_report_by_id(db: Session, report_id: int, report_model):
     """Получение отчёта проишествия"""
-    return db.query(report_model).get(id=report_id)
+    return db.query(report_model).filter_by(id=report_id).first()
 
 
 def get_reports(db: Session, report_model, skip: int = 0, limit: int = 100):
@@ -116,19 +143,33 @@ def update_report_patch(
         db: Session,
         report_info: schemas.AccidentsBaseSchema,
         report_id: int,
-        report_model
+        report_model,
+        http_method: HTTPMethods
 ):
     """Изменение отчёта проишествия"""
     report = get_report_by_id(db, report_id, report_model)
     if report:
-        return update_obj(db, report, report_info, HTTPMethods.patch)
+        return update_obj(db, report, report_info, http_method)
+
+
+def delete_repost(db: Session, report_id: int, report_model):
+    """Удаление отчёта о проишествии"""
+    report_db = get_report_by_id(db, report_id, report_model)
+    delete_from_db(db, report_db)
+    return HTTPStatus.NO_CONTENT
+
+
+def create_report_for_user(first_name: str, email: str):
+    """Формирование отчёта для пользователя"""
+    archive_report_handler.delay(first_name, email)
+    return {'message': 'Письмо с отчётом успешно отправлено.'}
 
 
 ###################################################################
 # Контроллеры кранов
 def get_crane_by_id(db: Session, crane_id: int):
     """Получение крана по id"""
-    return db.query(models.Cranes).get(id=crane_id)
+    return db.query(models.Cranes).filter_by(id=crane_id).first()
 
 
 def get_cranes(db: Session, skip: int, limit: int = 100):
@@ -136,18 +177,28 @@ def get_cranes(db: Session, skip: int, limit: int = 100):
     return db.query(models.Cranes).offset(skip).limit(limit).all()
 
 
-def update_crane_put(db: Session, crane_id: int, crane_info: schemas.CranesSchema):
-    """Изменение крана PUT"""
+def update_crane_put(
+    db: Session,
+    crane_id: int,
+    crane_info: schemas.CranesSchema,
+    http_method: HTTPMethods
+):
+    """Изменение крана"""
     crane = get_crane_by_id(db, crane_id)
     if crane:
-        return update_obj(db, crane, crane_info, HTTPMethods.put)
+        return update_obj(db, crane, crane_info, http_method)
 
 
-def update_crane_patch(db: Session, crane_id: int, crane_info: schemas.CranesSchema):
-    """Изменение крана PATCH"""
-    crane = get_crane_by_id(db, crane_id)
-    if crane:
-        return update_obj(db, crane, crane_info, HTTPMethods.patch)
+def delete_crane(db: Session, crane_id: int):
+    """Удаление крана по id"""
+    crane_db = get_crane_by_id(db, crane_id)
+    delete_from_db(db, crane_db)
+
+
+def create_crane(db: Session, crane_info: schemas.CranesBaseSchema):
+    """Создание крана"""
+    crane_db = models.Cranes(**crane_info.model_dump())
+    return create_in_db(db, crane_db)
 
 
 def get_cranes_pos_info():
@@ -163,7 +214,7 @@ def get_cranes_pos_info():
 # Контроллеры ковшей
 def get_ladle_by_id(db: Session, ladle_id: int):
     """Получение ковша"""
-    return db.query(models.Ladles).get(id=ladle_id)
+    return db.query(models.Ladles).filter_by(id=ladle_id).first()
 
 
 def get_ladles(db: Session, skip: int = 0, limit: int = 100):
@@ -177,17 +228,22 @@ def update_ladle(
         ladle_info: schemas.LadlesBaseSchema,
         http_method: HTTPMethods
 ):
-    """Изменение ковша по его id. PUT"""
+    """Изменение ковша по его id"""
     ladle_db = get_ladle_by_id(db, ladle_id)
     if ladle_db:
         return update_obj(db, ladle_db, ladle_info, http_method)
 
 
-def update_ladle_patch(db: Session, ladle_id: int, ladle_info: schemas.LadlesBaseSchema):
-    """Изменение ковша по его id. PATCH"""
+def delete_ladle(db: Session, ladle_id: int):
+    """Удаление ковша по id"""
     ladle_db = get_ladle_by_id(db, ladle_id)
-    if ladle_db:
-        return update_obj(db, ladle_db, ladle_info, HTTPMethods.patch)
+    delete_from_db(db, ladle_db)
+
+
+def create_ladle(db: Session, ladle_info: schemas.LadlesBaseSchema):
+    """Создание ковша"""
+    ladle_db = models.Ladles(**ladle_info.model_dump())
+    return create_in_db(db, ladle_db)
 
 
 def get_ladle_timeform():

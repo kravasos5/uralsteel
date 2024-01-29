@@ -28,7 +28,7 @@ class MainView(TemplateView):
     template_name = 'visual/main.html'
 
 
-class ArchiveReportMessage(TemplateView):
+class ArchiveReportMessage(LoginRequiredMixin, TemplateView):
     """Представление уведомления об отправке письма с отчётом на почту"""
     template_name = 'visual/archive_report_message.html'
 
@@ -46,7 +46,7 @@ class LadleOperationTypes(str, Enum):
     ENDING = 'ending'
 
 
-class LadlesView(RedisCacheMixin, TemplateView):
+class LadlesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
     """Представление страницы с ковшами"""
     template_name = 'visual/ladles.html'
 
@@ -285,7 +285,7 @@ class LadlesView(RedisCacheMixin, TemplateView):
         operation.delete()
 
 
-class CranesView(RedisCacheMixin, TemplateView):
+class CranesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
     """Представление страницы с кранами"""
     template_name = 'visual/cranes.html'
 
@@ -360,7 +360,7 @@ class AccessDeniedView(TemplateView):
 ##############################################################################
 # Проишествия
 
-class AccidentStartingView(TemplateView):
+class AccidentStartingView(LoginRequiredMixin, TemplateView):
     """Представление начала отчёта об аварии/проишествии"""
     template_name = 'visual/accident_starting.html'
 
@@ -391,7 +391,7 @@ class AccidentStartingView(TemplateView):
             return render(request, self.template_name, context={'form': form})
 
 
-class AccidentViewBase(CreateView):
+class AccidentViewBase(LoginRequiredMixin, CreateView):
     """Представление страницы с проишествиями"""
     template_name = 'visual/accident.html'
 
@@ -427,7 +427,7 @@ class AccidentViewBase(CreateView):
             return self.form_invalid(form, *args, **kwargs)
 
 
-class AccidentDetailStartingViewBase(TemplateView):
+class AccidentDetailStartingViewBase(LoginRequiredMixin, TemplateView):
     """
     Представление детального комментария отчёта об аварии/поломке
     Метод get_success_url нужно переопределить, а метод get_context_data
@@ -436,7 +436,7 @@ class AccidentDetailStartingViewBase(TemplateView):
     template_name = 'visual/accident_detail_starting.html'
 
 
-class AccidentDetailViewBase(UpdateView):
+class AccidentDetailViewBase(LoginRequiredMixin, UpdateView):
     """Представление страницы с формой заполнения подробного описания проишествия"""
     template_name = 'visual/accident_detail.html'
     success_url = reverse_lazy('main')

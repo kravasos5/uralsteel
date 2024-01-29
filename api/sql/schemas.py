@@ -18,6 +18,11 @@ class EmployeesBaseSchema(BaseModel):
     photo: str | None
 
 
+class EmployeesCreateSchema(EmployeesBaseSchema):
+    """Схема создания работника"""
+    password: str
+
+
 class EmployeesUpdateSchema(EmployeesBaseSchema):
     """Схема изменения работника"""
     pass
