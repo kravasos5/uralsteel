@@ -1,10 +1,14 @@
-from datetime import datetime
+import datetime
 from enum import Enum
+from http import HTTPStatus
+from typing import Type
 
-from sqlalchemy.orm import Session
+import pytz
+from sqlalchemy.orm import Session, selectinload
 
+from uralsteel.settings import TIME_ZONE
 from . import models, schemas
-from ...uralsteel.visual.views import CranesView, LadlesView
+from ...uralsteel.visual.views import CranesView, LadlesView, LadleOperationTypes
 
 
 # def commit_refresh(obj):
@@ -35,6 +39,13 @@ def create_in_db(db: Session, obj):
     db.commit()
     db.refresh(obj)
     return obj
+
+
+def delete_from_db(db: Session, obj) -> None:
+    """Удаление объекта из БД"""
+    db.delete(obj)
+    db.commit()
+    db.refresh(obj)
 
 
 def update_obj(db: Session, obj, obj_info, http_method: HTTPMethods):
@@ -191,6 +202,212 @@ def get_ladle_timeform():
     return {}
 
 
-def get_ladles_info(date: datetime):
+def time_convert(time: str) -> datetime:
+    """Метод, переводящий время в удобный формат без использования django timezone"""
+    t: list[str, str] = time.split(':')
+    hours: int = int(t[0])
+    minutes: int = int(t[1])
+    # записываю время в redis-cache
+    LadlesView.set_key_redis('ltimeform', f'{hours}:{minutes}', 120)
+    # получаю "наивную дату"
+    naive_datetime = datetime.datetime(2023, 12, 11, hours, minutes)
+    # преобразую её в "осведомлённую", то есть знающую часовой пояс
+    aware_datetime = pytz.timezone(TIME_ZONE).localize(naive_datetime)
+    ############
+    # в будущем здесь может быть любая дата, но будет текущий день
+    # получаю текущий часовой пояс
+    # current_timezone = pytz.timezone(TIME_ZONE)
+    # получаю сегодняшнюю дату
+    # today = current_timezone.localize(datetime.now())
+    ############
+    return aware_datetime
+
+
+def get_ladles_info(db: Session, date: datetime):
     """Получение информации о положении ковшей на странице"""
-    ...
+    # Использование статических методов из LadlesView
+    # date = LadlesView.time_convert(date)
+    # data: dict = LadlesView.get_ladles_info(date)
+    # return data
+
+    # Использование sqlalchemy
+    ladles_info: dict = {}
+    # получаю имя ключа, которое используется при кэшировании
+    key_name: str = f"ltime:{date.strftime('%H-%M')}"
+    # проверка наличия ключа в redis-cache
+    result: dict | None = LadlesView.get_key_redis_json(key_name)
+    if result is not None:
+        return result
+    # если ключа нет, то брать информацию из базы данных,
+    # она автоматически добавится в кэш в конце этого метода, перед return
+    ladles_queryset = db.query(models.ActiveDynamicTable) \
+        .options(selectinload(models.ActiveDynamicTable.ladle_info),
+                 selectinload(models.ActiveDynamicTable.brand_steel_info),
+                 selectinload(models.ActiveDynamicTable.aggregate_info)) \
+        .filter(models.ActiveDynamicTable.actual_start.isnot(None),
+                models.ActiveDynamicTable.actual_end.isnot(None),
+                models.ActiveDynamicTable.actual_start <= date).all()
+    # добавляю всю нужную информацию в словарь
+    ladles_info = ladles_into_dict(db, ladles_queryset, ladles_info, is_transporting=True)
+    # Извлекаю "ожидающие" ковши
+    ladles_queryset = db.query(models.ActiveDynamicTable) \
+        .options(selectinload(models.ActiveDynamicTable.ladle_info),
+                 selectinload(models.ActiveDynamicTable.brand_steel_info),
+                 selectinload(models.ActiveDynamicTable.aggregate_info)) \
+        .filter(models.ActiveDynamicTable.actual_start.isnot(None),
+                models.ActiveDynamicTable.actual_end.is_(None),
+                models.ActiveDynamicTable.actual_start <= date).all()
+    # добавляю всю нужную информацию в словарь
+    ladles_info = ladles_into_dict(db, ladles_queryset, ladles_info)
+    # Извлекаю "начинающие" ковши
+    ladles_queryset = db.query(models.ActiveDynamicTable) \
+        .options(selectinload(models.ActiveDynamicTable.ladle_info),
+                 selectinload(models.ActiveDynamicTable.brand_steel_info),
+                 selectinload(models.ActiveDynamicTable.aggregate_info)) \
+        .filter(models.ActiveDynamicTable.actual_start.is_(None),
+                models.ActiveDynamicTable.actual_end.is_(None),
+                models.ActiveDynamicTable.plan_start < date,
+                models.ActiveDynamicTable.plan_end > date).all()
+    # добавляю всю нужную информацию в словарь
+    ladles_info = ladles_into_dict(db, ladles_queryset, ladles_info, is_plan=True)
+    # добавление ключа в redis
+    LadlesView.set_key_redis_json(key_name, ladles_info, 300)
+    return ladles_info
+
+
+def ladles_into_dict(
+        db: Session,
+        ladles_queryset,
+        ladles_info: dict,
+        is_transporting: bool = False,
+        is_plan: bool = False
+) -> dict:
+    """
+    Метод, преобразующий queryset ковшей в dict.
+    Этот метод создаёт единый фундамент для всех видов
+    ковшей, передаваемых фронту. Преобразование проходит с использованием sqlalchemy
+    """
+    for elem in ladles_queryset:
+        if str(elem.ladle_info.id) in ladles_info:
+            continue
+        ladles_info[f'{elem.ladle_info.id}'] = {
+            'ladle_title': f'{elem.ladle_info.title}',
+            'x': elem.aggregate_info.coord_x,
+            'y': elem.aggregate_info.coord_y,
+            'num_melt': f'{elem.num_melt}',
+            'brand_steel': f'{elem.brand_steel_info.title}',
+            'aggregate': f'{elem.aggregate_info.title}',
+            'plan_start': f'{elem.plan_start.astimezone(pytz.timezone(TIME_ZONE))}',
+            'plan_end': f'{elem.plan_end.astimezone(pytz.timezone(TIME_ZONE))}',
+            'next_aggregate': '-',
+            'next_plan_start': '-',
+            'next_plan_end': '-',
+            'operation_id': elem.id
+        }
+        if is_transporting:
+            # если ковш едет на следующую позицию, то есть
+            # он "транспортируемый", то is_transporting=True
+            ladles_info[f'{elem.ladle_info.id}']['is_transporting'] = True
+        else:
+            ladles_info[f'{elem.ladle_info.id}']['is_transporting'] = False
+
+        if is_plan:
+            # для "начинающих" ковшей
+            ladles_info[f'{elem.ladle_info.id}']['photo'] = '/media/photos/aggregates/starting_ladle.png'
+            ladles_info[f'{elem.ladle_info.id}']['is_starting'] = True
+        else:
+            # для "транспортируемых" и "ожидающих"
+            ladles_info[f'{elem.ladle_info.id}']['photo'] = f'{elem.aggregate_info.photo.url}'
+            ladles_info[f'{elem.ladle_info.id}']['is_starting'] = False
+
+        # нахожу следующую позицию текущего ковша в БД
+        next_elems = db.query(models.ActiveDynamicTable) \
+            .options(selectinload(models.ActiveDynamicTable.aggregate_info)) \
+            .filter(models.ActiveDynamicTable.ladle == elem.ladle,
+                    models.ActiveDynamicTable.route == elem.route,
+                    models.ActiveDynamicTable.brand_steel == elem.brand_steel,
+                    models.ActiveDynamicTable.num_melt == elem.num_melt,
+                    models.ActiveDynamicTable.plan_start > elem.plan_end) \
+            .order_by(models.ActiveDynamicTable.plan_start)
+        # если следующая позиция присутствует, то обновляю
+        # соответствующие поля словаря
+        if next_elems.exists():
+            # получаю следующую позицию ковша
+            # это первый элемент next_elems, так как next_elems
+            # отсортирован по plan_start
+            next_elem = next_elems.first()
+            ladles_info[f'{elem.ladle_info.id}']['next_aggregate'] = f'{next_elem.aggregate_info.title}'
+            ladles_info[f'{elem.ladle_info.id}'][
+                'next_plan_start'] = f'{next_elem.plan_start.astimezone(pytz.timezone(TIME_ZONE))}'
+            ladles_info[f'{elem.ladle_info.id}'][
+                'next_plan_end'] = f'{next_elem.plan_end.astimezone(pytz.timezone(TIME_ZONE))}'
+            ladles_info[f'{elem.ladle_info.id}']['next_x'] = next_elem.aggregate_info.coord_x
+            ladles_info[f'{elem.ladle_info.id}']['next_y'] = next_elem.aggregate_info.coord_y
+            ladles_info[f'{elem.ladle_info.id}']['next_id'] = next_elem.id
+        elif not next_elems.exists() and ladles_info[str(elem.ladle_info.id)]['is_transporting']:
+            # если ковш отмечен, как транспортируемый и у него нет следующей позиции
+            # то такой ковш завершил свою последнюю операцию, а значит
+            # его нужно переписать в архивную таблицу и удалить из активной
+            # удаляю из словаря, чтобы ковш не отображался на сайте
+            del ladles_info[str(elem.ladle_info.id)]
+            # переписываю запись из активной таблицы в архивную
+            from_active_to_archive(db, elem)
+
+    return ladles_info
+
+
+def from_active_to_archive(db: Session, operation: Type[models.ActiveDynamicTable]) -> None:
+    """Метод, переписывающий ковш из активной таблицы в архив с помощью sqlalchemy"""
+    # перезаписываю запись в архивную таблицу
+    new_obj = models.ArchiveDynamicTable(
+        ladle=operation.ladle,
+        num_melt=operation.num_melt,
+        brand_steel=operation.brand_steel,
+        route=operation.route,
+        aggregate=operation.aggregate,
+        plan_start=operation.plan_start,
+        plan_end=operation.plan_end,
+        actual_start=operation.actual_start,
+        actual_end=operation.actual_end)
+    create_in_db(db, new_obj)
+    # удаляю запись из активной таблицы
+    delete_from_db(db, operation)
+
+
+def ladle_operation_id(db: Session, operation_id: int, operation_type: LadleOperationTypes, time: str):
+    """Запрос с операцией над ковшом"""
+    data: dict = {}
+    # получаю объект операции или 404
+    operation = db.query(models.ActiveDynamicTable).filter_by(id=operation_id).first()
+    # получаю время
+    time = time_convert(time)
+    # удаляю старые ключи из хранилища redis
+    LadlesView.delete_keys_redis('*ltime:*')
+    status: int = HTTPStatus.OK
+    match operation_type.value:
+        case LadleOperationTypes.TRANSPORTING.value:
+            # если ковш "транспортируемый"
+            # перезаписываю запись в архивную таблицу
+            from_active_to_archive(db, operation)
+            data['st'] = 'перемещён в архив'
+        case LadleOperationTypes.STARTING.value:
+            # если ковш "начинающий"
+            # перезаписываю дату в операции Активной Таблицы,
+            # то есть теперь ковш стаёт "ожидающим"
+            operation.actual_start = time
+            commit_refresh(db, operation)
+            data['st'] = 'теперь ковш ожидающим'
+        case LadleOperationTypes.ENDING.value:
+            # если ковш "ожидающий"
+            # перезаписываю дату в операции Активной Таблицы,
+            # то есть теперь ковш стаёт "транспортируемым"
+            operation.actual_end = time
+            commit_refresh(db, operation)
+            data['st'] = 'теперь ковш транспортируемый'
+        case _:
+            # в таком случае status=400, то есть пользователь
+            # клиент неверно указал operation_type
+            status = HTTPStatus.BAD_REQUEST
+            data['st'] = 'неверно указан operation_type'
+    data['status'] = status
+    return data

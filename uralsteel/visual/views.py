@@ -1,5 +1,7 @@
 import datetime, os, json
-from typing import List, Type, Optional
+from enum import Enum
+from http import HTTPStatus
+from typing import Type
 
 import glob2
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -37,6 +39,13 @@ class ArchiveReportMessage(TemplateView):
         return render(request, self.template_name)
 
 
+class LadleOperationTypes(str, Enum):
+    """Перечисление операций над ковшами"""
+    TRANSPORTING = 'transporting'
+    STARTING = 'starting'
+    ENDING = 'ending'
+
+
 class LadlesView(RedisCacheMixin, TemplateView):
     """Представление страницы с ковшами"""
     template_name = 'visual/ladles.html'
@@ -65,21 +74,21 @@ class LadlesView(RedisCacheMixin, TemplateView):
             time = LadlesView.time_convert(request.POST.get('time'))
             # удаляю старые ключи из хранилища redis
             LadlesView.delete_keys_redis('*ltime:*')
-            status: int = 200
+            status: int = HTTPStatus.OK
             match operation_type:
-                case 'transporting':
+                case LadleOperationTypes.TRANSPORTING.value:
                     # если ковш "транспортируемый"
                     # перезаписываю запись в архивную таблицу
                     LadlesView.from_active_to_archive(operation)
                     data: dict = {'st': 'перемещён в архив'}
-                case 'starting':
+                case LadleOperationTypes.STARTING.value:
                     # если ковш "начинающий"
                     # перезаписываю дату в операции Активной Таблицы,
                     # то есть теперь ковш стаёт "ожидающим"
                     operation.actual_start = time
                     operation.save()
                     data: dict = {'st': 'теперь ковш ожидающим'}
-                case 'ending':
+                case LadleOperationTypes.ENDING.value:
                     # если ковш "ожидающий"
                     # перезаписываю дату в операции Активной Таблицы,
                     # то есть теперь ковш стаёт "транспортируемым"
@@ -90,20 +99,20 @@ class LadlesView(RedisCacheMixin, TemplateView):
                     # в таком случае status=400, то есть пользователь
                     # клиент неверно указал operation_type
                     data: dict = {'st': 'неверно указан operation_type'}
-                    status: int = 400
+                    status: int = HTTPStatus.BAD_REQUEST
         else:
             # если нужно отобразить ковши
             # получение времени
             date = LadlesView.time_convert(request.POST.get('time'))
             # получаю ковши и формирую ответ
             data: dict = LadlesView.get_ladles_info(date)
-            status: int = 200
+            status: int = HTTPStatus.OK
         return JsonResponse(data=data, status=status)
 
     @staticmethod
     def time_convert(time: str) -> datetime:
         """Метод, переводящий время в удобный формат"""
-        t: List[str, str] = time.split(':')
+        t: list[str, str] = time.split(':')
         hours: int = int(t[0])
         minutes: int = int(t[1])
         # записываю время в redis-cache
@@ -160,28 +169,32 @@ class LadlesView(RedisCacheMixin, TemplateView):
                     actual_start__lte=date)
         # actual_start__lte=date, actual_end__gte=date)
         # добавляю всю нужную информацию в словарь
-        ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info, is_transporting=True)
+        ladles_info = LadlesView.ladles_into_dict(ladles_queryset, ladles_info, is_transporting=True)
         # Извлекаю "ожидающие" ковши
         ladles_queryset = ActiveDynamicTable.objects \
             .select_related('ladle', 'brand_steel', 'aggregate') \
             .filter(actual_start__isnull=False, actual_end__isnull=True,
                     actual_start__lte=date)
         # добавляю всю нужную информацию в словарь
-        ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info)
+        ladles_info = LadlesView.ladles_into_dict(ladles_queryset, ladles_info)
         # Извлекаю "начинающие" ковши
         ladles_queryset = ActiveDynamicTable.objects \
             .select_related('ladle', 'brand_steel', 'aggregate') \
             .filter(actual_start__isnull=True, actual_end__isnull=True,
                     plan_start__lt=date, plan_end__gt=date)
         # добавляю всю нужную информацию в словарь
-        ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info, is_plan=True)
+        ladles_info = LadlesView.ladles_into_dict(ladles_queryset, ladles_info, is_plan=True)
         # добавление ключа в redis
         LadlesView.set_key_redis_json(key_name, ladles_info, 300)
         return ladles_info
 
     @staticmethod
-    def cranes_into_dict(ladles_queryset, ladles_info: dict, is_transporting: bool = False,
-                         is_plan: bool = False) -> dict:
+    def ladles_into_dict(
+        ladles_queryset,
+        ladles_info: dict,
+        is_transporting: bool = False,
+        is_plan: bool = False
+    ) -> dict:
         """
         Метод, преобразующий queryset ковшей в dict.
         Этот метод создаёт единый фундамент для всех видов
@@ -283,7 +296,7 @@ class CranesView(RedisCacheMixin, TemplateView):
             'cranes_pos': CranesView.get_cranes_pos(),
             'cranes_info': CranesView.get_cranes_info()
         }
-        return JsonResponse(data=data, status=200)
+        return JsonResponse(data=data, status=HTTPStatus.OK)
 
     @staticmethod
     def get_cranes_pos() -> dict:
@@ -319,7 +332,7 @@ class CranesView(RedisCacheMixin, TemplateView):
         # имя ключа в redis
         key_name = 'cranes_info:1'
         # проверяю нет ли этой информации в redis
-        result: Optional[dict] = CranesView.get_key_redis_json(key_name)
+        result: dict | None = CranesView.get_key_redis_json(key_name)
         if result is not None:
             return result
         # получаю информацию
@@ -582,7 +595,7 @@ class ChangeEmployeeInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView
         is_crop_photo = str(form.cleaned_data.get('photo')) == 'photo.png'
         # и если пользователь добавил фото, то отправляю ссылку для перехода
         if is_crop_photo:
-            return JsonResponse(data={'url': self.get_success_url()}, status=200)
+            return JsonResponse(data={'url': self.get_success_url()}, status=HTTPStatus.OK)
         # если пользователь не добавлял новое фото, то отправляется
         # стандартный ответ
         return HttpResponseRedirect(self.get_success_url())
