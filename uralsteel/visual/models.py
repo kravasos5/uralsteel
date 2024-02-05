@@ -2,7 +2,6 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import pre_save
-from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.deconstruct import deconstructible
 from django.utils.text import slugify
@@ -140,7 +139,7 @@ class Cranes(models.Model):
     title = models.CharField(verbose_name="Название крана или каретки", max_length=100)
     size_x = models.SmallIntegerField(verbose_name="Размер по Х")
     size_y = models.SmallIntegerField(verbose_name="Размер по У")
-    photo = models.ImageField(upload_to="", verbose_name="Фото крана или каретки")
+    photo = models.ImageField(upload_to=get_photo_path, verbose_name="Фото крана или каретки")
     is_broken = models.BooleanField(default=False, null=False, blank=False,
                                     verbose_name="Сломан ли кран")
 
@@ -189,8 +188,8 @@ class DynamicTableAbstract(models.Model):
     aggregate = models.ForeignKey('Aggregates', on_delete=models.PROTECT, verbose_name='Агрегат')
     plan_start = models.DateTimeField(verbose_name='Плановая дата начала')
     plan_end = models.DateTimeField(verbose_name='Плановая дата завершения')
-    actual_start = models.DateTimeField(verbose_name='Фактическая дата начала')
-    actual_end = models.DateTimeField(verbose_name='Фактическая дата завершения')
+    actual_start = models.DateTimeField(null=True, verbose_name='Фактическая дата начала')
+    actual_end = models.DateTimeField(null=True, verbose_name='Фактическая дата завершения')
 
     def __str__(self):
         return f'{self.num_melt}'
@@ -260,6 +259,7 @@ def accident_pre_save_dispatcher(sender, **kwargs):
     object.is_broken = True
     object.save()
     # дальнейшая обработка перестроения маршрутов
+    ...
 
 class LadlesAccident(AccidentsAbstract):
     '''Модель проишествий ковшей'''

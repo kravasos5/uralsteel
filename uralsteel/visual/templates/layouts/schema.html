@@ -4,6 +4,12 @@
 
 {% block links %}
 <link rel="stylesheet" href="{% static 'visual/css/schema.css' %}">
+<script src="{% static 'visual/js/functions.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    bg_image = new Image();
+    bg_image.src = '{% static 'visual/css/images/canvas_background.jpg' %}'
+</script>
 {% block addlinks %}
 {% endblock addlinks %}
 {% endblock links %}
@@ -12,8 +18,10 @@
 {% block inputtime %}
 {% endblock inputtime %}
 <div class="center-container">
-    <canvas id="canvas">
+    <canvas id="canvas" width="1280" height="640">
 
     </canvas>
 </div>
+{% block modal %}
+{% endblock modal %}
 {% endblock content %}
