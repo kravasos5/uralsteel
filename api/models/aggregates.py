@@ -1,77 +1,80 @@
-from sqlalchemy import Column, String, TIMESTAMP, Boolean, func, SmallInteger, BigInteger, ForeignKey
-from sqlalchemy.orm import relationship, declared_attr
+from datetime import datetime
 
-from database import Base
-from .commons import IdMixin
+from sqlalchemy import String, TIMESTAMP, Boolean, SmallInteger, BigInteger, ForeignKey
+from sqlalchemy.orm import relationship, declared_attr, mapped_column, Mapped
+
+from database import Base, idpk
 
 
 ###################################################################
 # Модели агрегатов
-class Aggregates(IdMixin):
+class AggregatesORM(Base):
     """Модель агрегатов (справочная информация)"""
     __tablename__ = "visual_aggregates"
 
-    title = Column(String, nullable=False)
-    num_agg = Column(String, nullable=False)
-    num_pos = Column(String, nullable=False)
-    coord_x = Column(SmallInteger, nullable=False)
-    coord_y = Column(SmallInteger, nullable=False)
-    stay_time = Column(TIMESTAMP, nullable=False)
-    photo = Column(String, nullable=False)
-    is_broken = Column(Boolean, nullable=False)
+    id: Mapped[idpk]
+    title: Mapped[str] = mapped_column(String(100))
+    num_agg: Mapped[str] = mapped_column(String(100))
+    num_pos: Mapped[str] = mapped_column(String(100))
+    coord_x: Mapped[int] = mapped_column(SmallInteger)
+    coord_y: Mapped[int] = mapped_column(SmallInteger)
+    stay_time: Mapped[datetime] = mapped_column(TIMESTAMP)
+    photo: Mapped[str] = mapped_column(String(100))
+    is_broken: Mapped[bool] = mapped_column(Boolean)
 
-    aggregates_gmp = relationship('AggregatesGMP', back_populates='aggregate_info', uselist=False)
-    aggregates_ukp = relationship('AggregatesUKP', back_populates='aggregate_info', uselist=False)
-    aggregates_uvs = relationship('AggregatesUVS', back_populates='aggregate_info', uselist=False)
-    aggregates_mnlz = relationship('AggregatesMNLZ', back_populates='aggregate_info', uselist=False)
-    aggregates_l = relationship('AggregatesL', back_populates='aggregate_info', uselist=False)
-    aggregates_burner = relationship('AggregatesBurner', back_populates='aggregate_info', uselist=False)
-    # dynamic_table = relationship('DynamicTableMixin', back_populates='aggregates_info')
-    accidents = relationship('AggregateAccident', back_populates='object_info')
+    aggregates_gmp: Mapped[list['AggregatesGMPORM']] = relationship(back_populates='aggregate_info')
+    aggregates_ukp: Mapped[list['AggregatesUKPORM']] = relationship(back_populates='aggregate_info')
+    aggregates_uvs: Mapped[list['AggregatesUVSORM']] = relationship(back_populates='aggregate_info')
+    aggregates_mnlz: Mapped[list['AggregatesMNLZORM']] = relationship(back_populates='aggregate_info')
+    aggregates_l: Mapped[list['AggregatesLORM']] = relationship(back_populates='aggregate_info')
+    aggregates_burner: Mapped[list['AggregatesBurnerORM']] = relationship(back_populates='aggregate_info')
+    accidents: Mapped[list['AggregateAccidentORM']] = relationship(back_populates='object_info')
+    active_dynamic_table: Mapped[list['ActiveDynamicTableORM']] = relationship(back_populates='aggregates_info')
+    archive_dynamic_table: Mapped[list['ArchiveDynamicTableORM']] = relationship(back_populates='aggregates_info')
 
 
-class AggregatesBaseMixin(Base):
+class AggregatesBaseORMMixin(Base):
     """Базовый класс для всех агрегатов"""
     __abstract__ = True
 
-    id = Column(BigInteger, primary_key=True)
-    aggregates_ptr_id = Column(BigInteger, ForeignKey('visual_aggregates.id'),
-                               unique=True, nullable=False)
+    id: Mapped[idpk]
+    aggregates_ptr_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_aggregates.id', ondelete='CASCADE'),
+                                                   unique=True)
 
     @declared_attr
-    def aggregate_info(self):
-        return relationship('Aggregates', uselist=False)
+    def aggregate_info(self) -> Mapped['AggregatesORM']:
+        return relationship('AggregatesORM')
 
 
-class AggregatesGMP(AggregatesBaseMixin):
+class AggregatesGMPORM(AggregatesBaseORMMixin):
     """Модель агрегатов ГМП"""
     __tablename__ = 'visual_aggregatesgmp'
-    routes = relationship('Routes', back_populates='aggregate_gmp')
+    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregate_gmp')
 
 
-class AggregatesUKP(AggregatesBaseMixin):
+class AggregatesUKPORM(AggregatesBaseORMMixin):
     """Модель агрегатов УКП"""
     __tablename__ = 'visual_aggregatesukp'
-    routes = relationship('Routes', back_populates='aggregate_ukp')
+    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregate_ukp')
 
 
-class AggregatesUVS(AggregatesBaseMixin):
+class AggregatesUVSORM(AggregatesBaseORMMixin):
     """Модель агрегатов УВС"""
     __tablename__ = 'visual_aggregatesuvs'
-    routes = relationship('Routes', back_populates='aggregate_uvs')
+    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregate_uvs')
 
 
-class AggregatesMNLZ(AggregatesBaseMixin):
+class AggregatesMNLZORM(AggregatesBaseORMMixin):
     """Модель агрегатов МНЛЗ"""
     __tablename__ = 'visual_aggregatesmnlz'
-    routes = relationship('Routes', back_populates='aggregate_mnlz')
+    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregate_mnlz')
 
 
-class AggregatesL(AggregatesBaseMixin):
+class AggregatesLORM(AggregatesBaseORMMixin):
     """Модель агрегатов Лёжек"""
     __tablename__ = 'visual_aggregatesl'
 
 
-class AggregatesBurner(AggregatesBaseMixin):
+class AggregatesBurnerORM(AggregatesBaseORMMixin):
     """Модель агрегатов Горелок"""
     __tablename__ = 'visual_aggregatesburner'

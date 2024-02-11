@@ -1,15 +1,17 @@
-from sqlalchemy import Column, String
-from sqlalchemy.orm import relationship
+from sqlalchemy import String
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from .commons import IdMixin
+from database import idpk, Base
 
 
 ###################################################################
 # Модели марок стали
-class BrandSteel(IdMixin):
+class BrandSteelORM(Base):
     """Модель марок стали"""
     __tablename__ = 'visual_brandsteel'
 
-    title = Column(String, nullable=False)
+    id: Mapped[idpk]
+    title: Mapped[str] = mapped_column(String(100))
 
-    dynamic_table = relationship('DynamicTableMixin', back_populates='brand_steel_info')
+    active_dynamic_table: Mapped[list['ActiveDynamicTableORM']] = relationship(back_populates='brand_steel_info')
+    archive_dynamic_table: Mapped[list['ArchiveDynamicTableORM']] = relationship(back_populates='brand_steel_info')

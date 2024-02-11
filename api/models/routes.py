@@ -1,26 +1,23 @@
-from sqlalchemy import Column, BigInteger, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import BigInteger, ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from .commons import IdMixin
+from database import Base
 
 
 ###################################################################
 # Модели маршрутов
-class Routes(IdMixin):
+class RoutesORM(Base):
     """Модель маршрутов"""
     __tablename__ = 'visual_routes'
 
-    aggregate_1 = Column(BigInteger, ForeignKey('visual_aggregatesgmp.id'),
-                         nullable=False)
-    aggregate_2 = Column(BigInteger, ForeignKey('visual_aggregatesukp.id'),
-                         nullable=False)
-    aggregate_3 = Column(BigInteger, ForeignKey('visual_aggregatesuvs.id'),
-                         nullable=False)
-    aggregate_4 = Column(BigInteger, ForeignKey('visual_aggregatesmnlz.id'),
-                         nullable=False)
+    aggregate_1: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_aggregatesgmp.id'))
+    aggregate_2: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_aggregatesukp.id'))
+    aggregate_3: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_aggregatesuvs.id'))
+    aggregate_4: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_aggregatesmnlz.id'))
 
-    aggregate_gmp = relationship('AggregatesGMP', back_populates='routes')
-    aggregate_ukp = relationship('AggregatesUKP', back_populates='routes')
-    aggregate_uvs = relationship('AggregatesUVS', back_populates='routes')
-    aggregate_mnlz = relationship('AggregatesMNLZ', back_populates='routes')
-    dynamic_table = relationship('DynamicTableMixin', back_populates='route_info')
+    aggregate_gmp: Mapped['AggregatesGMPORM'] = relationship(back_populates='routes')
+    aggregate_ukp: Mapped['AggregatesUKPORM'] = relationship(back_populates='routes')
+    aggregate_uvs: Mapped['AggregatesUVSORM'] = relationship(back_populates='routes')
+    aggregate_mnlz: Mapped['AggregatesMNLZORM'] = relationship(back_populates='routes')
+    active_dynamic_table: Mapped[list['ActiveDynamicTableORM']] = relationship(back_populates='route_info')
+    archive_dynamic_table: Mapped[list['ArchiveDynamicTableORM']] = relationship(back_populates='route_info')

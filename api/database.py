@@ -1,16 +1,30 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from uralsteel.settings import DATABASES
+from typing import Annotated
 
-DB_DEFAULT = DATABASES['default']
+from sqlalchemy import create_engine, BigInteger, TIMESTAMP, text
+from sqlalchemy.orm import sessionmaker, DeclarativeBase, mapped_column
 
-SQLALCHEMY_DATABASE_URL = f"postgresql://{DB_DEFAULT['USER']}:{DB_DEFAULT['PASSWORD']}{DB_DEFAULT['HOST']}:{DB_DEFAULT['PORT']}@/{DB_DEFAULT['NAME']}"
+from config import settings
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={}
+    settings.DATABASE_URL, connect_args={}
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+idpk = Annotated[BigInteger, mapped_column(primary_key=True)]
+created_at = Annotated[TIMESTAMP, mapped_column(TIMESTAMP, server_default=text('TIMEZONE("utc+5", now()'))]
+
+
+class Base(DeclarativeBase):
+    """Базовый класс для всех моделей"""
+    repr_cols_num = 3
+    repr_cols = tuple()
+
+    def __repr__(self):
+        """Relations не будут выводиться на печать"""
+        cols = []
+        for index, col in enumerate(self.__table__.columns.keys()):
+            if col in self.repr_cols or index < self.repr_cols_num:
+                cols.append(f'{col}={getattr(self, col)}')
+
+        return f'<{self.__class__.__name__} {", ".join(cols)}>'

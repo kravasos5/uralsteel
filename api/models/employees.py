@@ -1,52 +1,48 @@
+from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import Column, String, TIMESTAMP, Boolean, func
-from sqlalchemy.orm import relationship
+from sqlalchemy import String, TIMESTAMP, Boolean
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from .commons import IdMixin
+from database import Base, created_at, idpk
 
 
 ###################################################################
 # Модели Employees(пользователя или же работника)
 class Posts(str, Enum):
-    """Класс, содержащий должности"""
+    """Enum, содержащий должности"""
     MASTER = 'MS'
     MECHANIC = 'MH'
     DISPATCHER = 'DT'
 
 
-class Employees(IdMixin):
+class EmployeesORM(Base):
     """Модель работника"""
     __tablename__ = "visual_employees"
 
-    email = Column(String, unique=True, index=True, nullable=False)
-    password = Column(String, nullable=False)
-    username = Column(String, nullable=False)
-    first_name = Column(String, nullable=False)
-    last_name = Column(String, nullable=False)
-    patronymic = Column(String, nullable=True)
-    last_login = Column(TIMESTAMP, nullable=True)
-    is_superuser = Column(Boolean, nullable=False, default=False)
-    is_staff = Column(Boolean, nullable=False, default=False)
-    is_active = Column(Boolean, default=True)
-    date_joined = Column(TIMESTAMP, nullable=False, server_default=func.now())
-    send_messages = Column(Boolean, nullable=False, default=True)
-    photo = Column(String, nullable=True)
-    post = Column(Enum(Posts, name='posts_enum'), nullable=False, default=Posts.MECHANIC.value)
-    slug = Column(String, unique=True, index=True)
+    id: Mapped[idpk]
+    email: Mapped[str] = mapped_column(String(254), unique=True, index=True)
+    password: Mapped[str] = mapped_column(String(128))
+    username: Mapped[str] = mapped_column(String(150))
+    first_name: Mapped[str] = mapped_column(String(150))
+    last_name: Mapped[str] = mapped_column(String(150))
+    patronymic: Mapped[str] = mapped_column(String(100), nullable=True)
+    last_login: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=True)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_staff: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    date_joined: Mapped[created_at]
+    send_messages: Mapped[bool] = mapped_column(Boolean, default=True)
+    photo: Mapped[str] = mapped_column(String(100), nullable=True)
+    post: Mapped[Posts] = mapped_column(String(2), default=Posts.MECHANIC.value)
+    slug: Mapped[str] = mapped_column(String(200), unique=True, index=True)
 
-    ladles_reports = relationship(
-        'LadlesAccident',
-        back_populates='author_info',
-        uselist=True
+    ladles_reports: Mapped[list['LadlesAccidentORM']] = relationship(
+        back_populates='author_info'
     )
-    cranes_reports = relationship(
-        'CranesAccident',
-        back_populates='author_info',
-        uselist=True
+    cranes_reports: Mapped[list['CranesAccidentORM']] = relationship(
+        back_populates='author_info'
     )
-    aggregates_reports = relationship(
-        'AggregatesAccident',
-        back_populates='author_info',
-        uselist=True
+    aggregates_reports: Mapped[list['AggregatesAccidentORM']] = relationship(
+        back_populates='author_info'
     )

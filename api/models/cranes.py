@@ -1,19 +1,22 @@
-from sqlalchemy import Column, String, Boolean, SmallInteger
-from sqlalchemy.orm import relationship
+from sqlalchemy import String, Boolean, SmallInteger
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from .commons import IdMixin
+from database import Base, idpk
 
 
 ###################################################################
 # Модели кранов
-class Cranes(IdMixin):
+class CranesORM(Base):
     """Модель кранов"""
     __tablename__ = 'visual_cranes'
 
-    title = Column(String, nullable=False)
-    size_x = Column(SmallInteger, nullable=False)
-    size_y = Column(SmallInteger, nullable=False)
-    photo = Column(String, nullable=False)
-    is_broken = Column(Boolean, default=False, nullable=False)
+    id: Mapped[idpk]
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+    size_x: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    size_y: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    photo: Mapped[str] = mapped_column(String(100), nullable=False)
+    is_broken: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    accidents = relationship('CranesAccident', back_populates='object_info')
+    accidents: Mapped[list['CranesAccidentOrm']] = relationship(
+        back_populates='object_info'
+    )

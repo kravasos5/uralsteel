@@ -1,79 +1,61 @@
-from sqlalchemy import Column, String, TIMESTAMP, func, BigInteger, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, BigInteger, ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from database import Base
+from database import Base, idpk, created_at
 
 
 ###################################################################
 # Модели проишествий
-# class AccidentsUserMixin:
-#     """Миксин, добавляющий отношение с Employees для проишествий"""
-#     author_id = Column(BigInteger, ForeignKey('visual_employees.id'), nullable=False)
-#
-#     @declared_attr
-#     def author_info(self):
-#         return relationship('Employees', back_populates='reports', uselist=False)
-
-
-class AccidentsMixin(Base):
+class AccidentsORMMixin(Base):
     """Модель происшествий"""
     __abstract__ = True
 
-    id = Column(BigInteger, primary_key=True)
-    report = Column(String, default=None, nullable=True)
-    created_at = Column(TIMESTAMP, default=func.now(), nullable=False)
-    author_id = Column(BigInteger, ForeignKey('visual_employees.id'), nullable=False)
+    id: Mapped[idpk]
+    report: Mapped[str | None] = mapped_column(String(800), default=None, nullable=True)
+    created_at: Mapped[created_at]
+    author_id: Mapped[int] = Column(BigInteger, ForeignKey('visual_employees.id'))
 
 
-class LadlesAccident(AccidentsMixin):
+class LadlesAccidentORM(AccidentsORMMixin):
     """Модель происшествий ковшей"""
     __tablename__ = 'visual_ladlesaccident'
 
-    object_id = Column(BigInteger, ForeignKey('visual_ladles.id'), nullable=True)
+    object_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey('visual_ladles.id'), nullable=True)
 
-    object_info = relationship(
-        'Ladles',
+    object_info: Mapped['LadlesORM'] = relationship(
         back_populates='accidents'
     )
 
-    author_info = relationship(
-        'Employees',
-        back_populates='ladles_reports',
-        uselist=False
+    author_info: Mapped['EmployeesORM'] = relationship(
+        back_populates='ladles_reports'
     )
 
 
-class CranesAccident(AccidentsMixin):
+class CranesAccidentORM(AccidentsORMMixin):
     """Модель проишествий кранов"""
     __tablename__ = 'visual_cranesaccident'
 
-    object_id = Column(BigInteger, ForeignKey('visual_cranes.id'), nullable=True)
+    object_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey('visual_cranes.id'), nullable=True)
 
-    object_info = relationship(
-        'Cranes',
+    object_info: Mapped['CranesORM'] = relationship(
         back_populates='accidents'
     )
 
-    author_info = relationship(
-        'Employees',
-        back_populates='cranes_reports',
-        uselist=False
+    author_info: Mapped['EmployeesORM'] = relationship(
+        back_populates='cranes_reports'
     )
 
 
-class AggregatesAccident(AccidentsMixin):
+class AggregatesAccidentORM(AccidentsORMMixin):
     """Модель проишествий агрегатов"""
     __tablename__ = 'visual_aggregataccident'
 
-    object_id = Column(BigInteger, ForeignKey('visual_aggregates.id'), nullable=True)
+    object_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey('visual_aggregates.id'), nullable=True)
 
-    object_info = relationship(
-        'Aggregates',
+    object_info: Mapped['AggregatesORM'] = relationship(
         back_populates='accidents'
     )
 
-    author_info = relationship(
-        'Employees',
-        back_populates='aggregates_reports',
-        uselist=False
+    author_info: Mapped['EmployeesORM'] = relationship(
+        back_populates='aggregates_reports'
     )

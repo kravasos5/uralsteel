@@ -1,18 +1,20 @@
-from sqlalchemy import Column, String, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy import String, Boolean
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from .commons import IdMixin
+from database import Base, idpk
 
 
 ###################################################################
 # Модели ковшей
-class Ladles(IdMixin):
+class LadlesORM(Base):
     """Модель ковшей"""
     __tablename__ = 'visual_ladles'
 
-    title = Column(String, nullable=False)
-    is_active = Column(Boolean, nullable=False, default=False)
-    is_broken = Column(Boolean, nullable=False, default=False)
+    id: Mapped[idpk]
+    title: Mapped[str] = mapped_column(String(100))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_broken: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    dynamic_table = relationship('DynamicTableMixin', back_populates='ladle_info')
-    accidents = relationship('LadlesAccident', back_populates='object_info')
+    active_dynamic_table: Mapped[list['ActiveDynamicTableORM']] = relationship(back_populates='ladle_info')
+    archive_dynamic_table: Mapped[list['ArchiveDynamicTableORM']] = relationship(back_populates='ladle_info')
+    accidents: Mapped[list['LadlesAccidentORM']] = relationship(back_populates='object_info')
