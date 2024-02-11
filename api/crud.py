@@ -10,9 +10,11 @@ from sqlalchemy.orm import Session, selectinload
 from django.utils.text import slugify
 
 from uralsteel.settings import TIME_ZONE
-from visual.tasks import archive_report_handler
+# from visual.tasks import archive_report_handler
+from visual.redis_interface import RedisCacheMixin
+from visual.utilities import CraneMixin
 from . import models, schemas
-from ...uralsteel.visual.views import CranesView, LadlesView, LadleOperationTypes
+from visual.utilities import LadleOperationTypes
 
 
 # def commit_refresh(obj):
@@ -80,6 +82,11 @@ def hash_password(password: str) -> str:
 def get_user_by_id(db: Session, user_id: int):
     """Получение пользователя по id"""
     return db.query(models.Employees).filter_by(id=user_id).first()
+
+
+def get_user_by_slug(db: Session, user_slug: str):
+    """Получение пользователя по slug"""
+    return db.query(models.Employees).filter_by(slug=user_slug).first()
 
 
 def get_users(db: Session, skip: int = 0, limit: int = 100):
@@ -159,10 +166,10 @@ def delete_repost(db: Session, report_id: int, report_model):
     return HTTPStatus.NO_CONTENT
 
 
-def create_report_for_user(first_name: str, email: str):
-    """Формирование отчёта для пользователя"""
-    archive_report_handler.delay(first_name, email)
-    return {'message': 'Письмо с отчётом успешно отправлено.'}
+# def create_report_for_user(first_name: str, email: str):
+#     """Формирование отчёта для пользователя"""
+#     archive_report_handler.delay(first_name, email)
+#     return {'message': 'Письмо с отчётом успешно отправлено.'}
 
 
 ###################################################################
@@ -201,11 +208,36 @@ def create_crane(db: Session, crane_info: schemas.CranesBaseSchema):
     return create_in_db(db, crane_db)
 
 
+def get_cranes_info(db: Session) -> dict:
+    """Функция, возвращающая фото кранов и кареток"""
+    # имя ключа в redis
+    key_name = 'cranes_info:1'
+    # проверяю нет ли этой информации в redis
+    result: dict | None = CraneMixin.get_key_redis_json(key_name)
+    if result is not None:
+        return result
+    # получаю информацию
+    cranes = db.query(models.Cranes).all()
+    cranes_dict: dict = {}
+    # формирую словарь
+    # информация ниже это размеры фото и само фото,
+    # корпуса или каретки крана например
+    for elem in cranes:
+        cranes_dict[f'{elem.title}'] = {
+            'size_x': elem.size_x,
+            'size_y': elem.size_y,
+            'photo': elem.photo.url
+        }
+    # если в redis нет такого ключа, то запишу его, время жизни 10 секунд
+    CraneMixin.set_key_redis_json(key_name, cranes_dict, 3600)
+    return cranes_dict
+
+
 def get_cranes_pos_info():
     """Получение информации о ковшах"""
     data: dict = {
-        'cranes_pos': CranesView.get_cranes_pos(),
-        'cranes_info': CranesView.get_cranes_info()
+        'cranes_pos': CraneMixin.get_cranes_pos(),
+        'cranes_info': get_cranes_info()
     }
     return data
 
@@ -252,7 +284,7 @@ def get_ladle_timeform():
     Проходит проверка наличия значения времени в кэше, оно будет передано
     странице и там обработано
     """
-    ladle_timeform = LadlesView.get_key_redis('ltimeform')
+    ladle_timeform = RedisCacheMixin.get_key_redis('ltimeform')
     if ladle_timeform:
         return {'timeformvalue': ladle_timeform}
     return {}
@@ -264,7 +296,7 @@ def time_convert(time: str) -> datetime:
     hours: int = int(t[0])
     minutes: int = int(t[1])
     # записываю время в redis-cache
-    LadlesView.set_key_redis('ltimeform', f'{hours}:{minutes}', 120)
+    RedisCacheMixin.set_key_redis('ltimeform', f'{hours}:{minutes}', 120)
     # получаю "наивную дату"
     naive_datetime = datetime.datetime(2023, 12, 11, hours, minutes)
     # преобразую её в "осведомлённую", то есть знающую часовой пояс
@@ -282,6 +314,7 @@ def time_convert(time: str) -> datetime:
 def get_ladles_info(db: Session, date: datetime):
     """Получение информации о положении ковшей на странице"""
     # Использование статических методов из LadlesView
+    # Пока что так не получится
     # date = LadlesView.time_convert(date)
     # data: dict = LadlesView.get_ladles_info(date)
     # return data
@@ -291,7 +324,7 @@ def get_ladles_info(db: Session, date: datetime):
     # получаю имя ключа, которое используется при кэшировании
     key_name: str = f"ltime:{date.strftime('%H-%M')}"
     # проверка наличия ключа в redis-cache
-    result: dict | None = LadlesView.get_key_redis_json(key_name)
+    result: dict | None = RedisCacheMixin.get_key_redis_json(key_name)
     if result is not None:
         return result
     # если ключа нет, то брать информацию из базы данных,
@@ -327,7 +360,7 @@ def get_ladles_info(db: Session, date: datetime):
     # добавляю всю нужную информацию в словарь
     ladles_info = ladles_into_dict(db, ladles_queryset, ladles_info, is_plan=True)
     # добавление ключа в redis
-    LadlesView.set_key_redis_json(key_name, ladles_info, 300)
+    RedisCacheMixin.set_key_redis_json(key_name, ladles_info, 300)
     return ladles_info
 
 
@@ -438,7 +471,7 @@ def ladle_operation_id(db: Session, operation_id: int, operation_type: LadleOper
     # получаю время
     time = time_convert(time)
     # удаляю старые ключи из хранилища redis
-    LadlesView.delete_keys_redis('*ltime:*')
+    RedisCacheMixin.delete_keys_redis('*ltime:*')
     status: int = HTTPStatus.OK
     match operation_type.value:
         case LadleOperationTypes.TRANSPORTING.value:

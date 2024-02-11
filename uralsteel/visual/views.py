@@ -1,9 +1,7 @@
-import datetime, os, json
-from enum import Enum
+import datetime
 from http import HTTPStatus
 from typing import Type
 
-import glob2
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, \
     PasswordResetConfirmView, PasswordResetCompleteView
@@ -17,10 +15,11 @@ from django.views.generic import TemplateView, UpdateView, CreateView
 
 from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, AggregateAccidentForm, \
     LadlesAccidentDetailForm, CranesAccidentDetailForm, AggregateAccidentDetailForm, AccidentStartingForm
-from visual.mixins import RedisCacheMixin
+from visual.redis_interface import RedisCacheMixin
 from visual.models import Employees, CranesAccident, LadlesAccident, AggregateAccident, Ladles, Cranes, Aggregates, \
     ActiveDynamicTable, ArchiveDynamicTable
-from visual.utilities import archive_report_signal
+from visual.signals import archive_report_signal
+from visual.utilities import CraneMixin, LadleOperationTypes
 
 
 class MainView(TemplateView):
@@ -37,13 +36,6 @@ class ArchiveReportMessage(LoginRequiredMixin, TemplateView):
         # вызов сигнала отправки отчёта
         archive_report_signal.send(ArchiveReportMessage, user=request.user)
         return render(request, self.template_name)
-
-
-class LadleOperationTypes(str, Enum):
-    """Перечисление операций над ковшами"""
-    TRANSPORTING = 'transporting'
-    STARTING = 'starting'
-    ENDING = 'ending'
 
 
 class LadlesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
@@ -285,7 +277,7 @@ class LadlesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
         operation.delete()
 
 
-class CranesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
+class CranesView(LoginRequiredMixin, CraneMixin, TemplateView):
     """Представление страницы с кранами"""
     template_name = 'visual/cranes.html'
 
@@ -297,34 +289,6 @@ class CranesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
             'cranes_info': CranesView.get_cranes_info()
         }
         return JsonResponse(data=data, status=HTTPStatus.OK)
-
-    @staticmethod
-    def get_cranes_pos() -> dict:
-        """
-        Функция, распаковывующая json-данные в рамках модуляции
-        с помощью pygame интерфейса
-        """
-        # ключ для redis
-        key_name = 'cranes_pos:1'
-        # проверяю нет ли этой информации в redis
-        result: dict | None = CranesView.get_key_redis_json(key_name)
-        if result is not None:
-            return result
-        path = os.path.join(os.getcwd(), 'visual\\static\\visual\\jsons')
-        files = glob2.glob(path + '\\*.json')
-        data: dict = {}
-        for file in files:
-            with open(file, 'r') as f:
-                crane_data = json.load(f)
-            for key, value in crane_data.items():
-                new_value = {}
-                new_value['x'] = value[0][0]
-                new_value['y'] = value[0][-1]
-                new_value['is_ladle'] = value[1]
-                data[str(key)] = new_value
-        # если в redis нет такого ключа, то запишу его, время жизни 10 секунд
-        CranesView.set_key_redis_json(key_name, data, 10)
-        return data
 
     @staticmethod
     def get_cranes_info() -> dict:
@@ -366,7 +330,7 @@ class AccidentStartingView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Вывод формы"""
-        context = super().get_context_data(*args, **kwargs)
+        context = super().get_context_data(**kwargs)
         form = AccidentStartingForm()
         context['form'] = form
         return render(request, self.template_name, context=context)
