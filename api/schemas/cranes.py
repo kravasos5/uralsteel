@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class CranesBaseSchema(BaseModel):
+class CranesBaseDTO(BaseModel):
     """Схема кранов"""
     title: str
     size_x: int
@@ -10,7 +10,7 @@ class CranesBaseSchema(BaseModel):
     is_broken: bool
 
 
-class CranesSchema(CranesBaseSchema):
+class CranesDTO(CranesBaseDTO):
     """Схема кранов для чтения"""
     id: int
 

@@ -1,14 +1,14 @@
 from pydantic import BaseModel
 
 
-class LadlesBaseSchema(BaseModel):
+class LadlesBaseDTO(BaseModel):
     """Схема ковша"""
     title: str
     is_active: int
     is_broken: bool
 
 
-class LadlesSchema(LadlesBaseSchema):
+class LadlesDTO(LadlesBaseDTO):
     """Схема ковша для чтения"""
     id: int
 

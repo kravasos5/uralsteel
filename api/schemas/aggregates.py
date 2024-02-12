@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class AggregatesBaseSchema(BaseModel):
+class AggregatesBaseDTO(BaseModel):
     """Схема агрегатов (справочная информация)"""
     title: str
     num_agg: str
@@ -15,9 +15,9 @@ class AggregatesBaseSchema(BaseModel):
     is_broken: bool
 
 
-class AggregatesSchema(AggregatesBaseSchema):
+class AggregatesDTO(AggregatesBaseDTO):
     """Схема агрегатов (справочная информация) для чтения"""
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True

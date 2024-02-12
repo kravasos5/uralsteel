@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from repositories.accidents import LadlesAccidentRepo, CranesAccidentRepo, AggregatesAccidentRepo
 from repositories.aggregates import AggregatesGMPRepo, AggregatesUKPRepo, AggregatesUVSRepo, AggregatesMNLZRepo, \
-    AggregatesLRepo, AggregatesBurnerRepo
+    AggregatesLRepo, AggregatesBurnerRepo, AggregatesAllRepo
 from repositories.brandsteel import BrandSteelRepo
 from repositories.cranes import CranesRepo
 from repositories.dynamic import ArchiveDynamicTableRepo, ActiveDynamicTableRepo
@@ -16,12 +16,15 @@ class RepoManager:
     # ladles_accident_repo = LadlesAccidentRepo
     # cranes_accident_repo = CranesAccidentRepo
     # aggregates_accident_repo = AggregatesAccidentRepo
-    # aggregates_gmp_repo = AggregatesGMPRepo
-    # aggregates_ukp_repo = AggregatesUKPRepo
-    # aggregates_uvs_repo = AggregatesUVSRepo
-    # aggregates_mnlz_repo = AggregatesMNLZRepo
-    # aggregates_l_repo = AggregatesLRepo
-    # aggregates_burner_repo = AggregatesBurnerRepo
+    aggregates = {
+        'aggregates_all': AggregatesAllRepo,
+        'aggregates_gmp_repo': AggregatesGMPRepo,
+        'aggregates_ukp_repo': AggregatesUKPRepo,
+        'aggregates_uvs_repo': AggregatesUVSRepo,
+        'aggregates_mnlz_repo': AggregatesMNLZRepo,
+        'aggregates_l_repo': AggregatesLRepo,
+        'aggregates_burner_repo': AggregatesBurnerRepo
+    }
     # brandsteel_repo = BrandSteelRepo
     # cranes_repo = CranesRepo
     # archived_dyn_repo = ArchiveDynamicTableRepo
@@ -35,12 +38,13 @@ class RepoManager:
         # other.ladles_accident_repo = self.ladles_accident_repo(session)
         # other.cranes_accident_repo = self.cranes_accident_repo(session)
         # other.aggregates_accident_repo = self.aggregates_accident_repo(session)
-        # other.aggregates_gmp_repo = self.aggregates_gmp_repo(session)
-        # other.aggregates_ukp_repo = self.aggregates_ukp_repo(session)
-        # other.aggregates_uvs_repo = self.aggregates_uvs_repo(session)
-        # other.aggregates_mnlz_repo = self.aggregates_mnlz_repo(session)
-        # other.aggregates_l_repo = self.aggregates_l_repo(session)
-        # other.aggregates_burner_repo = self.aggregates_burner_repo(session)
+        other.aggregates['aggregates_all'] = self.aggregates['aggregates_all'](session)
+        other.aggregates['aggregates_gmp_repo'] = self.aggregates['aggregates_gmp_repo'](session)
+        other.aggregates['aggregates_ukp_repo'] = self.aggregates['aggregates_ukp_repo'](session)
+        other.aggregates['aggregates_uvs_repo'] = self.aggregates['aggregates_uvs_repo'](session)
+        other.aggregates['aggregates_mnlz_repo'] = self.aggregates['aggregates_mnlz_repo'](session)
+        other.aggregates['aggregates_l_repo'] = self.aggregates['aggregates_l_repo'](session)
+        other.aggregates['aggregates_burner_repo'] = self.aggregates['aggregates_burner_repo'](session)
         # other.brandsteel_repo = self.brandsteel_repo(session)
         # other.cranes_repo = self.cranes_repo(session)
         # other.archived_dyn_repo = self.archived_dyn_repo(session)

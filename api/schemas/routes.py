@@ -1,19 +1,22 @@
 from pydantic import BaseModel
 
-from schemas.aggregates import AggregatesSchema
+from schemas.aggregates import AggregatesDTO
 
 
-class RoutesBaseSchema(BaseModel):
+class RoutesBaseDTO(BaseModel):
     """Схема маршрутов"""
-    aggregate_1: AggregatesSchema
-    aggregate_2: AggregatesSchema
-    aggregate_3: AggregatesSchema
-    aggregate_4: AggregatesSchema
-
-
-class RoutesSchema(BaseModel):
-    """Схема маршрутов для чтения"""
     id: int
 
+
+class RoutesDTO(RoutesBaseDTO):
+    """Схема маршрутов"""
+    aggregate_1: AggregatesDTO
+    aggregate_2: AggregatesDTO
+    aggregate_3: AggregatesDTO
+    aggregate_4: AggregatesDTO
+
+
+class RoutesShortDTO(RoutesBaseDTO):
+    """Схема маршрутов для чтения"""
     class Config:
-        orm_mode = True
+        from_attributes = True

@@ -2,13 +2,13 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from schemas.aggregates import AggregatesSchema
-from schemas.brandsteel import BrandSteelSchema
-from schemas.ladles import LadlesSchema
-from schemas.routes import RoutesSchema
+from schemas.aggregates import AggregatesDTO
+from schemas.brandsteel import BrandSteelDTO
+from schemas.ladles import LadlesDTO
+from schemas.routes import RoutesDTO
 
 
-class DynamicTableBaseSchema(BaseModel):
+class DynamicTableBaseDTO(BaseModel):
     """Схема основной таблицы с информацией о перемещении ковшей в реальном времени"""
     ladle: int
     num_melt: str
@@ -19,13 +19,13 @@ class DynamicTableBaseSchema(BaseModel):
     plan_end: datetime
     actual_start: datetime
     actual_end: datetime
-    ladle_info: LadlesSchema
-    brand_steel_info: BrandSteelSchema
-    route_info: RoutesSchema
-    aggregate_info: AggregatesSchema
+    ladle_info: LadlesDTO
+    brand_steel_info: BrandSteelDTO
+    route_info: RoutesDTO
+    aggregate_info: AggregatesDTO
 
 
-class DynamicTableSchema(DynamicTableBaseSchema):
+class DynamicTableDTO(DynamicTableBaseDTO):
     """
     Схема основной таблицы с информацией о перемещении ковшей в реальном времени.
     Для чтения.

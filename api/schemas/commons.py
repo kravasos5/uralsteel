@@ -9,14 +9,14 @@ from database import Base
 class AbstractDataConverter(ABC):
     """Абстрактный класс, содержащий методы конвертации данных"""
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def model_to_dto(model, schema):
         """Метод, конвертирующий модели или словари в dto"""
         raise NotImplementedError
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def models_to_dto(models, schema):
         """Метод, конвертирующий модели или словари в dto"""
         raise NotImplementedError

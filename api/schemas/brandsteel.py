@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class BrandSteelBaseSchema(BaseModel):
+class BrandSteelBaseDTO(BaseModel):
     """Схема марок стали"""
     title: str
 
@@ -9,7 +9,7 @@ class BrandSteelBaseSchema(BaseModel):
         orm_mode = True
 
 
-class BrandSteelSchema(BrandSteelBaseSchema):
+class BrandSteelDTO(BrandSteelBaseDTO):
     """Схема марок стали для чтения"""
     id: int
 
