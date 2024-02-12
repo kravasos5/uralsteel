@@ -4,8 +4,6 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from database import Base, idpk, created_at
 
 
-###################################################################
-# Модели проишествий
 class AccidentsORMMixin(Base):
     """Модель происшествий"""
     __abstract__ = True

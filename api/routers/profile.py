@@ -1,11 +1,12 @@
+from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException, Path
 
-from ..sql import crud, schemas
-from api.dependencies import get_db
-
+from dependencies import UOWDep
+from schemas.employees import EmployeesReadDTO
+from services.employees import EmployeesService
+from utils.unitofwork import AbstractUnitOfWork
 
 router = APIRouter(
     prefix="/profile",
@@ -13,13 +14,10 @@ router = APIRouter(
 )
 
 
-dbDep = Annotated[Session, Depends(get_db)]
-
-
-@router.get('/{slug}', response_model=schemas.EmployeesReadSchema)
-def get_profile(slug: str, db: dbDep):
+@router.get('/{slug}', response_model=EmployeesReadDTO)
+def get_profile(slug: Annotated[str, Path(max_length=200)], uow: UOWDep):
     """Получить данные профиля пользователя"""
-    user_db = crud.get_user_by_slug(db, slug)
-    if user_db is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user_db
+    user = EmployeesService().get_employee_by_slug(uow=uow, user_slug=slug)
+    if not user:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
+    return user

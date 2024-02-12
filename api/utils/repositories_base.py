@@ -37,31 +37,31 @@ class SqlAlchemyRepo(AbstractRepo):
 
     def create_one(self, data: dict):
         """Comment"""
-        stmt = insert(self.model).values(**data).returning(self.model.id)
+        stmt = insert(self.model).values(**data).returning(self.model)
         result = self.session.execute(stmt).scalar_one()
         return result
 
-    def delete_one(self, obj_id: int):
+    def delete_one(self, **filters):
         """Comment"""
         stmt = delete(self.model).where(self.model.id == obj_id).returning(self.model.id)
         result = self.session.execute(stmt).scalar_one()
         return result
 
-    def update_one(self, obj_id: int, data: dict):
+    def update_one(self, data: dict, **filters):
         """Comment"""
-        stmt = update(self.model).where(self.model.id == obj_id).values(**data).returning(self.model)
+        stmt = update(self.model).filter_by(**filters).values(**data).returning(self.model)
         result = self.session.execute(stmt).scalar_one()
         return result
 
-    def retrieve_one(self, obj_id: int):
+    def retrieve_one(self, **filters):
         """Comment"""
-        stmt = select(self.model).where(self.model.id == obj_id).returning(self.model)
+        stmt = select(self.model).filter_by(**filters)
         result = self.session.execute(stmt).scalar_one()
         return result
 
-    def retrieve_all(self, limit: int, offset: int):
+    def retrieve_all(self, limit: int, offset: int, **filters):
         """Comment"""
-        stmt = select(self.model).offset(offset).limit(limit).returning(self.model)
+        stmt = select(self.model).filter_by(**filters).offset(offset).limit(limit)
         result = self.session.execute(stmt).scalars().all()
         return result
 

@@ -4,8 +4,6 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from database import idpk, Base
 
 
-###################################################################
-# Модели марок стали
 class BrandSteelORM(Base):
     """Модель марок стали"""
     __tablename__ = 'visual_brandsteel'

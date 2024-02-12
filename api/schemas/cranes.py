@@ -1,8 +1,6 @@
 from pydantic import BaseModel
 
 
-###################################################################
-# Схемы кранов
 class CranesBaseSchema(BaseModel):
     """Схема кранов"""
     title: str

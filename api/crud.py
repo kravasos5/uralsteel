@@ -79,48 +79,48 @@ def hash_password(password: str) -> str:
 
 ###################################################################
 # Контроллеры пользователя (Employees)
-def get_user_by_id(db: Session, user_id: int):
-    """Получение пользователя по id"""
-    return db.query(models.Employees).filter_by(id=user_id).first()
-
-
-def get_user_by_slug(db: Session, user_slug: str):
-    """Получение пользователя по slug"""
-    return db.query(models.Employees).filter_by(slug=user_slug).first()
-
-
-def get_users(db: Session, skip: int = 0, limit: int = 100):
-    """Получение пользователей"""
-    return db.query(models.Employees).offset(skip).limit(limit).all()
-
-
-def update_user(
-    db: Session,
-    user_id: int,
-    user_info: schemas.EmployeesUpdateSchema,
-    http_method: HTTPMethods
-):
-    """Изменение пользователя"""
-    user_db = get_user_by_id(db, user_id)
-    if user_db:
-        return update_obj(db, user_db, user_info, http_method)
-
-
-def delete_user(db: Session, user_id: int):
-    """Удаление пользователя"""
-    user_db = get_user_by_id(db, user_id)
-    delete_from_db(db, user_db)
-    return HTTPStatus.NO_CONTENT
-
-
-def create_user(db: Session, user_info: schemas.EmployeesCreateSchema):
-    """Создание нового пользователя"""
-    user_dict: dict = user_info.model_dump()
-    password: str = user_dict.get('password')
-    hashed_password: str = hash_password(password)
-    slug = slugify(f'{user_dict.get("username")}')
-    user_db = models.Employees(**user_dict, password=make_password(hashed_password), slug=slug)
-    return create_in_db(db, user_db)
+# def get_user_by_id(db: Session, user_id: int):
+#     """Получение пользователя по id"""
+#     return db.query(models.Employees).filter_by(id=user_id).first()
+#
+#
+# def get_user_by_slug(db: Session, user_slug: str):
+#     """Получение пользователя по slug"""
+#     return db.query(models.Employees).filter_by(slug=user_slug).first()
+#
+#
+# def get_users(db: Session, skip: int = 0, limit: int = 100):
+#     """Получение пользователей"""
+#     return db.query(models.Employees).offset(skip).limit(limit).all()
+#
+#
+# def update_user(
+#     db: Session,
+#     user_id: int,
+#     user_info: schemas.EmployeesUpdateSchema,
+#     http_method: HTTPMethods
+# ):
+#     """Изменение пользователя"""
+#     user_db = get_user_by_id(db, user_id)
+#     if user_db:
+#         return update_obj(db, user_db, user_info, http_method)
+#
+#
+# def delete_user(db: Session, user_id: int):
+#     """Удаление пользователя"""
+#     user_db = get_user_by_id(db, user_id)
+#     delete_from_db(db, user_db)
+#     return HTTPStatus.NO_CONTENT
+#
+#
+# def create_user(db: Session, user_info: schemas.EmployeesCreateSchema):
+#     """Создание нового пользователя"""
+#     user_dict: dict = user_info.model_dump()
+#     password: str = user_dict.get('password')
+#     hashed_password: str = hash_password(password)
+#     slug = slugify(f'{user_dict.get("username")}')
+#     user_db = models.Employees(**user_dict, password=make_password(hashed_password), slug=slug)
+#     return create_in_db(db, user_db)
 
 
 ###################################################################

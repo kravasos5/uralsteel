@@ -8,8 +8,6 @@ from schemas.employees import EmployeesReadSchema
 from schemas.ladles import LadlesSchema
 
 
-###################################################################
-# Схемы проишествий
 class AccidentsBaseSchema(BaseModel):
     """Схема происшествий"""
     author: int

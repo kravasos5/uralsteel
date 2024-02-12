@@ -1,17 +1,17 @@
-from models.accidents import LadlesAccident, CranesAccident, AggregatesAccident
+from models.accidents import LadlesAccidentORM, CranesAccidentORM, AggregatesAccidentORM
 from utils.repositories_base import SqlAlchemyRepo
 
 
 class LadlesAccidentRepo(SqlAlchemyRepo):
     """Репозиторий происшествия с ковшом"""
-    model = LadlesAccident
+    model = LadlesAccidentORM
 
 
 class CranesAccidentRepo(SqlAlchemyRepo):
     """Репозиторий происшествия с краном"""
-    model = CranesAccident
+    model = CranesAccidentORM
 
 
 class AggregatesAccidentRepo(SqlAlchemyRepo):
     """Репозиторий происшествия с агрегатом"""
-    model = AggregatesAccident
+    model = AggregatesAccidentORM

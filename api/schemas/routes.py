@@ -3,8 +3,6 @@ from pydantic import BaseModel
 from schemas.aggregates import AggregatesSchema
 
 
-###################################################################
-# Схемы маршрутов
 class RoutesBaseSchema(BaseModel):
     """Схема маршрутов"""
     aggregate_1: AggregatesSchema

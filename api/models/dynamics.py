@@ -6,8 +6,6 @@ from sqlalchemy.orm import relationship, declared_attr, Mapped, mapped_column
 from database import Base, idpk
 
 
-###################################################################
-# Модели динамических таблиц
 class DynamicTableORMMixin(Base):
     """Основная таблица с информацией о перемещении ковшей в реальном времени"""
     __abstract__ = True

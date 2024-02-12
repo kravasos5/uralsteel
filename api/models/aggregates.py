@@ -6,8 +6,6 @@ from sqlalchemy.orm import relationship, declared_attr, mapped_column, Mapped
 from database import Base, idpk
 
 
-###################################################################
-# Модели агрегатов
 class AggregatesORM(Base):
     """Модель агрегатов (справочная информация)"""
     __tablename__ = "visual_aggregates"
@@ -28,9 +26,9 @@ class AggregatesORM(Base):
     aggregates_mnlz: Mapped[list['AggregatesMNLZORM']] = relationship(back_populates='aggregate_info')
     aggregates_l: Mapped[list['AggregatesLORM']] = relationship(back_populates='aggregate_info')
     aggregates_burner: Mapped[list['AggregatesBurnerORM']] = relationship(back_populates='aggregate_info')
-    accidents: Mapped[list['AggregateAccidentORM']] = relationship(back_populates='object_info')
-    active_dynamic_table: Mapped[list['ActiveDynamicTableORM']] = relationship(back_populates='aggregates_info')
-    archive_dynamic_table: Mapped[list['ArchiveDynamicTableORM']] = relationship(back_populates='aggregates_info')
+    accidents: Mapped[list['AggregatesAccidentORM']] = relationship(back_populates='object_info')
+    active_dynamic_table: Mapped[list['ActiveDynamicTableORM']] = relationship(back_populates='aggregate_info')
+    archive_dynamic_table: Mapped[list['ArchiveDynamicTableORM']] = relationship(back_populates='aggregate_info')
 
 
 class AggregatesBaseORMMixin(Base):

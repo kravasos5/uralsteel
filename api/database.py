@@ -11,7 +11,7 @@ engine = create_engine(
 
 session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-idpk = Annotated[BigInteger, mapped_column(primary_key=True)]
+idpk = Annotated[int, mapped_column(primary_key=True)]
 created_at = Annotated[TIMESTAMP, mapped_column(TIMESTAMP, server_default=text('TIMEZONE("utc+5", now()'))]
 
 

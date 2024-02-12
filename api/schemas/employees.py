@@ -2,13 +2,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr
 
-
-###################################################################
-# Схемы Employees
 from models.employees import Posts
 
 
-class EmployeesBaseSchema(BaseModel):
+class EmployeesBaseDTO(BaseModel):
     """Схема работника"""
     email: EmailStr
     username: str
@@ -19,17 +16,17 @@ class EmployeesBaseSchema(BaseModel):
     photo: str | None
 
 
-class EmployeesCreateSchema(EmployeesBaseSchema):
+class EmployeesCreateDTO(EmployeesBaseDTO):
     """Схема создания работника"""
     password: str
 
 
-class EmployeesUpdateSchema(EmployeesBaseSchema):
+class EmployeesUpdateDTO(EmployeesBaseDTO):
     """Схема изменения работника"""
     pass
 
 
-class EmployeesReadSchema(EmployeesBaseSchema):
+class EmployeesReadDTO(EmployeesBaseDTO):
     """Схема чтения пользовательских данных"""
     id: int
     last_login: datetime | None
@@ -39,10 +36,10 @@ class EmployeesReadSchema(EmployeesBaseSchema):
     slug: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
-class EmployeesAdminReadSchema(EmployeesReadSchema):
+class EmployeesAdminReadDTO(EmployeesReadDTO):
     """Расширенная схема пользователя"""
     is_superuser: bool
     is_staff: bool

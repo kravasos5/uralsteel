@@ -1,12 +1,12 @@
-from models.dynamics import ArchiveDynamicTable, ActiveDynamicTable
+from models.dynamics import ArchiveDynamicTableORM, ActiveDynamicTableORM
 from utils.repositories_base import SqlAlchemyRepo
 
 
 class ArchiveDynamicTableRepo(SqlAlchemyRepo):
     """Репозиторий архивных записей динамической таблицы"""
-    model = ArchiveDynamicTable
+    model = ArchiveDynamicTableORM
 
 
 class ActiveDynamicTableRepo(SqlAlchemyRepo):
     """Репозиторий активных записей динамической таблицы"""
-    model = ActiveDynamicTable
+    model = ActiveDynamicTableORM

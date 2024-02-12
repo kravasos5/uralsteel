@@ -4,8 +4,6 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from database import Base, idpk
 
 
-###################################################################
-# Модели кранов
 class CranesORM(Base):
     """Модель кранов"""
     __tablename__ = 'visual_cranes'
@@ -17,6 +15,6 @@ class CranesORM(Base):
     photo: Mapped[str] = mapped_column(String(100), nullable=False)
     is_broken: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    accidents: Mapped[list['CranesAccidentOrm']] = relationship(
+    accidents: Mapped[list['CranesAccidentORM']] = relationship(
         back_populates='object_info'
     )

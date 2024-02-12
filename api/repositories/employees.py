@@ -1,7 +1,7 @@
-from models.employees import Employees
+from models.employees import EmployeesORM
 from utils.repositories_base import SqlAlchemyRepo
 
 
 class EmployeesRepo(SqlAlchemyRepo):
     """Репозиторий работника"""
-    model = Employees
+    model = EmployeesORM

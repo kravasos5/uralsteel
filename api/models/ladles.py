@@ -4,8 +4,6 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from database import Base, idpk
 
 
-###################################################################
-# Модели ковшей
 class LadlesORM(Base):
     """Модель ковшей"""
     __tablename__ = 'visual_ladles'

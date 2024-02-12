@@ -1,8 +1,6 @@
 from pydantic import BaseModel
 
 
-###################################################################
-# Схемы марок стали
 class BrandSteelBaseSchema(BaseModel):
     """Схема марок стали"""
     title: str

@@ -8,8 +8,6 @@ from schemas.ladles import LadlesSchema
 from schemas.routes import RoutesSchema
 
 
-###################################################################
-# Схемы динамических таблиц
 class DynamicTableBaseSchema(BaseModel):
     """Схема основной таблицы с информацией о перемещении ковшей в реальном времени"""
     ladle: int

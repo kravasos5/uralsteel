@@ -1,15 +1,14 @@
 from sqlalchemy import BigInteger, ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from database import Base
+from database import Base, idpk
 
 
-###################################################################
-# Модели маршрутов
 class RoutesORM(Base):
     """Модель маршрутов"""
     __tablename__ = 'visual_routes'
 
+    id: Mapped[idpk]
     aggregate_1: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_aggregatesgmp.id'))
     aggregate_2: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_aggregatesukp.id'))
     aggregate_3: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_aggregatesuvs.id'))

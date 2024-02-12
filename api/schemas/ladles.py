@@ -1,8 +1,6 @@
 from pydantic import BaseModel
 
 
-###################################################################
-# Схемы ковшей
 class LadlesBaseSchema(BaseModel):
     """Схема ковша"""
     title: str

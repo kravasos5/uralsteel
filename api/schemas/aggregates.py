@@ -3,8 +3,6 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-###################################################################
-# Схемы агрегатов
 class AggregatesBaseSchema(BaseModel):
     """Схема агрегатов (справочная информация)"""
     title: str

@@ -7,8 +7,6 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from database import Base, created_at, idpk
 
 
-###################################################################
-# Модели Employees(пользователя или же работника)
 class Posts(str, Enum):
     """Enum, содержащий должности"""
     MASTER = 'MS'
