@@ -8,7 +8,7 @@ class RoutesBaseDTO(BaseModel):
     id: int
 
 
-class RoutesDTO(RoutesBaseDTO):
+class RoutesFullReadDTO(RoutesBaseDTO):
     """Схема маршрутов"""
     aggregate_1: AggregatesDTO
     aggregate_2: AggregatesDTO
@@ -16,7 +16,15 @@ class RoutesDTO(RoutesBaseDTO):
     aggregate_4: AggregatesDTO
 
 
-class RoutesShortDTO(RoutesBaseDTO):
+class RoutesReadDTO(RoutesBaseDTO):
     """Схема маршрутов для чтения"""
     class Config:
         from_attributes = True
+
+
+class RoutersCreateUpdateDTO(BaseModel):
+    """Схема создания маршрутов"""
+    aggregate_1: int
+    aggregate_2: int
+    aggregate_3: int
+    aggregate_4: int

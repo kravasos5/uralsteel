@@ -3,8 +3,8 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class AggregatesBaseDTO(BaseModel):
-    """Схема агрегатов (справочная информация)"""
+class AggregatesCreateUpdateDTO(BaseModel):
+    """Схема создания агрегатов"""
     title: str
     num_agg: str
     num_pos: str
@@ -15,8 +15,8 @@ class AggregatesBaseDTO(BaseModel):
     is_broken: bool
 
 
-class AggregatesDTO(AggregatesBaseDTO):
-    """Схема агрегатов (справочная информация) для чтения"""
+class AggregatesReadDTO(AggregatesCreateUpdateDTO):
+    """Схема агрегатов для чтения"""
     id: int
 
     class Config:

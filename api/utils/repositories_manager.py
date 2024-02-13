@@ -13,42 +13,44 @@ from repositories.routes import RoutesRepo
 
 class RepoManager:
     """Менеджер репозиториев"""
-    # ladles_accident_repo = LadlesAccidentRepo
-    # cranes_accident_repo = CranesAccidentRepo
-    # aggregates_accident_repo = AggregatesAccidentRepo
-    aggregates = {
+    repositories = {
+        'ladles_accident_repo': LadlesAccidentRepo,
+        'cranes_accident_repo': CranesAccidentRepo,
+        'aggregates_accident_repo': AggregatesAccidentRepo,
         'aggregates_all': AggregatesAllRepo,
         'aggregates_gmp_repo': AggregatesGMPRepo,
         'aggregates_ukp_repo': AggregatesUKPRepo,
         'aggregates_uvs_repo': AggregatesUVSRepo,
         'aggregates_mnlz_repo': AggregatesMNLZRepo,
         'aggregates_l_repo': AggregatesLRepo,
-        'aggregates_burner_repo': AggregatesBurnerRepo
+        'aggregates_burner_repo': AggregatesBurnerRepo,
+        'brandsteel_repo': BrandSteelRepo,
+        'cranes_repo': CranesRepo,
+        'archive_dyn_repo': ArchiveDynamicTableRepo,
+        'active_dyn_repo': ActiveDynamicTableRepo,
+        'employees_repo': EmployeesRepo,
+        'ladles_repo': LadlesRepo,
+        'routes_repo': RoutesRepo,
     }
-    # brandsteel_repo = BrandSteelRepo
-    # cranes_repo = CranesRepo
-    # archived_dyn_repo = ArchiveDynamicTableRepo
-    # active_dyn_repo = ActiveDynamicTableRepo
-    employees_repo = EmployeesRepo
-    # ladles_repo = LadlesRepo
-    # routes_repo = RoutesRepo
 
-    def __init__(self, session: Session, other):
+    def __init__(self, session: Session, other, other_repositories):
         """Инициализация всех репозиториев в другом классе"""
-        # other.ladles_accident_repo = self.ladles_accident_repo(session)
-        # other.cranes_accident_repo = self.cranes_accident_repo(session)
-        # other.aggregates_accident_repo = self.aggregates_accident_repo(session)
-        other.aggregates['aggregates_all'] = self.aggregates['aggregates_all'](session)
-        other.aggregates['aggregates_gmp_repo'] = self.aggregates['aggregates_gmp_repo'](session)
-        other.aggregates['aggregates_ukp_repo'] = self.aggregates['aggregates_ukp_repo'](session)
-        other.aggregates['aggregates_uvs_repo'] = self.aggregates['aggregates_uvs_repo'](session)
-        other.aggregates['aggregates_mnlz_repo'] = self.aggregates['aggregates_mnlz_repo'](session)
-        other.aggregates['aggregates_l_repo'] = self.aggregates['aggregates_l_repo'](session)
-        other.aggregates['aggregates_burner_repo'] = self.aggregates['aggregates_burner_repo'](session)
-        # other.brandsteel_repo = self.brandsteel_repo(session)
-        # other.cranes_repo = self.cranes_repo(session)
-        # other.archived_dyn_repo = self.archived_dyn_repo(session)
-        # other.active_dyn_repo = self.active_dyn_repo(session)
-        other.employees_repo = self.employees_repo(session)
-        # other.ladles_repo = self.ladles_repo(session)
-        # other.routes_repo = self.routes_repo(session)
+        for repo in other_repositories.keys():
+            other.repositories[repo] = self.repositories[repo](session)
+        # other.repositories['ladles_accident_repo'] = self.repositories['ladles_accident_repo'](session)
+        # other.repositories['cranes_accident_repo'] = self.repositories['cranes_accident_repo'](session)
+        # other.repositories['aggregates_accident_repo'] = self.repositories['aggregates_accident_repo'](session)
+        # other.repositories['aggregates_all'] = self.repositories['aggregates_all'](session)
+        # other.repositories['aggregates_gmp_repo'] = self.repositories['aggregates_gmp_repo'](session)
+        # other.repositories['aggregates_ukp_repo'] = self.repositories['aggregates_ukp_repo'](session)
+        # other.repositories['aggregates_uvs_repo'] = self.repositories['aggregates_uvs_repo'](session)
+        # other.repositories['aggregates_mnlz_repo'] = self.repositories['aggregates_mnlz_repo'](session)
+        # other.repositories['aggregates_l_repo'] = self.repositories['aggregates_l_repo'](session)
+        # other.repositories['aggregates_burner_repo'] = self.repositories['aggregates_burner_repo'](session)
+        # other.repositories['brandsteel_repo'] = self.repositories['brandsteel_repo'](session)
+        # other.repositories['cranes_repo'] = self.repositories['cranes_repo'](session)
+        # other.repositories['archived_dyn_repo'] = self.repositories['archived_dyn_repo'](session)
+        # other.repositories['active_dyn_repo'] = self.repositories['active_dyn_repo'](session)
+        # other.repositories['employees_repo'] = self.repositories['employees_repo'](session)
+        # other.repositories['ladles_repo'] = self.repositories['ladles_repo'](session)
+        # other.repositories['routes_repo'] = self.repositories['routes_repo'](session)

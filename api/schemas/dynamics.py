@@ -2,32 +2,39 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from schemas.aggregates import AggregatesDTO
-from schemas.brandsteel import BrandSteelDTO
-from schemas.ladles import LadlesDTO
-from schemas.routes import RoutesDTO
+from schemas.aggregates import AggregatesReadDTO
+from schemas.brandsteel import BrandSteelReadDTO
+from schemas.ladles import LadlesReadDTO
+from schemas.routes import RoutesReadDTO
 
 
-class DynamicTableBaseDTO(BaseModel):
-    """Схема основной таблицы с информацией о перемещении ковшей в реальном времени"""
-    ladle: int
+class DynamicTableCreateUpdateDTO(BaseModel):
+    """Схема создания динамических таблиц"""
     num_melt: str
-    brand_steel: int
-    route: int
-    aggregate: int
+    brand_steel_id: int
     plan_start: datetime
     plan_end: datetime
     actual_start: datetime
     actual_end: datetime
-    ladle_info: LadlesDTO
-    brand_steel_info: BrandSteelDTO
-    route_info: RoutesDTO
-    aggregate_info: AggregatesDTO
+    aggregate_id: int
+    ladle_id: int
+    route_id: int
 
 
-class DynamicTableDTO(DynamicTableBaseDTO):
-    """
-    Схема основной таблицы с информацией о перемещении ковшей в реальном времени.
-    Для чтения.
-    """
+class DynamicTableReadDTO(DynamicTableCreateUpdateDTO):
+    """Схема чтения информации с динамической таблицы краткая"""
     id: int
+
+
+class DynamicTableFullReadDTO(BaseModel):
+    """Схема чтения информации с динамической таблицы краткая"""
+    id: int
+    num_melt: str
+    brand_steel_info: BrandSteelReadDTO
+    plan_start: datetime
+    plan_end: datetime
+    actual_start: datetime
+    actual_end: datetime
+    aggregate_info: AggregatesReadDTO
+    ladle_info: LadlesReadDTO
+    route_info: RoutesReadDTO

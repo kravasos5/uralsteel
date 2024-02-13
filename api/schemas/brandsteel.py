@@ -1,15 +1,12 @@
 from pydantic import BaseModel
 
 
-class BrandSteelBaseDTO(BaseModel):
+class BrandSteelCreateUpdateDTO(BaseModel):
     """Схема марок стали"""
     title: str
 
-    class Config:
-        orm_mode = True
 
-
-class BrandSteelDTO(BrandSteelBaseDTO):
+class BrandSteelReadDTO(BrandSteelCreateUpdateDTO):
     """Схема марок стали для чтения"""
     id: int
 

@@ -35,9 +35,11 @@ class AggregatesBaseORMMixin(Base):
     """Базовый класс для всех агрегатов"""
     __abstract__ = True
 
-    id: Mapped[idpk]
-    aggregates_ptr_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_aggregates.id', ondelete='CASCADE'),
-                                                   unique=True)
+    aggregates_ptr_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey('visual_aggregates.id', ondelete='CASCADE'),
+        primary_key=True
+    )
 
     @declared_attr
     def aggregate_info(self) -> Mapped['AggregatesORM']:
@@ -47,32 +49,34 @@ class AggregatesBaseORMMixin(Base):
 class AggregatesGMPORM(AggregatesBaseORMMixin):
     """Модель агрегатов ГМП"""
     __tablename__ = 'visual_aggregatesgmp'
-    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregate_gmp')
+    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregates_gmp')
 
 
 class AggregatesUKPORM(AggregatesBaseORMMixin):
     """Модель агрегатов УКП"""
     __tablename__ = 'visual_aggregatesukp'
-    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregate_ukp')
+    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregates_ukp')
 
 
 class AggregatesUVSORM(AggregatesBaseORMMixin):
     """Модель агрегатов УВС"""
     __tablename__ = 'visual_aggregatesuvs'
-    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregate_uvs')
+    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregates_uvs')
 
 
 class AggregatesMNLZORM(AggregatesBaseORMMixin):
     """Модель агрегатов МНЛЗ"""
     __tablename__ = 'visual_aggregatesmnlz'
-    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregate_mnlz')
+    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregates_mnlz')
 
 
 class AggregatesLORM(AggregatesBaseORMMixin):
     """Модель агрегатов Лёжек"""
     __tablename__ = 'visual_aggregatesl'
+    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregates_l')
 
 
 class AggregatesBurnerORM(AggregatesBaseORMMixin):
     """Модель агрегатов Горелок"""
     __tablename__ = 'visual_aggregatesburner'
+    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregates_burner')

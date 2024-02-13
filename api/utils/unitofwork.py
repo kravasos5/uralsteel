@@ -21,27 +21,8 @@ class AbstractUnitOfWork(ABC):
     """Абстрактный uow класс"""
 
     manager: Type[RepoManager]
-    ladles_accident_repo: Type[LadlesAccidentRepo]
-    cranes_accident_repo: Type[CranesAccidentRepo]
-    aggregates_accident_repo: Type[AggregatesAccidentRepo]
 
-    aggregates: dict[str, AbstractRepo] = {
-        'aggregates_all': Type[AggregatesAllRepo],
-        'aggregates_gmp_repo': Type[AggregatesGMPRepo],
-        'aggregates_ukp_repo': Type[AggregatesUKPRepo],
-        'aggregates_uvs_repo': Type[AggregatesUVSRepo],
-        'aggregates_mnlz_repo': Type[AggregatesMNLZRepo],
-        'aggregates_l_repo': Type[AggregatesLRepo],
-        'aggregates_burner_repo': Type[AggregatesBurnerRepo]
-    }
-
-    brandsteel_repo: Type[BrandSteelRepo]
-    cranes_repo: Type[CranesRepo]
-    archived_dyn_repo: Type[ArchiveDynamicTableRepo]
-    active_dyn_repo: Type[ActiveDynamicTableRepo]
-    employees_repo: Type[EmployeesRepo]
-    ladles_repo: Type[LadlesRepo]
-    routes_repo: Type[RoutesRepo]
+    repositories: dict[str, AbstractRepo]
 
     @abstractmethod
     def __init__(self):
@@ -66,6 +47,25 @@ class AbstractUnitOfWork(ABC):
 
 class UnitOfWork(AbstractUnitOfWork):
     """Uow класс, который управляет транзакциями с помощью SqlAlchemy"""
+    repositories = {
+        'ladles_accident_repo': Type[LadlesAccidentRepo],
+        'cranes_accident_repo': Type[CranesAccidentRepo],
+        'aggregates_accident_repo': Type[AggregatesAccidentRepo],
+        'aggregates_all': Type[AggregatesAllRepo],
+        'aggregates_gmp_repo': Type[AggregatesGMPRepo],
+        'aggregates_ukp_repo': Type[AggregatesUKPRepo],
+        'aggregates_uvs_repo': Type[AggregatesUVSRepo],
+        'aggregates_mnlz_repo': Type[AggregatesMNLZRepo],
+        'aggregates_l_repo': Type[AggregatesLRepo],
+        'aggregates_burner_repo': Type[AggregatesBurnerRepo],
+        'brandsteel_repo': Type[BrandSteelRepo],
+        'cranes_repo': Type[CranesRepo],
+        'archive_dyn_repo': Type[ArchiveDynamicTableRepo],
+        'active_dyn_repo': Type[ActiveDynamicTableRepo],
+        'employees_repo': Type[EmployeesRepo],
+        'ladles_repo': Type[LadlesRepo],
+        'routes_repo': Type[RoutesRepo],
+    }
 
     def __init__(self):
         self.session_factory = session_factory
@@ -75,7 +75,7 @@ class UnitOfWork(AbstractUnitOfWork):
 
         # объявление репозиториев
         self.manager = RepoManager
-        self.manager(session=self.session, other=self)
+        self.manager(session=self.session, other=self, other_repositories=self.repositories)
 
         return self
 

@@ -44,7 +44,7 @@ class DataConverter(AbstractDataConverter):
         return dto
 
     @staticmethod
-    def models_to_dto(models: list[Base] | list[dict], schema: Type[BaseModel]) -> list[BaseModel]:
+    def models_to_dto(models, schema: Type[BaseModel]) -> list[BaseModel]:
         """Метод, конвертирующий модели или словари в dto"""
         dtos = [schema.model_validate(row, from_attributes=True) for row in models]
         return dtos
