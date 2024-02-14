@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from schemas.aggregates import AggregatesDTO
+from schemas.aggregates import AggregatesReadDTO
 
 
 class RoutesBaseDTO(BaseModel):
@@ -10,10 +10,10 @@ class RoutesBaseDTO(BaseModel):
 
 class RoutesFullReadDTO(RoutesBaseDTO):
     """Схема маршрутов"""
-    aggregate_1: AggregatesDTO
-    aggregate_2: AggregatesDTO
-    aggregate_3: AggregatesDTO
-    aggregate_4: AggregatesDTO
+    aggregate_1: AggregatesReadDTO
+    aggregate_2: AggregatesReadDTO
+    aggregate_3: AggregatesReadDTO
+    aggregate_4: AggregatesReadDTO
 
 
 class RoutesReadDTO(RoutesBaseDTO):

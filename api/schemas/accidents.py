@@ -2,31 +2,42 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from schemas.aggregates import AggregatesDTO
-from schemas.cranes import CranesDTO
+from schemas.aggregates import AggregatesReadDTO
+from schemas.cranes import CranesReadDTO
 from schemas.employees import EmployeesReadDTO
-from schemas.ladles import LadlesDTO
+from schemas.ladles import LadlesReadDTO
 
 
-class AccidentsBaseDTO(BaseModel):
-    """Схема происшествий"""
+class AccidentsUpdateDTO(BaseModel):
+    """Схема обновления происшествий"""
     author: int
-    report: str
+    report: str | None
+    object_id: int
+
+
+class AccidentsCreateDTO(BaseModel):
+    """Схема создания проишествий"""
+    report: str | None
+    object_id: int
+
+
+class AccidentReadDTO(AccidentsUpdateDTO):
+    """Схема происшествий для чтения"""
+    id: int
     created_at: datetime
     author_info: EmployeesReadDTO
-    object: int
 
 
-class LadlesAccidentDTO(AccidentsBaseDTO):
+class LadlesAccidentReadDTO(AccidentReadDTO):
     """Схема происшествий с ковшами"""
-    object_info: list[LadlesDTO]
+    object_info: LadlesReadDTO
 
 
-class CranesAccidentDTO(AccidentsBaseDTO):
+class CranesAccidentReadDTO(AccidentReadDTO):
     """Модель проишествий кранов"""
-    object_info: list[CranesDTO]
+    object_info: CranesReadDTO
 
 
-class AggregateAccidentDTO(AccidentsBaseDTO):
+class AggregateAccidentReadDTO(AccidentReadDTO):
     """Модель проишествий кранов"""
-    object_info: list[AggregatesDTO]
+    object_info: AggregatesReadDTO

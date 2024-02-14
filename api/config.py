@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,6 +11,10 @@ class Settings(BaseSettings):
     DB_NAME: str
     REDIS_HOST: str
     REDIS_PORT: int
+    BASE_DIR = os.getcwd()
+    MEDIA_ROOT = 'K:/python/python/uralsteel/uralsteel/media'
+    MEDIA_URL = '/media/'
+    TIME_ZONE = 'Asia/Yekaterinburg'
 
     @property
     def DATABASE_URL(self):

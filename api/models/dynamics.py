@@ -11,11 +11,11 @@ class DynamicTableORMMixin(Base):
     __abstract__ = True
 
     id: Mapped[idpk]
-    ladle: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_ladles.id'))
+    ladle_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_ladles.id'))
     num_melt: Mapped[str] = mapped_column(String)
-    brand_steel: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_brandsteel.id'))
-    route: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_routes.id'))
-    aggregate: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_aggregates.id'))
+    brand_steel_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_brandsteel.id'))
+    route_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_routes.id'))
+    aggregate_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_aggregates.id'))
     plan_start: Mapped[datetime] = mapped_column(TIMESTAMP)
     plan_end: Mapped[datetime] = mapped_column(TIMESTAMP)
     actual_start: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)

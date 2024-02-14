@@ -1,0 +1,77 @@
+import json
+
+import glob2
+
+from config import settings
+from utils.repositories_base import RedisRepo
+from utils.service_base import ServiceBase
+from utils.unitofwork import AbstractUnitOfWork
+
+
+class CranesService(ServiceBase):
+    """Сервис для работы с кранами"""
+    repository = 'cranes_repo'
+
+    def retrieve_one_by_id(self, uow: AbstractUnitOfWork, crane_id: int):
+        """Получение крана по id"""
+        return self.retrieve_one(uow, id=crane_id)
+
+    def get_cranes_info(self, uow: AbstractUnitOfWork, **filters):
+        """Получить фото кранов и кареток"""
+        # имя ключа в redis
+        key_name = 'cranes_info:1'
+        # проверяю нет ли этой информации в redis
+        result: dict | None = RedisRepo.get_key_redis_json(key_name)
+        if result is not None:
+            return result
+        # получаю информацию
+        cranes = self.retrieve_all(uow, **filters)
+        cranes_dict: dict = {}
+        # формирую словарь
+        # информация ниже это размеры фото и само фото,
+        # корпуса или каретки крана например
+        for elem in cranes:
+            cranes_dict[f'{elem.title}'] = {
+                'size_x': elem.size_x,
+                'size_y': elem.size_y,
+                'photo': f'{settings.MEDIA_PATH}/{elem.photo}'
+            }
+        # если в redis нет такого ключа, то запишу его, время жизни 10 секунд
+        RedisRepo.set_key_redis_json(key_name, cranes_dict, 3600)
+        return cranes_dict
+
+    def get_cranes_pos(self):
+        """
+        Функция, распаковывующая json-данные в рамках модуляции
+        с помощью pygame интерфейса
+        """
+        # ключ для redis
+        key_name = 'cranes_pos:1'
+        # проверяю нет ли этой информации в redis
+        result: dict | None = RedisRepo.get_key_redis_json(key_name)
+        if result is not None:
+            return result
+        path = 'K:/python/python/uralsteel/uralsteel/visual/static/visual/jsons'
+        files = glob2.glob(path + '/*.json')
+        data: dict = {}
+        for file in files:
+            with open(file, 'r') as f:
+                crane_data = json.load(f)
+            for key, value in crane_data.items():
+                new_value = {
+                    'x': value[0][0],
+                    'y': value[0][-1],
+                    'is_ladle': value[1],
+                }
+                data[str(key)] = new_value
+        # если в redis нет такого ключа, то запишу его, время жизни 10 секунд
+        RedisRepo.set_key_redis_json(key_name, data, 10)
+        return data
+
+    def get_cranes_pos_info(self, uow: AbstractUnitOfWork, **filters):
+        """Получение информации о ковшах"""
+        data: dict = {
+            'cranes_pos': self.get_cranes_pos(),
+            'cranes_info': self.get_cranes_info(uow, **filters)
+        }
+        return data

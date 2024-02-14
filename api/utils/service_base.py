@@ -31,7 +31,7 @@ class AbstractService(ABC):
 
 
 class ServiceBase(AbstractService):
-    """Базовый репозиторий"""
+    """Базовый сервис"""
     repository = None
 
     def create_one(self, uow: AbstractUnitOfWork, data_schema: BaseModel):

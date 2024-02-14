@@ -83,3 +83,8 @@ class SqlAlchemyRepo(AbstractRepo):
 class AbstractRedisRepo(ABC):
     """Абстрактный репозиторий redis-кэша"""
     ...
+
+
+class RedisRepo(AbstractRedisRepo):
+    """Репозиторий для работы с Redis-хранилищем"""
+    ...

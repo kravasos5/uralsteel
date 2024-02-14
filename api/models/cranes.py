@@ -9,11 +9,11 @@ class CranesORM(Base):
     __tablename__ = 'visual_cranes'
 
     id: Mapped[idpk]
-    title: Mapped[str] = mapped_column(String(100), nullable=False)
-    size_x: Mapped[int] = mapped_column(SmallInteger, nullable=False)
-    size_y: Mapped[int] = mapped_column(SmallInteger, nullable=False)
-    photo: Mapped[str] = mapped_column(String(100), nullable=False)
-    is_broken: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    title: Mapped[str] = mapped_column(String(100))
+    size_x: Mapped[int] = mapped_column(SmallInteger)
+    size_y: Mapped[int] = mapped_column(SmallInteger)
+    photo: Mapped[str] = mapped_column(String(100))
+    is_broken: Mapped[bool] = mapped_column(Boolean, default=False)
 
     accidents: Mapped[list['CranesAccidentORM']] = relationship(
         back_populates='object_info'
