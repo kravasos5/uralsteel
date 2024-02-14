@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
 
+import redis
+from redis.commands.json.path import Path
 from pydantic import BaseModel
 from sqlalchemy import insert, delete, update, select
 from sqlalchemy.orm import Session
 
+from config import settings
 from schemas.commons import DataConverter
 
 
@@ -82,9 +85,82 @@ class SqlAlchemyRepo(AbstractRepo):
 
 class AbstractRedisRepo(ABC):
     """Абстрактный репозиторий redis-кэша"""
-    ...
+
+    @abstractmethod
+    def get_key_redis_json(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_key_redis_json(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_key_redis(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_key_redis(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete_key_redis(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete_keys_redis(self, *args, **kwargs):
+        raise NotImplementedError
 
 
 class RedisRepo(AbstractRedisRepo):
     """Репозиторий для работы с Redis-хранилищем"""
-    ...
+
+    def get_key_redis_json(self, key_name: str) -> dict | None:
+        """
+        Функция, извлекающая ключ из redis, если такого ключа нет,
+        то вернёт None. Работает только с json
+        """
+        with redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT) as redis_client:
+            result = redis_client.json().get(key_name)
+        if result is not None:
+            return result
+
+    def set_key_redis_json(self, key_name: str, data: dict, ttl: int) -> None:
+        """Функция, задающая ключ в храниилище. Работает только с json"""
+        with redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT) as redis_client:
+            # сохраняю ключ и данные
+            redis_client.json().set(key_name, Path.root_path(), data)
+            # даю время жизни кэшу ttl секунд
+            redis_client.expire(key_name, ttl)
+
+    def get_key_redis(self, key_name: str) -> str | None:
+        """
+        Функция, извлекающая ключ из redis, если такого ключа нет,
+        то вернёт None
+        """
+        with redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT) as redis_client:
+            result: bytes = redis_client.get(key_name)
+        if result is not None:
+            return result.decode()
+
+    def set_key_redis(self, key_name: str, data: str, ttl: int) -> None:
+        """Функция, задающая ключ в хранилище"""
+        with redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT) as redis_client:
+            # сохраняю ключ и данные
+            redis_client.set(key_name, data)
+            # даю время жизни кэшу ttl секунд
+            redis_client.expire(key_name, ttl)
+
+    def delete_key_redis(self, key_name: str) -> None:
+        """Функция, удаляющая ключ из хранилища"""
+        with redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT) as redis_client:
+            # удаляю ключ
+            redis_client.delete(key_name)
+
+    def delete_keys_redis(self, pattern: str) -> None:
+        """Функция, удаляющая ключи из хранилища по паттерну"""
+        with redis.Redis() as redis_client:
+            # получаю все ключи по паттерну
+            all_keys: list = redis_client.keys(pattern)
+            for key in all_keys:
+                # удаляю ключ
+                redis_client.delete(key)

@@ -22,7 +22,7 @@ class RedisCacheMixin:
 
     @staticmethod
     def set_key_redis_json(key_name: str, data: dict, ttl: int) -> None:
-        """Функция, задающая ключ в храниилище. Работает только с json"""
+        """Функция, задающая ключ в хранилище. Работает только с json"""
         with redis.Redis(host=REDIS_HOST, port=REDIS_PORT) as redis_client:
             # сохраняю ключ и данные
             redis_client.json().set(key_name, Path.root_path(), data)
@@ -42,7 +42,7 @@ class RedisCacheMixin:
 
     @staticmethod
     def set_key_redis(key_name: str, data: str, ttl: int) -> None:
-        """Функция, задающая ключ в храниилище"""
+        """Функция, задающая ключ в хранилище"""
         with redis.Redis(host=REDIS_HOST, port=REDIS_PORT) as redis_client:
             # сохраняю ключ и данные
             redis_client.set(key_name, data)
