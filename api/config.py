@@ -11,10 +11,10 @@ class Settings(BaseSettings):
     DB_NAME: str
     REDIS_HOST: str
     REDIS_PORT: int
-    BASE_DIR = os.getcwd()
-    MEDIA_ROOT = 'K:/python/python/uralsteel/uralsteel/media'
-    MEDIA_URL = '/media/'
-    TIME_ZONE = 'Asia/Yekaterinburg'
+    BASE_DIR: str = os.getcwd()
+    MEDIA_ROOT: str = 'K:/python/python/uralsteel/uralsteel/media'
+    MEDIA_URL: str = '/media/'
+    TIME_ZONE: str = 'Asia/Yekaterinburg'
 
     @property
     def DATABASE_URL(self):

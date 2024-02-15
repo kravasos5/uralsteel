@@ -73,10 +73,10 @@ class AggregatesMNLZORM(AggregatesBaseORMMixin):
 class AggregatesLORM(AggregatesBaseORMMixin):
     """Модель агрегатов Лёжек"""
     __tablename__ = 'visual_aggregatesl'
-    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregates_l')
+    # routes: Mapped['RoutesORM'] = relationship(back_populates='aggregates_l')
 
 
 class AggregatesBurnerORM(AggregatesBaseORMMixin):
     """Модель агрегатов Горелок"""
     __tablename__ = 'visual_aggregatesburner'
-    routes: Mapped['RoutesORM'] = relationship(back_populates='aggregates_burner')
+    # routes: Mapped['RoutesORM'] = relationship(back_populates='aggregates_burner')
