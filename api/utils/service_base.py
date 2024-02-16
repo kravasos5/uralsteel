@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Type
 
 from pydantic import BaseModel
 
@@ -59,7 +60,7 @@ class ServiceBase(AbstractService):
             result = uow.repositories[self.repository].retrieve_all(offset=offset, limit=limit, **filters)
             return result
 
-    def delete_one(self, uow: AbstractUnitOfWork, data_schema: BaseModel, **filters):
+    def delete_one(self, uow: AbstractUnitOfWork, **filters):
         """Удаление одного объекта в БД"""
         with uow:
             result = uow.repositories[self.repository].delete_one(**filters)

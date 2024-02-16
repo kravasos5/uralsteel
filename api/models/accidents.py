@@ -30,7 +30,7 @@ class LadlesAccidentORM(AccidentsORMMixin):
 
 
 class CranesAccidentORM(AccidentsORMMixin):
-    """Модель проишествий кранов"""
+    """Модель происшествий кранов"""
     __tablename__ = 'visual_cranesaccident'
 
     object_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey('visual_cranes.id'), nullable=True)
@@ -45,8 +45,8 @@ class CranesAccidentORM(AccidentsORMMixin):
 
 
 class AggregatesAccidentORM(AccidentsORMMixin):
-    """Модель проишествий агрегатов"""
-    __tablename__ = 'visual_aggregataccident'
+    """Модель происшествий агрегатов"""
+    __tablename__ = 'visual_aggregateaccident'
 
     object_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey('visual_aggregates.id'), nullable=True)
 

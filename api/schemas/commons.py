@@ -50,11 +50,11 @@ class DataConverter(AbstractDataConverter):
         return dtos
 
     @staticmethod
-    def dto_to_dict(schema: BaseModel) -> dict:
+    def dto_to_dict(schema: BaseModel, exclude_unset: bool = False) -> dict:
         """Метод, конвертирующий dto в словарь"""
-        return schema.model_dump()
+        return schema.model_dump(exclude_unset=exclude_unset)
 
     @staticmethod
-    def dtos_to_dict(schemas: list[BaseModel]) -> list[dict]:
+    def dtos_to_dict(schemas: list[BaseModel], exclude_unset: bool = False) -> list[dict]:
         """Метод, конвертирующий dtos в список словарей"""
-        return [schema.model_dump() for schema in schemas]
+        return [schema.model_dump(exclude_unset=exclude_unset) for schema in schemas]

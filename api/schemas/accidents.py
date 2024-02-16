@@ -8,24 +8,31 @@ from schemas.employees import EmployeesReadDTO
 from schemas.ladles import LadlesReadDTO
 
 
-class AccidentsUpdateDTO(BaseModel):
+class AccidentsCreateUpdateDTO(BaseModel):
     """Схема обновления происшествий"""
-    author: int
+    author_id: int
     report: str | None
     object_id: int
 
 
-class AccidentsCreateDTO(BaseModel):
-    """Схема создания проишествий"""
-    report: str | None
-    object_id: int
+class AccidentsUpdatePatchDTO(BaseModel):
+    """Схема обновления происшествий"""
+    author_id: int | None = None
+    report: str | None = None
+    object_id: int | None = None
 
 
-class AccidentReadDTO(AccidentsUpdateDTO):
+class AccidentReadDTO(AccidentsCreateUpdateDTO):
     """Схема происшествий для чтения"""
     id: int
     created_at: datetime
     author_info: EmployeesReadDTO
+
+
+class AccidentReadShortDTO(AccidentsCreateUpdateDTO):
+    """Схема происшествий для чтения"""
+    id: int
+    created_at: datetime
 
 
 class LadlesAccidentReadDTO(AccidentReadDTO):

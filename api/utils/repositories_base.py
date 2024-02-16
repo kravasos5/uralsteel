@@ -56,24 +56,30 @@ class SqlAlchemyRepo(AbstractRepo):
         """Удаление записи из бд"""
         # запрос
         stmt = delete(self.model).filter_by(**filters).returning(self.model.id)
-        result = self.session.execute(stmt).scalar_one()[0]
-        return result
+        result = self.session.execute(stmt).scalar_one_or_none()
+        if result:
+            return result
+        return None
 
     def update_one(self, data_schema: BaseModel, **filters):
         """Обновление записи в бд"""
-        data = DataConverter.dto_to_dict(data_schema)
+        data = DataConverter.dto_to_dict(data_schema, exclude_unset=True)
         # запрос
         stmt = update(self.model).filter_by(**filters).values(**data).returning(self.model)
-        res = self.session.execute(stmt).scalar_one()
-        result = DataConverter.model_to_dto(res, self.read_schema)
-        return result
+        res = self.session.execute(stmt).scalar_one_or_none()
+        if res:
+            result = DataConverter.model_to_dto(res, self.read_schema)
+            return result
+        return res
 
     def retrieve_one(self, **filters):
         """Получение одной записи из бд"""
         stmt = select(self.model).filter_by(**filters)
-        res = self.session.execute(stmt).scalar_one()
-        result = DataConverter.model_to_dto(res, self.read_schema)
-        return result
+        res = self.session.execute(stmt).scalar_one_or_none()
+        if res:
+            result = DataConverter.model_to_dto(res, self.read_schema)
+            return result
+        return res
 
     def retrieve_all(self, offset: int, limit: int, **filters):
         """Получение списка записей из бд"""
@@ -114,7 +120,8 @@ class AbstractRedisRepo(ABC):
 class RedisRepo(AbstractRedisRepo):
     """Репозиторий для работы с Redis-хранилищем"""
 
-    def get_key_redis_json(self, key_name: str) -> dict | None:
+    @staticmethod
+    def get_key_redis_json(key_name: str) -> dict | None:
         """
         Функция, извлекающая ключ из redis, если такого ключа нет,
         то вернёт None. Работает только с json
@@ -124,7 +131,8 @@ class RedisRepo(AbstractRedisRepo):
         if result is not None:
             return result
 
-    def set_key_redis_json(self, key_name: str, data: dict, ttl: int) -> None:
+    @staticmethod
+    def set_key_redis_json(key_name: str, data: dict, ttl: int) -> None:
         """Функция, задающая ключ в храниилище. Работает только с json"""
         with redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT) as redis_client:
             # сохраняю ключ и данные
@@ -132,7 +140,8 @@ class RedisRepo(AbstractRedisRepo):
             # даю время жизни кэшу ttl секунд
             redis_client.expire(key_name, ttl)
 
-    def get_key_redis(self, key_name: str) -> str | None:
+    @staticmethod
+    def get_key_redis(key_name: str) -> str | None:
         """
         Функция, извлекающая ключ из redis, если такого ключа нет,
         то вернёт None
@@ -142,7 +151,8 @@ class RedisRepo(AbstractRedisRepo):
         if result is not None:
             return result.decode()
 
-    def set_key_redis(self, key_name: str, data: str, ttl: int) -> None:
+    @staticmethod
+    def set_key_redis(key_name: str, data: str, ttl: int) -> None:
         """Функция, задающая ключ в хранилище"""
         with redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT) as redis_client:
             # сохраняю ключ и данные
@@ -150,13 +160,15 @@ class RedisRepo(AbstractRedisRepo):
             # даю время жизни кэшу ttl секунд
             redis_client.expire(key_name, ttl)
 
-    def delete_key_redis(self, key_name: str) -> None:
+    @staticmethod
+    def delete_key_redis(key_name: str) -> None:
         """Функция, удаляющая ключ из хранилища"""
         with redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT) as redis_client:
             # удаляю ключ
             redis_client.delete(key_name)
 
-    def delete_keys_redis(self, pattern: str) -> None:
+    @staticmethod
+    def delete_keys_redis(pattern: str) -> None:
         """Функция, удаляющая ключи из хранилища по паттерну"""
         with redis.Redis() as redis_client:
             # получаю все ключи по паттерну

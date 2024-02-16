@@ -1,6 +1,8 @@
+from datetime import datetime
 from typing import Annotated
 
-from sqlalchemy import create_engine, BigInteger, TIMESTAMP, text
+import pytz
+from sqlalchemy import create_engine, TIMESTAMP, text
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, mapped_column
 
 from config import settings
@@ -12,7 +14,11 @@ engine = create_engine(
 session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 idpk = Annotated[int, mapped_column(primary_key=True)]
-created_at = Annotated[TIMESTAMP, mapped_column(TIMESTAMP, server_default=text('TIMEZONE("utc+5", now()'))]
+created_at = Annotated[TIMESTAMP, mapped_column(
+    TIMESTAMP,
+    server_default=text('TIMEZONE("utc+5", now()'),
+    default=datetime.now(pytz.timezone(settings.TIME_ZONE)))
+]
 
 
 class Base(DeclarativeBase):
