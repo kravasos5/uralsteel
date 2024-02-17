@@ -3,28 +3,34 @@ from pydantic import BaseModel
 from schemas.aggregates import AggregatesReadDTO
 
 
-class RoutesBaseDTO(BaseModel):
+class RoutesFullReadDTO(BaseModel):
     """Схема маршрутов"""
     id: int
-
-
-class RoutesFullReadDTO(RoutesBaseDTO):
-    """Схема маршрутов"""
-    aggregate_1: AggregatesReadDTO
-    aggregate_2: AggregatesReadDTO
-    aggregate_3: AggregatesReadDTO
-    aggregate_4: AggregatesReadDTO
-
-
-class RoutesReadDTO(RoutesBaseDTO):
-    """Схема маршрутов для чтения"""
-    class Config:
-        from_attributes = True
+    aggregate_1_id: AggregatesReadDTO
+    aggregate_2_id: AggregatesReadDTO
+    aggregate_3_id: AggregatesReadDTO
+    aggregate_4_id: AggregatesReadDTO
 
 
 class RoutersCreateUpdateDTO(BaseModel):
     """Схема создания маршрутов"""
-    aggregate_1: int
-    aggregate_2: int
-    aggregate_3: int
-    aggregate_4: int
+    aggregate_1_id: int
+    aggregate_2_id: int
+    aggregate_3_id: int
+    aggregate_4_id: int
+
+
+class RoutersReadShortDTO(RoutersCreateUpdateDTO):
+    """Схема создания маршрутов"""
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+class RoutersUpdatePatchDTO(BaseModel):
+    """Схема создания маршрутов методом patch"""
+    aggregate_1_id: int | None = None
+    aggregate_2_id: int | None = None
+    aggregate_3_id: int | None = None
+    aggregate_4_id: int | None = None

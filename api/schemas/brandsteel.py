@@ -6,6 +6,11 @@ class BrandSteelCreateUpdateDTO(BaseModel):
     title: str
 
 
+class BrandSteelUpdatePatchDTO(BaseModel):
+    """Схема марок стали"""
+    title: str | None = None
+
+
 class BrandSteelReadDTO(BrandSteelCreateUpdateDTO):
     """Схема марок стали для чтения"""
     id: int

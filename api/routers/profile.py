@@ -1,13 +1,13 @@
-from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, Path
 
-from dependencies import UOWDep, GetAccTypeDEP, is_object, AccidentType, GetIdDEP, is_author, error_raiser_if_none
+from dependencies import UOWDep, GetAccTypeDEP, is_object, AccidentType, GetIdDEP, error_raiser_if_none, AccServiceDEP
 from schemas.accidents import AccidentReadDTO, AccidentsCreateUpdateDTO, AccidentsUpdatePatchDTO
-from schemas.employees import EmployeesReadDTO, EmployeesUpdateDTO, EmployeesPatchUpdateDTO, EmployeesCreateDTO
+from schemas.employees import EmployeesReadDTO, EmployeesUpdateDTO, EmployeesPatchUpdateDTO
 from services.accidents import CranesAccidentService, LadlesAccidentService, AggregatesAccidentService
 from services.employees import EmployeesService
+
 
 router = APIRouter(
     prefix="/profile",
@@ -19,8 +19,7 @@ router = APIRouter(
 def get_profile(slug: Annotated[str, Path(max_length=200)], uow: UOWDep):
     """Получить данные профиля работника"""
     employee = EmployeesService().retrieve_one_by_slug(uow=uow, user_slug=slug)
-    if not employee:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
+    error_raiser_if_none(employee, 'User')
     return employee
 
 
@@ -32,8 +31,7 @@ def change_profile_put(
 ):
     """Обновить данные профиля работника"""
     employee = EmployeesService().update_one(uow=uow, data_schema=updated_employee, slug=slug)
-    if not employee:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
+    error_raiser_if_none(employee, 'User')
     return employee
 
 
@@ -45,8 +43,7 @@ def change_profile_patch(
 ):
     """Обновить данные профиля работника"""
     employee = EmployeesService().update_one(uow=uow, data_schema=updated_employee, slug=slug)
-    if not employee:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
+    error_raiser_if_none(employee, 'User')
     return employee
 
 
@@ -82,21 +79,13 @@ def get_archive_report():
 
 
 @router.post('/report/create', response_model=AccidentReadDTO, include_in_schema=False)
-def create_accident(uow: UOWDep, acc_type: GetAccTypeDEP, accident_data: AccidentsCreateUpdateDTO):
+def create_accident(uow: UOWDep, service: AccServiceDEP, accident_data: AccidentsCreateUpdateDTO):
     """Создание отчёта о происшествии"""
     # проверка есть ли такой автор и агрегат
     # is_author(uow, accident_data.author_id)
     accident_data.author_id = id
     # логика назначения автором текущего авторизованного пользователя
-    is_object(uow, accident_data.object_id, acc_type)
-    service = None
-    match acc_type:
-        case AccidentType.crane:
-            service = CranesAccidentService()
-        case AccidentType.ladle:
-            service = LadlesAccidentService()
-        case AccidentType.aggregate:
-            service = AggregatesAccidentService()
+    is_object(uow, accident_data.object_id, service)
     new_accident = service.create_one(uow, accident_data)
     return new_accident
 
@@ -104,7 +93,7 @@ def create_accident(uow: UOWDep, acc_type: GetAccTypeDEP, accident_data: Acciden
 @router.patch('/report/update/{object_id}', response_model=AccidentReadDTO, include_in_schema=False)
 def update_crane_patch(
         uow: UOWDep,
-        acc_type: GetAccTypeDEP,
+        service: AccServiceDEP,
         object_id: GetIdDEP,
         accident_data: AccidentsUpdatePatchDTO
 ):
@@ -114,15 +103,7 @@ def update_crane_patch(
     accident_data.author_id = id
     # логика назначения автором текущего авторизованного пользователя
     # а также проверка на авторство за этим репортом
-    is_object(uow, accident_data.object_id, acc_type)
-    service = None
-    match acc_type:
-        case AccidentType.crane:
-            service = CranesAccidentService()
-        case AccidentType.ladle:
-            service = LadlesAccidentService()
-        case AccidentType.aggregate:
-            service = AggregatesAccidentService()
+    is_object(uow, accident_data.object_id, service)
     updated_acc = service.update_one(uow, accident_data, id=object_id)
     error_raiser_if_none(updated_acc)
     return updated_acc

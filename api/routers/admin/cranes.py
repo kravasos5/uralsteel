@@ -47,7 +47,7 @@ def update_crane_put(
 
 
 @router.patch('/update/{object_id}', response_model=CranesReadDTO)
-def update_crane_put(
+def update_crane_patch(
         uow: UOWDep,
         object_id: GetIdDEP,
         crane_data: CranesUpdatePatchDTO

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import time
 
 from sqlalchemy import String, TIMESTAMP, Boolean, SmallInteger, BigInteger, ForeignKey
 from sqlalchemy.orm import relationship, declared_attr, mapped_column, Mapped
@@ -16,7 +16,7 @@ class AggregatesORM(Base):
     num_pos: Mapped[str] = mapped_column(String(100))
     coord_x: Mapped[int] = mapped_column(SmallInteger)
     coord_y: Mapped[int] = mapped_column(SmallInteger)
-    stay_time: Mapped[datetime] = mapped_column(TIMESTAMP)
+    stay_time: Mapped[time] = mapped_column(TIMESTAMP)
     photo: Mapped[str] = mapped_column(String(100))
     is_broken: Mapped[bool] = mapped_column(Boolean)
 
