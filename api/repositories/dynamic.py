@@ -1,8 +1,8 @@
 from datetime import datetime
-from select import select
 
 import pytz
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from config import settings
@@ -133,41 +133,42 @@ class ActiveDynamicTableRepo(SqlAlchemyRepo):
                 ladles_info[f'{elem.ladle_info.id}']['is_starting'] = True
             else:
                 # для "транспортируемых" и "ожидающих"
-                ladles_info[f'{elem.ladle_info.id}']['photo'] = f'{elem.aggregate_info.photo.url}'
+                ladles_info[f'{elem.ladle_info.id}']['photo'] = f'{elem.aggregate_info.photo}'
                 ladles_info[f'{elem.ladle_info.id}']['is_starting'] = False
 
             # нахожу следующую позицию текущего ковша в БД
-            next_elems = (
+            next_elems_stmt = (
                 select(self.model)
                 .options(joinedload(self.model.aggregate_info))
-                .filter(self.model.ladle == elem.ladle,
-                        self.model.route == elem.route,
-                        self.model.brand_steel == elem.brand_steel,
+                .filter(self.model.ladle_id == elem.ladle_id,
+                        self.model.route_id == elem.route_id,
+                        self.model.brand_steel_id == elem.brand_steel_id,
                         self.model.num_melt == elem.num_melt,
                         self.model.plan_start > elem.plan_end)
                 .order_by(self.model.plan_start)
             )
+            next_elems = self.session.execute(next_elems_stmt).scalars().all()
             # если следующая позиция присутствует, то обновляю
             # соответствующие поля словаря
-            if next_elems.exists():
+            if next_elems:
                 # получаю следующую позицию ковша
                 # это первый элемент next_elems, так как next_elems
                 # отсортирован по plan_start
-                next_elem = next_elems.first()
-                ladles_info[f'{elem.ladle_info.id}']['next_aggregate'] = f'{next_elem.aggregate_info.title}'
-                ladles_info[f'{elem.ladle_info.id}'][
+                next_elem = next_elems[0]
+                ladles_info[f'{elem.ladle_id}']['next_aggregate'] = f'{next_elem.aggregate_info.title}'
+                ladles_info[f'{elem.ladle_id}'][
                     'next_plan_start'] = f'{next_elem.plan_start.astimezone(pytz.timezone(settings.TIME_ZONE))}'
-                ladles_info[f'{elem.ladle_info.id}'][
+                ladles_info[f'{elem.ladle_id}'][
                     'next_plan_end'] = f'{next_elem.plan_end.astimezone(pytz.timezone(settings.TIME_ZONE))}'
-                ladles_info[f'{elem.ladle_info.id}']['next_x'] = next_elem.aggregate_info.coord_x
-                ladles_info[f'{elem.ladle_info.id}']['next_y'] = next_elem.aggregate_info.coord_y
-                ladles_info[f'{elem.ladle_info.id}']['next_id'] = next_elem.id
-            elif not next_elems.exists() and ladles_info[str(elem.ladle_info.id)]['is_transporting']:
+                ladles_info[f'{elem.ladle_id}']['next_x'] = next_elem.aggregate_info.coord_x
+                ladles_info[f'{elem.ladle_id}']['next_y'] = next_elem.aggregate_info.coord_y
+                ladles_info[f'{elem.ladle_id}']['next_id'] = next_elem.id
+            elif not next_elems and ladles_info[str(elem.ladle_id)]['is_transporting']:
                 # если ковш отмечен, как транспортируемый и у него нет следующей позиции
                 # то такой ковш завершил свою последнюю операцию, а значит
                 # его нужно переписать в архивную таблицу и удалить из активной
                 # удаляю из словаря, чтобы ковш не отображался на сайте
-                del ladles_info[str(elem.ladle_info.id)]
+                del ladles_info[str(elem.ladle_id)]
                 # Добавляю id записей, которые нужно переписать из активной в архивную таблицу
                 deletion_ids.append(elem.id)
 

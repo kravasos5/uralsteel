@@ -67,6 +67,13 @@ class ServiceBase(AbstractService):
             uow.commit()
             return result
 
+    def delete_by_ids(self, uow: AbstractUnitOfWork, ids: list[int]):
+        """Удаление одного объекта в БД"""
+        with uow:
+            result = uow.repositories[self.repository].delete_by_ids(ids)
+            uow.commit()
+            return result
+
     def update_one(self, uow: AbstractUnitOfWork, data_schema: BaseModel, **filters):
         """Обновление одного объекта в БД"""
         with uow:

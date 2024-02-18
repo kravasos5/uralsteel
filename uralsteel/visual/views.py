@@ -79,7 +79,7 @@ class LadlesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
                     # то есть теперь ковш стаёт "ожидающим"
                     operation.actual_start = time
                     operation.save()
-                    data: dict = {'st': 'теперь ковш ожидающим'}
+                    data: dict = {'st': 'теперь ковш ожидающий'}
                 case LadleOperationTypes.ENDING.value:
                     # если ковш "ожидающий"
                     # перезаписываю дату в операции Активной Таблицы,

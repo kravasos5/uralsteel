@@ -5,7 +5,7 @@ from typing import Annotated, Any
 from fastapi import Depends, Path, HTTPException, Query
 
 from services.accidents import CranesAccidentService, LadlesAccidentService, AggregatesAccidentService
-from services.dynamic import ActiveDynamicTableService, ArchiveDynamicTableService
+from services.dynamic import ActiveDynamicTableService, ArchiveDynamicTableService, LadleOperationTypes
 from services.aggregates import AggregatesGMPService, AggregatesUKPService, AggregatesUVSService,\
     AggregatesMNLZService, AggregatesLService, AggregatesBurnerService
 from services.employees import EmployeesService
@@ -144,3 +144,11 @@ def get_dynamic_service(dyn_type: GetDynTypeDEP):
 
 
 DynamicServiceDEP = Annotated[ServiceBase, Depends(get_dynamic_service)]
+
+
+def get_ladle_operation_type(ladle_operation_type: Annotated[LadleOperationTypes, Query()]):
+    """Зависимость типов операций над ковшами"""
+    return ladle_operation_type
+
+
+GetOpTypeDEP = Annotated[LadleOperationTypes, Depends(get_ladle_operation_type)]

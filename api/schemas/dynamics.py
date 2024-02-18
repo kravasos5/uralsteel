@@ -45,3 +45,28 @@ class DynamicTableFullReadDTO(DynamicTableReadDTO):
     aggregate_info: AggregatesReadDTO
     ladle_info: LadlesReadDTO
     route_info: RoutersReadShortDTO
+
+
+class DynamicLadleInfoAnswerNested(BaseModel):
+    """
+    Схема ответа на получение информации о положении ковшей на странице
+    внутренняя часть
+    """
+    ladle_title: str
+    x: int
+    y: int
+    num_melt: str
+    brand_steel: str
+    aggregate: str
+    plan_start: datetime
+    plan_end: datetime
+    next_aggregate: str
+    next_plan_start: datetime
+    next_plan_end: datetime
+    operation_id: int
+    is_transporting: bool
+    photo: str
+    is_starting: bool
+    next_x: int
+    next_y: int
+    next_id: int

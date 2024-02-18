@@ -22,6 +22,10 @@ class AbstractRepo(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def delete_by_ids(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
     def update_one(self, *args, **kwargs):
         raise NotImplementedError
 
@@ -57,6 +61,15 @@ class SqlAlchemyRepo(AbstractRepo):
         # запрос
         stmt = delete(self.model).filter_by(**filters).returning(self.model.id)
         result = self.session.execute(stmt).scalar_one_or_none()
+        if result:
+            return result
+        return None
+
+    def delete_by_ids(self, ids: list[int]):
+        """Удаление записи из бд"""
+        # запрос
+        stmt = delete(self.model).where(self.model.id.in_(ids)).returning(self.model.id)
+        result = self.session.execute(stmt).scalars().all()
         if result:
             return result
         return None

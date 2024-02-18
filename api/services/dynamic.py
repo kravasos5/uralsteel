@@ -14,7 +14,7 @@ class LadleOperationTypes(str, Enum):
     """Перечисление операций над ковшами"""
     TRANSPORTING = 'transporting'
     STARTING = 'starting'
-    ENDING = 'ending'
+    WAITING = 'waiting'
 
 
 class ActiveDynamicTableService(ServiceBase):
@@ -36,6 +36,8 @@ class ActiveDynamicTableService(ServiceBase):
                 # добавляю в архивную
                 created_one = uow.repositories[self.archive_repo].create_one(create_schema)
                 answer.append((deleted_one, created_one))
+            # провожу транзакцию
+            uow.commit()
             return answer
 
     def time_convert(self, hours: int, minutes: int) -> datetime:
@@ -55,6 +57,12 @@ class ActiveDynamicTableService(ServiceBase):
         ############
         return aware_datetime
 
+    def is_end_time_gt_start_time(self, start_time: datetime, end_time: datetime) -> bool:
+        """Сравнивает время конца и начала операции"""
+        if end_time > start_time:
+            return True
+        return False
+
     def get_ladle_operation_id(
             self,
             uow: AbstractUnitOfWork,
@@ -66,7 +74,6 @@ class ActiveDynamicTableService(ServiceBase):
         with uow:
             """Запрос с операцией над ковшом"""
             data: dict = {}
-            status = HTTPStatus.OK
             # получаю объект операции
             operation = uow.repositories[self.repository].retrieve_one(id=operation_id)
             # получаю время
@@ -77,28 +84,26 @@ class ActiveDynamicTableService(ServiceBase):
                 case LadleOperationTypes.TRANSPORTING.value:
                     # если ковш "транспортируемый"
                     # перезаписываю запись в архивную таблицу
-                    uow.repositories[self.repository].delete_one(id=operation.id)
-                    data['st'] = 'перемещён в архив'
+                    self.from_active_to_archive(uow, [operation.id])
+                    data['st'] = 'Ladle moved into archive dynamic table'
                 case LadleOperationTypes.STARTING.value:
                     # если ковш "начинающий"
                     # перезаписываю дату в операции Активной Таблицы,
                     # то есть теперь ковш стаёт "ожидающим"
                     operation.actual_start = time
                     uow.repositories[self.repository].update_one(operation, id=operation_id)
-                    data['st'] = 'теперь ковш ожидающим'
-                case LadleOperationTypes.ENDING.value:
+                    data['st'] = 'Now ladle is waiting'
+                case LadleOperationTypes.WAITING.value:
                     # если ковш "ожидающий"
                     # перезаписываю дату в операции Активной Таблицы,
                     # то есть теперь ковш стаёт "транспортируемым"
                     operation.actual_end = time
                     uow.repositories[self.repository].update_one(operation, id=operation_id)
-                    data['st'] = 'теперь ковш транспортируемый'
+                    data['st'] = 'Now ladle is transporting'
                 case _:
                     # в таком случае status=400, то есть пользователь
                     # клиент неверно указал operation_type
-                    status = HTTPStatus.BAD_REQUEST
-                    data['st'] = 'неверно указан operation_type'
-            data['status'] = status
+                    data['st'] = 'Invalid operation_type'
             return data
 
     def get_ladle_timeform(self):
@@ -112,7 +117,7 @@ class ActiveDynamicTableService(ServiceBase):
             return {'timeformvalue': ladle_timeform}
         return {}
 
-    def get_ladles_info(self, uow: AbstractUnitOfWork, date: datetime) -> tuple[dict, list[int]]:
+    def get_ladles_info(self, uow: AbstractUnitOfWork, date: datetime) -> tuple[dict, list[int]] | None:
         """Получение информации о положении ковшей на странице"""
         with uow:
             ladles_info: dict = {}
