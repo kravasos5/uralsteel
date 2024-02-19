@@ -127,7 +127,7 @@ class ActiveDynamicTableService(ServiceBase):
             # проверка наличия ключа в redis-cache
             result: dict | None = RedisRepo.get_key_redis_json(key_name)
             if result is not None:
-                return result
+                return result, deletion_ids
             # если ключа нет, то брать информацию из базы данных,
             # она автоматически добавится в кэш в конце этого метода, перед return
             # Извлекаю "транспортируемые" ковши и

@@ -2,7 +2,6 @@ import json
 
 import glob2
 
-from config import settings
 from utils.repositories_base import RedisRepo
 from utils.service_base import ServiceBase
 from utils.unitofwork import AbstractUnitOfWork
@@ -34,10 +33,10 @@ class CranesService(ServiceBase):
             cranes_dict[f'{elem.title}'] = {
                 'size_x': elem.size_x,
                 'size_y': elem.size_y,
-                'photo': f'{settings.MEDIA_ROOT}/{elem.photo}'
+                'photo': f'{elem.photo}'
             }
         # если в redis нет такого ключа, то запишу его, время жизни 10 секунд
-        RedisRepo.set_key_redis_json(key_name=key_name, data=cranes_dict, ttl=3600)
+        RedisRepo.set_key_redis_json(key_name=key_name, data=cranes_dict, ttl=360)
         return cranes_dict
 
     def get_cranes_pos(self):

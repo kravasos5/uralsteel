@@ -47,7 +47,7 @@ def update_ladle_put(
 
 
 @router.patch('/update/{object_id}', response_model=LadlesReadDTO)
-def update_ladle_put(
+def update_ladle_patch(
         uow: UOWDep,
         object_id: GetIdDEP,
         ladle_data: LadlesUpdatePatchDTO

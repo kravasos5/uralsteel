@@ -6,8 +6,8 @@ class CranesCreateUpdateDTO(BaseModel):
     title: str
     size_x: int
     size_y: int
-    photo: str
     is_broken: bool
+    photo: str
 
 
 class CranesUpdatePatchDTO(BaseModel):
@@ -15,8 +15,8 @@ class CranesUpdatePatchDTO(BaseModel):
     title: str | None = None
     size_x: int | None = None
     size_y: int | None = None
-    photo: str | None = None
     is_broken: bool | None = None
+    photo: str | None = None
 
 
 class CranesReadDTO(CranesCreateUpdateDTO):

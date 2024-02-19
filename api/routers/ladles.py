@@ -6,6 +6,7 @@ from fastapi import APIRouter, Query, HTTPException
 from dependencies import UOWDep, GetIdDEP, GetOpTypeDEP, error_raiser_if_none
 from schemas.dynamics import DynamicLadleInfoAnswerNested
 from services.dynamic import ActiveDynamicTableService, LadleOperationTypes
+from utils.utilities import Base64Converter
 
 router = APIRouter(
     prefix="/ladles",
@@ -35,6 +36,7 @@ def get_ladles_info(
     date = service.time_convert(hours, minutes)
     data, deletion_ids = service.get_ladles_info(uow, date)
     service.delete_by_ids(uow, deletion_ids)
+    data = Base64Converter.key_to_base64(data, is_nested=True)
     return data
 
 

@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from dependencies import UOWDep
 from services.cranes import CranesService
+from utils.utilities import Base64Converter
 
 router = APIRouter(
     prefix="/cranes",
@@ -15,4 +16,5 @@ def get_cranes_data(uow: UOWDep) -> dict:
     # проверка на авторизацию
     # написать схему ответа
     data = CranesService().get_cranes_pos_info(uow)
+    data['cranes_info'] = Base64Converter.key_to_base64(data['cranes_info'], is_nested=True)
     return data

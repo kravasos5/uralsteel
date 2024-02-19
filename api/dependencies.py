@@ -1,9 +1,12 @@
+from datetime import time
 from enum import Enum
 from http import HTTPStatus
 from typing import Annotated, Any
 
-from fastapi import Depends, Path, HTTPException, Query
+from fastapi import Depends, Path, HTTPException, Query, Form
+from pydantic import EmailStr
 
+from models.employees import Posts
 from services.accidents import CranesAccidentService, LadlesAccidentService, AggregatesAccidentService
 from services.dynamic import ActiveDynamicTableService, ArchiveDynamicTableService, LadleOperationTypes
 from services.aggregates import AggregatesGMPService, AggregatesUKPService, AggregatesUVSService,\
@@ -152,3 +155,155 @@ def get_ladle_operation_type(ladle_operation_type: Annotated[LadleOperationTypes
 
 
 GetOpTypeDEP = Annotated[LadleOperationTypes, Depends(get_ladle_operation_type)]
+
+
+def crane_fields_getter(
+    title: Annotated[str, Form(max_length=100)],
+    size_x: Annotated[int, Form(gt=0)],
+    size_y: Annotated[int, Form(gt=0)],
+    is_broken: Annotated[bool, Form()],
+):
+    """Зависимость полей кранов"""
+    return dict(title=title, size_x=size_x,
+                size_y=size_y, is_broken=is_broken)
+
+
+CraneFieldsDEP = Annotated[dict, Depends(crane_fields_getter)]
+
+
+def crane_fields_patch_getter(
+    title: Annotated[str | None, Form(max_length=100)] = None,
+    size_x: Annotated[int | None, Form(gt=0)] = None,
+    size_y: Annotated[int | None, Form(gt=0)] = None,
+    is_broken: Annotated[bool | None, Form()] = None,
+):
+    """Зависимость полей кранов"""
+    return dict(title=title, size_x=size_x,
+                size_y=size_y, is_broken=is_broken)
+
+
+CraneFieldsPatchDEP = Annotated[dict, Depends(crane_fields_patch_getter)]
+
+
+def aggregates_fields_getter(
+    title: Annotated[str, Form(max_length=100)],
+    num_agg: Annotated[str, Form(max_length=100)],
+    num_pos: Annotated[str, Form(max_length=100)],
+    coord_x: Annotated[int, Form(gt=0)],
+    coord_y: Annotated[int, Form(gt=0)],
+    stay_time: Annotated[time, Form()],
+    is_broken: Annotated[bool, Form()] = False,
+):
+    """Зависимость полей агрегатов"""
+    return dict(
+        title=title,
+        num_agg=num_agg,
+        num_pos=num_pos,
+        coord_x=coord_x,
+        coord_y=coord_y,
+        stay_time=stay_time,
+        is_broken=is_broken,
+    )
+
+
+AggFieldsDEP = Annotated[dict, Depends(aggregates_fields_getter)]
+
+
+def aggregates_fields_patch_getter(
+    title: Annotated[str | None, Form(max_length=100)] = None,
+    num_agg: Annotated[str | None, Form(max_length=100)] = None,
+    num_pos: Annotated[str | None, Form(max_length=100)] = None,
+    coord_x: Annotated[int | None, Form(gt=0)] = None,
+    coord_y: Annotated[int | None, Form(gt=0)] = None,
+    stay_time: Annotated[time | None, Form()] = None,
+    is_broken: Annotated[bool | None, Form()] = None,
+):
+    """Зависимость полей агрегатов для метода patch"""
+    return dict(
+        title=title,
+        num_agg=num_agg,
+        num_pos=num_pos,
+        coord_x=coord_x,
+        coord_y=coord_y,
+        stay_time=stay_time,
+        is_broken=is_broken,
+    )
+
+
+AggFieldsPatchDEP = Annotated[dict, Depends(aggregates_fields_patch_getter)]
+
+
+def employees_create_fields_getter(
+    email: Annotated[EmailStr, Form(max_length=254)],
+    username: Annotated[str, Form(max_length=150)],
+    password: Annotated[str, Form(max_length=128)],
+    first_name: Annotated[str, Form(max_length=150)],
+    last_name: Annotated[str, Form(max_length=150)],
+    patronymic: Annotated[str, Form(max_length=100)],
+    send_messages: Annotated[bool, Form()],
+    slug: Annotated[str, Form(max_length=200)],
+    post: Annotated[Posts, Form()],
+):
+    """Зависимость полей работника post"""
+    return dict(
+        email=email,
+        username=username,
+        password=password,
+        first_name=first_name,
+        last_name=last_name,
+        patronymic=patronymic,
+        send_messages=send_messages,
+        slug=slug,
+        post=post,
+    )
+
+
+EmpCreateFieldsDEP = Annotated[dict, Depends(employees_create_fields_getter)]
+
+
+def employees_update_fields_getter(
+    email: Annotated[EmailStr, Form(max_length=254)],
+    username: Annotated[str, Form(max_length=150)],
+    first_name: Annotated[str, Form(max_length=150)],
+    last_name: Annotated[str, Form(max_length=150)],
+    patronymic: Annotated[str, Form(max_length=100)],
+    send_messages: Annotated[bool, Form()],
+    post: Annotated[Posts, Form()],
+):
+    """Зависимость полей работника put"""
+    return dict(
+        email=email,
+        username=username,
+        first_name=first_name,
+        last_name=last_name,
+        patronymic=patronymic,
+        send_messages=send_messages,
+        post=post,
+    )
+
+
+EmpUpdateFieldsDEP = Annotated[dict, Depends(employees_update_fields_getter)]
+
+
+def employees_update_fields_patch_getter(
+        email: Annotated[EmailStr | None, Form(max_length=254)] = None,
+        username: Annotated[str | None, Form(max_length=150)] = None,
+        first_name: Annotated[str | None, Form(max_length=150)] = None,
+        last_name: Annotated[str | None, Form(max_length=150)] = None,
+        patronymic: Annotated[str | None, Form(max_length=100)] = None,
+        send_messages: Annotated[bool | None, Form()] = None,
+        post: Annotated[Posts | None, Form()] = None,
+):
+    """Зависимость полей работника patch"""
+    return dict(
+        email=email,
+        username=username,
+        first_name=first_name,
+        last_name=last_name,
+        patronymic=patronymic,
+        send_messages=send_messages,
+        post=post,
+    )
+
+
+EmpUpdatePatchFieldsDEP = Annotated[dict, Depends(employees_update_fields_patch_getter)]
