@@ -9,8 +9,7 @@ from services.employees import EmployeesService
 from utils.utilities import Base64Converter, PhotoAddToSchema
 
 router = APIRouter(
-    prefix="/admin/employee",
-    tags=["admin"],
+    prefix='/employee',
 )
 
 

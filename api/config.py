@@ -1,6 +1,18 @@
 import os
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+BASE_DIR = Path(__file__).parent.parent
+
+
+class AuthSettings(BaseSettings):
+    private_key_path: Path = BASE_DIR / 'api' / 'auth' / 'private.pem'
+    public_key_path: Path = BASE_DIR / 'api' / 'auth' / 'public.pem'
+    algorithm: str = 'RS256'
+    # access_token_expire_minutes: int = 15
+    access_token_expire_minutes: int = 3
 
 
 class Settings(BaseSettings):
@@ -11,10 +23,11 @@ class Settings(BaseSettings):
     DB_NAME: str
     REDIS_HOST: str
     REDIS_PORT: int
-    BASE_DIR: str = os.getcwd()
-    MEDIA_ROOT: str = 'K:/python/python/uralsteel/uralsteel/media'
+    BASE_DIR: Path = BASE_DIR
+    MEDIA_ROOT: str = os.path.join(BASE_DIR, 'uralsteel', 'media')
     MEDIA_URL: str = '/media/'
     TIME_ZONE: str = 'Asia/Yekaterinburg'
+    AUTH: AuthSettings = AuthSettings()
 
     @property
     def DATABASE_URL(self):

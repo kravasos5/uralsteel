@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Type
 
 import redis
 from redis.commands.json.path import Path
@@ -85,12 +86,16 @@ class SqlAlchemyRepo(AbstractRepo):
             return result
         return res
 
-    def retrieve_one(self, **filters):
+    def retrieve_one(self, read_schema: Type[BaseModel] | None = None, **filters):
         """Получение одной записи из бд"""
         stmt = select(self.model).filter_by(**filters)
         res = self.session.execute(stmt).scalar_one_or_none()
         if res:
-            result = DataConverter.model_to_dto(res, self.read_schema)
+            if read_schema is not None:
+                read_schema = read_schema
+            else:
+                read_schema = self.read_schema
+            result = DataConverter.model_to_dto(res, read_schema)
             return result
         return res
 

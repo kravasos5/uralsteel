@@ -9,8 +9,7 @@ from services.cranes import CranesService
 from utils.utilities import Base64Converter, PhotoAddToSchema
 
 router = APIRouter(
-    prefix="/admin/crane",
-    tags=["admin"],
+    prefix='/crane',
 )
 
 

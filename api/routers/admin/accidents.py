@@ -9,8 +9,7 @@ from schemas.accidents import AccidentReadDTO, AccidentsUpdatePatchDTO, \
 
 
 router = APIRouter(
-    prefix="/admin/accident",
-    tags=["admin"],
+    prefix='/accident',
 )
 
 

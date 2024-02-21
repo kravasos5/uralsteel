@@ -8,8 +8,7 @@ from schemas.aggregates import AggregatesReadDTO, AggregatesCreateUpdateDTO, Agg
 from utils.utilities import Base64Converter, PhotoAddToSchema
 
 router = APIRouter(
-    prefix="/admin/aggregate",
-    tags=["admin"],
+    prefix='/aggregate',
 )
 
 

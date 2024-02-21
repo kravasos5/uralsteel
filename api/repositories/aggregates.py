@@ -83,7 +83,6 @@ class AggregatesUtilityRepo(SqlAlchemyRepo):
             .where(self.main_model.id.in_(subq))
         )
         res = self.session.execute(stmt).scalars().all()
-        print(res[0].stay_time)
         result = DataConverter.models_to_dto(res, self.read_schema)
         return result
 

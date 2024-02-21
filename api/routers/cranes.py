@@ -1,12 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from dependencies import UOWDep
+from dependencies import UOWDep, oauth2_scheme
 from services.cranes import CranesService
 from utils.utilities import Base64Converter
 
 router = APIRouter(
-    prefix="/cranes",
-    tags=["cranes"],
+    prefix='/cranes',
+    tags=['cranes'],
+    dependencies=[Depends(oauth2_scheme)],
 )
 
 

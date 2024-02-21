@@ -55,22 +55,22 @@ class Base64Converter:
             if is_dict:
                 for elem in iter_data:
                     value = elem[key_name]
-                    value_base64 = Base64Converter.encode_to_base64(f'{settings.MEDIA_ROOT}/{value}').decode('UTF-8')
+                    value_base64 = Base64Converter.encode_to_base64(f'{os.path.join(settings.MEDIA_ROOT, *value.split("/"))}').decode('UTF-8')
                     elem[key_name] = value_base64
             else:
                 for elem in iter_data:
                     value = getattr(elem, key_name)
-                    value_base64 = Base64Converter.encode_to_base64(f'{settings.MEDIA_ROOT}/{value}').decode('UTF-8')
+                    value_base64 = Base64Converter.encode_to_base64(f'{os.path.join(settings.MEDIA_ROOT, *value.split("/"))}').decode('UTF-8')
                     setattr(elem, key_name, value_base64)
         # если объект один
         else:
             if is_dict:
                 value = iter_data[key_name]
-                value_base64 = Base64Converter.encode_to_base64(f'{settings.MEDIA_ROOT}/{value}').decode('UTF-8')
+                value_base64 = Base64Converter.encode_to_base64(f'{os.path.join(settings.MEDIA_ROOT, *value.split("/"))}').decode('UTF-8')
                 iter_data[key_name] = value_base64
             else:
                 value = getattr(iter_data, key_name)
-                value_base64 = Base64Converter.encode_to_base64(f'{settings.MEDIA_ROOT}/{value}').decode('UTF-8')
+                value_base64 = Base64Converter.encode_to_base64(f'{os.path.join(settings.MEDIA_ROOT, *value.split("/"))}').decode('UTF-8')
                 setattr(iter_data, key_name, value_base64)
         return iter_data
 
@@ -93,12 +93,12 @@ class PhotoAddToSchema:
         а также сохраняющий файл.
         """
         if create_dir:
-            folder_path: str = f'{settings.MEDIA_ROOT}/{created_dir}'
+            folder_path: str = os.path.join(settings.MEDIA_ROOT, created_dir)
             # Создаю папку, если она не существует
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
-        path: str = f'{start_path}{file.filename}'
-        full_path = f'{settings.MEDIA_ROOT}/{path}'
+        path: str = os.path.join(start_path, file.filename)
+        full_path = os.path.join(settings.MEDIA_ROOT, path)
         saved_data = await file.read()
         with open(full_path, 'wb') as new_file:
             new_file.write(saved_data)

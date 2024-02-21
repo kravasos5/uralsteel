@@ -7,8 +7,7 @@ from schemas.ladles import LadlesReadDTO, LadlesCreateUpdateDTO, LadlesUpdatePat
 from services.ladles import LadlesService
 
 router = APIRouter(
-    prefix="/admin/ladle",
-    tags=["admin"],
+    prefix='/ladle',
 )
 
 

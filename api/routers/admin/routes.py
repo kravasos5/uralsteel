@@ -9,8 +9,7 @@ from services.routes import RoutesService
 from utils.unitofwork import AbstractUnitOfWork
 
 router = APIRouter(
-    prefix="/admin/route",
-    tags=["admin"],
+    prefix='/route',
 )
 
 

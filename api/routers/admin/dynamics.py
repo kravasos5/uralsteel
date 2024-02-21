@@ -11,8 +11,7 @@ from services.routes import RoutesService
 from utils.unitofwork import AbstractUnitOfWork
 
 router = APIRouter(
-    prefix="/admin/dynamic-tables",
-    tags=["admin"],
+    prefix='/dynamic-tables',
 )
 
 

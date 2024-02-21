@@ -4,14 +4,18 @@ from http import HTTPStatus
 from typing import Annotated, Any
 
 from fastapi import Depends, Path, HTTPException, Query, Form
+from fastapi.security import OAuth2PasswordBearer
+from jwt import InvalidTokenError
 from pydantic import EmailStr
 
 from models.employees import Posts
+from schemas.employees import EmployeesReadDTO, EmployeesAdminReadDTO
 from services.accidents import CranesAccidentService, LadlesAccidentService, AggregatesAccidentService
 from services.dynamic import ActiveDynamicTableService, ArchiveDynamicTableService, LadleOperationTypes
 from services.aggregates import AggregatesGMPService, AggregatesUKPService, AggregatesUVSService,\
     AggregatesMNLZService, AggregatesLService, AggregatesBurnerService
 from services.employees import EmployeesService
+from utils import auth_utils
 from utils.service_base import ServiceBase
 from utils.unitofwork import AbstractUnitOfWork, UnitOfWork
 
@@ -307,3 +311,104 @@ def employees_update_fields_patch_getter(
 
 
 EmpUpdatePatchFieldsDEP = Annotated[dict, Depends(employees_update_fields_patch_getter)]
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')
+
+
+def get_current_token_payload(
+    token: Annotated[str, Depends(oauth2_scheme)]
+) -> dict:
+    """Получить payload токена работника"""
+    try:
+        payload = auth_utils.decode_jwt(
+            token=token
+        )
+    except InvalidTokenError:
+        raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail='Invalid token'
+        )
+    return payload
+
+
+def get_current_auth_user(
+    payload: Annotated[dict, Depends(get_current_token_payload)],
+    uow: UOWDep,
+) -> EmployeesReadDTO:
+    """Получить работника по payload токена"""
+    employee_id: int | None = payload.get('sub')
+    if employee := EmployeesService().retrieve_one_by_id(uow, employee_id):
+        return employee
+    raise HTTPException(
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail='Invalid token'
+    )
+
+
+def get_current_active_auth_user(
+    employee: Annotated[EmployeesReadDTO, Depends(get_current_auth_user)]
+) -> EmployeesReadDTO:
+    """Получить активного аутентифицированного работника"""
+    if employee.is_active:
+        return employee
+    raise HTTPException(
+        status_code=HTTPStatus.FORBIDDEN,
+        detail='Employee inactive'
+    )
+
+
+access_denied = HTTPException(
+    status_code=HTTPStatus.FORBIDDEN,
+    detail='Access denied'
+)
+
+
+def get_change_by_slug_permission(
+    slug: Annotated[str, Path(max_length=200)],
+    cur_employee: Annotated[EmployeesReadDTO, Depends(get_current_active_auth_user)]
+):
+    """Проверка доступа к функционалу изменения"""
+    if cur_employee.slug != slug:
+        raise access_denied
+    return slug
+
+
+employeeSlugPermissionDEP = Annotated[EmployeesReadDTO, Depends(get_change_by_slug_permission)]
+
+
+def get_current_auth_admin_user(
+    payload: Annotated[dict, Depends(get_current_token_payload)],
+    uow: UOWDep,
+) -> EmployeesAdminReadDTO:
+    """Получить работника по payload токена"""
+    employee_id: int | None = payload.get('sub')
+    if employee := EmployeesService().retrieve_one_by_id(uow, employee_id, read_schema=EmployeesAdminReadDTO):
+        return employee
+    raise HTTPException(
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail='Invalid token'
+    )
+
+
+def get_current_active_admin_user(
+    employee: Annotated[EmployeesAdminReadDTO, Depends(get_current_auth_admin_user)]
+) -> EmployeesAdminReadDTO:
+    """Получить активного аутентифицированного работника"""
+    if employee.is_active:
+        return employee
+    raise HTTPException(
+        status_code=HTTPStatus.FORBIDDEN,
+        detail='Employee inactive'
+    )
+
+
+def get_admin_permission(
+    cur_employee: Annotated[EmployeesAdminReadDTO, Depends(get_current_active_admin_user)]
+):
+    """Получение доступа к админ контроллерам"""
+    if not cur_employee.is_superuser:
+        raise access_denied
+
+
+AdminPermissionDEP = Depends(get_admin_permission)

@@ -1,25 +1,40 @@
+import os
 from typing import Annotated
 
-from fastapi import APIRouter, Path, UploadFile, File
+from fastapi import APIRouter, Path, UploadFile, File, Depends
 
 from dependencies import UOWDep, is_object, GetIdDEP, error_raiser_if_none, AccServiceDEP, EmpUpdatePatchFieldsDEP, \
-    EmpUpdateFieldsDEP
+    EmpUpdateFieldsDEP, oauth2_scheme, get_current_active_auth_user, employeeSlugPermissionDEP
 from schemas.accidents import AccidentReadDTO, AccidentsCreateUpdateDTO, AccidentsUpdatePatchDTO
 from schemas.employees import EmployeesReadDTO, EmployeesUpdateDTO, EmployeesPatchUpdateDTO
 from services.employees import EmployeesService
 from utils.utilities import Base64Converter, PhotoAddToSchema
 
+
 router = APIRouter(
     prefix="/profile",
     tags=["users"],
+    dependencies=[Depends(oauth2_scheme)],
 )
 
 
-path_start: str = 'photos/'
+path_start: str = 'photos'
+
+
+@router.get('/me', response_model=EmployeesReadDTO)
+def get_profile_auth_user(
+    employee: Annotated[EmployeesReadDTO, Depends(get_current_active_auth_user)]
+):
+    """Получить профиль аутентифицированного работника"""
+    answer_data = Base64Converter.key_to_base64(employee)
+    return answer_data
 
 
 @router.get('/{slug}', response_model=EmployeesReadDTO)
-async def get_profile(slug: Annotated[str, Path(max_length=200)], uow: UOWDep):
+async def get_profile(
+    slug: Annotated[str, Path(max_length=200)],
+    uow: UOWDep
+):
     """Получить данные профиля работника"""
     employee = EmployeesService().retrieve_one_by_slug(uow=uow, employee_slug=slug)
     error_raiser_if_none(employee, 'Profile')
@@ -29,13 +44,13 @@ async def get_profile(slug: Annotated[str, Path(max_length=200)], uow: UOWDep):
 
 @router.put('/{slug}/change', response_model=EmployeesReadDTO)
 async def change_profile_put(
-        slug: Annotated[str, Path(max_length=200)],
-        uow: UOWDep,
-        updated_employee: EmpUpdateFieldsDEP,
-        photo: Annotated[UploadFile, File()],
+    slug: employeeSlugPermissionDEP,
+    uow: UOWDep,
+    updated_employee: EmpUpdateFieldsDEP,
+    photo: Annotated[UploadFile, File()],
 ):
     """Обновить данные профиля работника"""
-    path: str = f'{path_start}{updated_employee["username"]}/'
+    path: str = os.path.join(path_start, updated_employee["username"])
     update_data = await PhotoAddToSchema.file_add(
         photo, path, updated_employee, EmployeesUpdateDTO,
         create_dir=True, created_dir=path
@@ -48,10 +63,10 @@ async def change_profile_put(
 
 @router.patch('/{slug}/change', response_model=EmployeesReadDTO)
 async def change_profile_patch(
-        slug: Annotated[str, Path(max_length=200)],
-        uow: UOWDep,
-        updated_employee: EmpUpdatePatchFieldsDEP,
-        photo: Annotated[UploadFile, File()] = None,
+    slug: employeeSlugPermissionDEP,
+    uow: UOWDep,
+    updated_employee: EmpUpdatePatchFieldsDEP,
+    photo: Annotated[UploadFile, File()] = None,
 ):
     """Обновить данные профиля работника"""
     service = EmployeesService()
@@ -59,9 +74,9 @@ async def change_profile_patch(
     if photo:
         if 'username' not in updated_employee:
             empl = service.retrieve_one(uow, slug=slug)
-            path: str = f'{path_start}{empl.username}/'
+            path: str = os.path.join(path_start, empl.username)
         else:
-            path: str = f'{path_start}{updated_employee["username"]}/'
+            path: str = os.path.join(path_start, updated_employee["username"])
         update_data = await PhotoAddToSchema.file_add(
             photo, path, updated_employee, EmployeesPatchUpdateDTO,
             create_dir=True, created_dir=path
@@ -119,10 +134,10 @@ async def create_accident(uow: UOWDep, service: AccServiceDEP, accident_data: Ac
 
 @router.patch('/report/update/{object_id}', response_model=AccidentReadDTO, include_in_schema=False)
 async def update_crane_patch(
-        uow: UOWDep,
-        service: AccServiceDEP,
-        object_id: GetIdDEP,
-        accident_data: AccidentsUpdatePatchDTO
+    uow: UOWDep,
+    service: AccServiceDEP,
+    object_id: GetIdDEP,
+    accident_data: AccidentsUpdatePatchDTO
 ):
     """Обновление происшествия методом put"""
     # проверка есть ли такой автор и агрегат
@@ -134,5 +149,3 @@ async def update_crane_patch(
     updated_acc = service.update_one(uow, accident_data, id=object_id)
     error_raiser_if_none(updated_acc)
     return updated_acc
-
-# Ещё система разграничения доступа с JWT

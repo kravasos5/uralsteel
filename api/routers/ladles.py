@@ -1,9 +1,9 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Depends
 
-from dependencies import UOWDep, GetIdDEP, GetOpTypeDEP, error_raiser_if_none
+from dependencies import UOWDep, GetIdDEP, GetOpTypeDEP, error_raiser_if_none, oauth2_scheme
 from schemas.dynamics import DynamicLadleInfoAnswerNested
 from services.dynamic import ActiveDynamicTableService, LadleOperationTypes
 from utils.utilities import Base64Converter
@@ -11,6 +11,7 @@ from utils.utilities import Base64Converter
 router = APIRouter(
     prefix="/ladles",
     tags=["ladles"],
+    dependencies=[Depends(oauth2_scheme)],
 )
 
 

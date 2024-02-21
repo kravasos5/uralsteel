@@ -56,3 +56,13 @@ class EmployeesAdminReadDTO(EmployeesReadDTO):
     """Расширенная схема пользователя"""
     is_superuser: bool
     is_staff: bool
+
+
+class EmployeeLoginDTO(BaseModel):
+    """Схема аутентификации"""
+    username: str
+    password: str
+
+
+class EmployeeAuthReadDTO(EmployeesReadDTO):
+    password: str

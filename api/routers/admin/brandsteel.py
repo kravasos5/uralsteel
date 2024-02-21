@@ -7,8 +7,7 @@ from schemas.brandsteel import BrandSteelReadDTO, BrandSteelCreateUpdateDTO, Bra
 from services.brandsteel import BrandSteelService
 
 router = APIRouter(
-    prefix="/admin/brandsteel",
-    tags=["admin"],
+    prefix='/brandsteel',
 )
 
 
