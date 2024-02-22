@@ -44,3 +44,6 @@ class EmployeesORM(Base):
     aggregates_reports: Mapped[list['AggregatesAccidentORM']] = relationship(
         back_populates='author_info'
     )
+    tokens: Mapped[list['TokenORM']] = relationship(
+        back_populates='employee'
+    )

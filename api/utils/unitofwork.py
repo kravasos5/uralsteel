@@ -11,6 +11,7 @@ from repositories.brandsteel import BrandSteelRepo
 from repositories.cranes import CranesRepo
 from repositories.dynamic import ArchiveDynamicTableRepo, ActiveDynamicTableRepo
 from repositories.employees import EmployeesRepo
+from repositories.jwt import RefreshTokenRepo, RefreshTokenBlacklistRepo
 from repositories.ladles import LadlesRepo
 from repositories.routes import RoutesRepo
 from utils.repositories_base import AbstractRepo
@@ -65,6 +66,8 @@ class UnitOfWork(AbstractUnitOfWork):
         'employees_repo': Type[EmployeesRepo],
         'ladles_repo': Type[LadlesRepo],
         'routes_repo': Type[RoutesRepo],
+        'refresh_token_repo': Type[RefreshTokenRepo],
+        'refresh_token_bl_repo': Type[RefreshTokenBlacklistRepo],
     }
 
     def __init__(self):

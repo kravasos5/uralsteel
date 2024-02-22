@@ -7,6 +7,7 @@ from repositories.brandsteel import BrandSteelRepo
 from repositories.cranes import CranesRepo
 from repositories.dynamic import ArchiveDynamicTableRepo, ActiveDynamicTableRepo
 from repositories.employees import EmployeesRepo
+from repositories.jwt import RefreshTokenRepo, RefreshTokenBlacklistRepo
 from repositories.ladles import LadlesRepo
 from repositories.routes import RoutesRepo
 
@@ -31,6 +32,8 @@ class RepoManager:
         'employees_repo': EmployeesRepo,
         'ladles_repo': LadlesRepo,
         'routes_repo': RoutesRepo,
+        'refresh_token_repo': RefreshTokenRepo,
+        'refresh_token_bl_repo': RefreshTokenBlacklistRepo,
     }
 
     def __init__(self, session: Session, other, other_repositories):

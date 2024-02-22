@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Form, HTTPException
 from pydantic import SecretStr
 
-from dependencies import UOWDep
+from dependencies import UOWDep, oauth2_scheme
 from schemas.auth import TokenInfo
 from schemas.employees import EmployeeAuthReadDTO
 from services.employees import EmployeesService
@@ -39,7 +39,7 @@ def validate_auth_employee(
     if not employee.is_active:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
-            detail='User inactive'
+            detail='Employee inactive'
         )
 
     return employee
@@ -59,5 +59,15 @@ def auth_employee(
     )
     return TokenInfo(
         access_token=access_token,
+        refresh_token=refresh_token,
         token_type='Bearer',
     )
+
+
+@router.post('/logout')
+def logout(
+    token: Annotated[str, Depends(oauth2_scheme)]
+):
+    """Выйти из учётной записи"""
+    # добавить refresh_token в black_list
+    ...

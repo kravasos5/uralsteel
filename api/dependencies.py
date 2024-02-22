@@ -316,6 +316,25 @@ EmpUpdatePatchFieldsDEP = Annotated[dict, Depends(employees_update_fields_patch_
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')
 
 
+invalid_token_exception = HTTPException(
+    status_code=HTTPStatus.UNAUTHORIZED,
+    detail='Invalid token',
+    headers={"WWW-Authenticate": "Bearer"},
+)
+
+
+inactive_user_exception = HTTPException(
+    status_code=HTTPStatus.FORBIDDEN,
+    detail='Employee inactive'
+)
+
+
+access_denied = HTTPException(
+    status_code=HTTPStatus.FORBIDDEN,
+    detail='Access denied'
+)
+
+
 def get_current_token_payload(
     token: Annotated[str, Depends(oauth2_scheme)]
 ) -> dict:
@@ -325,10 +344,7 @@ def get_current_token_payload(
             token=token
         )
     except InvalidTokenError:
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail='Invalid token'
-        )
+        raise invalid_token_exception
     return payload
 
 
@@ -340,10 +356,7 @@ def get_current_auth_user(
     employee_id: int | None = payload.get('sub')
     if employee := EmployeesService().retrieve_one_by_id(uow, employee_id):
         return employee
-    raise HTTPException(
-        status_code=HTTPStatus.UNAUTHORIZED,
-        detail='Invalid token'
-    )
+    raise invalid_token_exception
 
 
 def get_current_active_auth_user(
@@ -352,16 +365,7 @@ def get_current_active_auth_user(
     """Получить активного аутентифицированного работника"""
     if employee.is_active:
         return employee
-    raise HTTPException(
-        status_code=HTTPStatus.FORBIDDEN,
-        detail='Employee inactive'
-    )
-
-
-access_denied = HTTPException(
-    status_code=HTTPStatus.FORBIDDEN,
-    detail='Access denied'
-)
+    raise inactive_user_exception
 
 
 def get_change_by_slug_permission(
@@ -381,26 +385,20 @@ def get_current_auth_admin_user(
     payload: Annotated[dict, Depends(get_current_token_payload)],
     uow: UOWDep,
 ) -> EmployeesAdminReadDTO:
-    """Получить работника по payload токена"""
+    """Получить админа по payload токена"""
     employee_id: int | None = payload.get('sub')
     if employee := EmployeesService().retrieve_one_by_id(uow, employee_id, read_schema=EmployeesAdminReadDTO):
         return employee
-    raise HTTPException(
-        status_code=HTTPStatus.UNAUTHORIZED,
-        detail='Invalid token'
-    )
+    raise invalid_token_exception
 
 
 def get_current_active_admin_user(
     employee: Annotated[EmployeesAdminReadDTO, Depends(get_current_auth_admin_user)]
 ) -> EmployeesAdminReadDTO:
-    """Получить активного аутентифицированного работника"""
+    """Получить активного аутентифицированного админа"""
     if employee.is_active:
         return employee
-    raise HTTPException(
-        status_code=HTTPStatus.FORBIDDEN,
-        detail='Employee inactive'
-    )
+    raise inactive_user_exception
 
 
 def get_admin_permission(

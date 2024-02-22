@@ -332,3 +332,35 @@ class AggregateAccident(AccidentsAbstract):
 
 
 pre_save.connect(accident_pre_save_dispatcher, sender=AggregateAccident)
+
+
+class RefreshToken(models.Model):
+    """Модель refresh токенов"""
+    refresh_token = models.CharField(max_length=1000,
+                                     unique=True,
+                                     verbose_name='Токен')
+    employee = models.ForeignKey(Employees, on_delete=models.CASCADE,
+                                 verbose_name='Работник')
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} {self.id}>'
+
+    class Meta:
+        verbose_name = 'Токен'
+        verbose_name_plural = 'Токены'
+        db_table = 'jwt_refresh_tokens'
+
+
+class TokenBlacklist(models.Model):
+    """Модель чёрного списка refresh токенов"""
+    refresh_token = models.CharField(max_length=1000,
+                                     unique=True,
+                                     verbose_name='Токен')
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} {self.id}>'
+
+    class Meta:
+        verbose_name = 'Чёрный список токенов'
+        verbose_name_plural = 'Чёрный список токенов'
+        db_table = 'jwt_blacklist'
