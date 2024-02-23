@@ -66,3 +66,4 @@ class EmployeeLoginDTO(BaseModel):
 
 class EmployeeAuthReadDTO(EmployeesReadDTO):
     password: str
+    is_superuser: bool

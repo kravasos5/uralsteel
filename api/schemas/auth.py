@@ -4,8 +4,14 @@ from pydantic import BaseModel
 class TokenInfo(BaseModel):
     """Схема токена"""
     access_token: str
-    refresh_token: str
+    # refresh_token: str
     token_type: str
+
+
+class TokenScopesData(BaseModel):
+    """Схема информации в токене"""
+    id: int
+    scopes: list[str] = []
 
 
 class RefreshTokenBlacklistCreateUpdateDTO(BaseModel):

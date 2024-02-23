@@ -3,12 +3,13 @@ from enum import Enum
 from http import HTTPStatus
 from typing import Annotated, Any
 
-from fastapi import Depends, Path, HTTPException, Query, Form
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, Path, HTTPException, Query, Form, Security
+from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jwt import InvalidTokenError
-from pydantic import EmailStr
+from pydantic import EmailStr, ValidationError
 
 from models.employees import Posts
+from schemas.auth import TokenScopesData
 from schemas.employees import EmployeesReadDTO, EmployeesAdminReadDTO
 from services.accidents import CranesAccidentService, LadlesAccidentService, AggregatesAccidentService
 from services.dynamic import ActiveDynamicTableService, ArchiveDynamicTableService, LadleOperationTypes
@@ -313,13 +314,20 @@ def employees_update_fields_patch_getter(
 EmpUpdatePatchFieldsDEP = Annotated[dict, Depends(employees_update_fields_patch_getter)]
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl='/auth/login',
+    # scopes={
+    #     'employee': 'Employee permissions. Read, update yourself info, \
+    #                 get cranes, ladles location info and create reports',
+    #     'admin': 'All permissions.'
+    # },
+)
 
 
 invalid_token_exception = HTTPException(
     status_code=HTTPStatus.UNAUTHORIZED,
     detail='Invalid token',
-    headers={"WWW-Authenticate": "Bearer"},
+    headers={'WWW-Authenticate': 'Bearer'},
 )
 
 
@@ -349,18 +357,45 @@ def get_current_token_payload(
 
 
 def get_current_auth_user(
+    security_scopes: SecurityScopes,
     payload: Annotated[dict, Depends(get_current_token_payload)],
     uow: UOWDep,
 ) -> EmployeesReadDTO:
     """Получить работника по payload токена"""
-    employee_id: int | None = payload.get('sub')
-    if employee := EmployeesService().retrieve_one_by_id(uow, employee_id):
+    # получение данных о scopes для информации ошибки
+    if security_scopes.scopes:
+        authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+    else:
+        authenticate_value = 'Bearer'
+    invalid_token_scopes_exception = HTTPException(
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail='Invalid token',
+        headers={'WWW-Authenticate': authenticate_value},
+    )
+    # валидация scopes и id
+    try:
+        employee_id: int | None = payload.get('sub')
+        scopes: list[str] = payload.get('scopes')
+        token_data = TokenScopesData(scopes=scopes, id=employee_id)
+    except ValidationError:
+        raise invalid_token_scopes_exception
+    # проверка прав доступа
+    for scope in security_scopes.scopes:
+        if scope not in token_data.scopes:
+            raise HTTPException(
+                status_code=HTTPStatus.UNAUTHORIZED,
+                detail='Access denied',
+                headers={'WWW-Authenticate': authenticate_value},
+            )
+    # если получилось найти такого пользователя, то вернуть его
+    if employee := EmployeesService().retrieve_one_by_id(uow, token_data.id):
         return employee
+    # otherwise вызвать ошибку
     raise invalid_token_exception
 
 
 def get_current_active_auth_user(
-    employee: Annotated[EmployeesReadDTO, Depends(get_current_auth_user)]
+    employee: Annotated[EmployeesReadDTO, Security(get_current_auth_user, scopes=['employee'])]
 ) -> EmployeesReadDTO:
     """Получить активного аутентифицированного работника"""
     if employee.is_active:
@@ -381,32 +416,11 @@ def get_change_by_slug_permission(
 employeeSlugPermissionDEP = Annotated[EmployeesReadDTO, Depends(get_change_by_slug_permission)]
 
 
-def get_current_auth_admin_user(
-    payload: Annotated[dict, Depends(get_current_token_payload)],
-    uow: UOWDep,
-) -> EmployeesAdminReadDTO:
-    """Получить админа по payload токена"""
-    employee_id: int | None = payload.get('sub')
-    if employee := EmployeesService().retrieve_one_by_id(uow, employee_id, read_schema=EmployeesAdminReadDTO):
-        return employee
-    raise invalid_token_exception
-
-
-def get_current_active_admin_user(
-    employee: Annotated[EmployeesAdminReadDTO, Depends(get_current_auth_admin_user)]
-) -> EmployeesAdminReadDTO:
-    """Получить активного аутентифицированного админа"""
-    if employee.is_active:
-        return employee
-    raise inactive_user_exception
-
-
 def get_admin_permission(
-    cur_employee: Annotated[EmployeesAdminReadDTO, Depends(get_current_active_admin_user)]
+    cur_employee: Annotated[EmployeesAdminReadDTO, Security(get_current_auth_user, scopes=['admin'])]
 ):
     """Получение доступа к админ контроллерам"""
-    if not cur_employee.is_superuser:
-        raise access_denied
+    pass
 
 
 AdminPermissionDEP = Depends(get_admin_permission)

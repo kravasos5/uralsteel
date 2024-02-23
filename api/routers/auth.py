@@ -50,16 +50,21 @@ def auth_employee(
     employee: Annotated[EmployeeAuthReadDTO, Depends(validate_auth_employee)],
 ):
     """Получить новый access token"""
+    scopes = ['employee']
+    if employee.is_superuser:
+        scopes.append('admin')
+
     jwt_payload = {
         'sub': employee.id,
         'username': employee.username,
+        'scopes': scopes,
     }
     access_token = auth_utils.encode_jwt(
         payload=jwt_payload
     )
     return TokenInfo(
         access_token=access_token,
-        refresh_token=refresh_token,
+        # refresh_token=refresh_token,
         token_type='Bearer',
     )
 
