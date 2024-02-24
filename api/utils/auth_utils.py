@@ -13,6 +13,8 @@ def encode_jwt(
     algorithm: str = settings.AUTH.algorithm,
     expire_timedelta: timedelta | None = None,
     expire_minutes: int = settings.AUTH.access_token_expire_minutes,
+    expire_minutes_refresh = settings.AUTH.refresh_token_expire_minutes,
+    is_refresh: bool = False,
 ):
     """Кодировать JWT"""
     to_encode = payload.copy()
@@ -20,17 +22,21 @@ def encode_jwt(
     if expire_timedelta:
         expire = now + expire_timedelta
     else:
+        if is_refresh:
+            expire_minutes = expire_minutes_refresh
         expire = now + timedelta(minutes=expire_minutes)
+
     to_encode.update(
         exp=expire,
         iat=now
     )
+
     encoded = jwt.encode(
         payload=to_encode,
         key=private_key,
         algorithm=algorithm,
     )
-    return encoded
+    return encoded, expire
 
 
 def decode_jwt(

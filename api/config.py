@@ -13,6 +13,7 @@ class AuthSettings(BaseSettings):
     algorithm: str = 'RS256'
     # access_token_expire_minutes: int = 15
     access_token_expire_minutes: int = 3
+    refresh_token_expire_minutes: int = 1440
 
 
 class Settings(BaseSettings):

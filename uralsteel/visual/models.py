@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -334,16 +336,29 @@ class AggregateAccident(AccidentsAbstract):
 pre_save.connect(accident_pre_save_dispatcher, sender=AggregateAccident)
 
 
-class RefreshToken(models.Model):
-    """Модель refresh токенов"""
+class TokenBase(models.Model):
+    """Базовая модель refresh token"""
     refresh_token = models.CharField(max_length=1000,
                                      unique=True,
                                      verbose_name='Токен')
-    employee = models.ForeignKey(Employees, on_delete=models.CASCADE,
-                                 verbose_name='Работник')
+    expire_date = models.DateTimeField(verbose_name='Дата и время истечения токена')
+    token_family = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        verbose_name='Уникальный идентификатор семейства токенов',
+    )
 
     def __repr__(self):
         return f'<{self.__class__.__name__} {self.id}>'
+
+    class Meta:
+        abstract = True
+
+
+class RefreshToken(TokenBase):
+    """Модель refresh токенов"""
+    employee = models.ForeignKey(Employees, on_delete=models.CASCADE,
+                                 verbose_name='Работник')
 
     class Meta:
         verbose_name = 'Токен'
@@ -351,14 +366,8 @@ class RefreshToken(models.Model):
         db_table = 'jwt_refresh_tokens'
 
 
-class TokenBlacklist(models.Model):
+class TokenBlacklist(TokenBase):
     """Модель чёрного списка refresh токенов"""
-    refresh_token = models.CharField(max_length=1000,
-                                     unique=True,
-                                     verbose_name='Токен')
-
-    def __repr__(self):
-        return f'<{self.__class__.__name__} {self.id}>'
 
     class Meta:
         verbose_name = 'Чёрный список токенов'
