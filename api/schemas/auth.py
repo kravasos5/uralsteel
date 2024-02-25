@@ -23,6 +23,9 @@ class RefreshTokenBaseDTO(BaseModel):
     expire_date: datetime
     token_family: uuid.UUID
 
+    class Config:
+        from_attributes = True
+
 
 class RefreshTokenBlacklistReadDTO(RefreshTokenBaseDTO):
     """Схема токена из чёрного списка"""

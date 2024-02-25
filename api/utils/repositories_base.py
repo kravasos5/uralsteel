@@ -99,7 +99,7 @@ class SqlAlchemyRepo(AbstractRepo):
             return result
         return res
 
-    def retrieve_all(self, offset: int, limit: int, **filters):
+    def retrieve_all(self, offset: int = 0, limit: int = 100, **filters):
         """Получение списка записей из бд"""
         stmt = select(self.model).filter_by(**filters).offset(offset).limit(limit)
         res = self.session.execute(stmt).scalars().all()

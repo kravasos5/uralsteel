@@ -114,30 +114,17 @@ async def refresh_tokens(
         raise invalid_token_exception
     # инициализация сервисов
     rt_service = RefreshTokenService()
-    rt_bl_service = RefreshTokenBlacklistService()
-    # получаю токен, который нужно занести в blacklist
-    blacked_token = rt_service.retrieve_one(
-        uow,
-        employee_id=employee_id,
-        token_family=token_family,
-        refresh_token=refresh_token
-    )
-    # получаю dto для токена в чёрном списке
-    create_bl_dto = RefreshTokenBaseDTO(
-        refresh_token=blacked_token.refresh_token,
-        expire_date=blacked_token.expire_date,
-        token_family=blacked_token.token_family
-    )
-    # заношу этот токен в чёрный список
-    rt_bl_service.create_one(uow, create_bl_dto)
-    # удаляю токен из бд
-    rt_service.delete_one(
-        uow,
-        employee_id=employee_id,
-        token_family=token_family,
-        refresh_token=refresh_token
-    )
+    # rt_bl_service = RefreshTokenBlacklistService()
+    # проверяю есть ли этот токен в blacklist, если есть, то заношу
+    # всё семейство в blacklist
 
+    # переношу текущий токен в чёрный список и удаляю из таблицы токенов
+    rt_service.transfer_to_blacklist(
+        uow,
+        refresh_token,
+        employee_id,
+        token_family,
+    )
     # создаю новый access и refresh токены
     jwt_payload = {
         'sub': employee_id,
