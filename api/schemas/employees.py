@@ -65,5 +65,22 @@ class EmployeeLoginDTO(BaseModel):
 
 
 class EmployeeAuthReadDTO(EmployeesReadDTO):
+    """Схема для аутентификации"""
     password: str
     is_superuser: bool
+
+
+class EmployeePasswordRestStartDTO(BaseModel):
+    """Схема для сброса пароля"""
+    token: str
+
+
+class EmployeePasswordResetDTO(BaseModel):
+    """Схема сброса пароля"""
+    password: str
+
+
+class EmployeeResetPayloadDTO(BaseModel):
+    """Схема данных, кодируемых в токен для сброса пароля"""
+    email: str
+    expire: datetime

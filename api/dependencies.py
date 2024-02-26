@@ -1,3 +1,4 @@
+import datetime
 from datetime import time
 from enum import Enum
 from http import HTTPStatus
@@ -7,18 +8,26 @@ from fastapi import Depends, Path, HTTPException, Query, Form, Security
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jwt import InvalidTokenError
 from pydantic import EmailStr, ValidationError
+from cryptography.fernet import InvalidToken as InvalidResetToken
 
 from models.employees import Posts
+from schemas.aggregates import AggregatesUpdatePatchDTO
 from schemas.auth import TokenScopesData
-from schemas.employees import EmployeesReadDTO, EmployeesAdminReadDTO
+from schemas.cranes import CranesUpdatePatchDTO
+from schemas.employees import EmployeesReadDTO, EmployeesAdminReadDTO, EmployeePasswordResetDTO, EmployeeResetPayloadDTO
+from schemas.ladles import LadlesUpdatePatchDTO
 from services.accidents import CranesAccidentService, LadlesAccidentService, AggregatesAccidentService
+from services.cranes import CranesService
 from services.dynamic import ActiveDynamicTableService, ArchiveDynamicTableService, LadleOperationTypes
-from services.aggregates import AggregatesGMPService, AggregatesUKPService, AggregatesUVSService,\
-    AggregatesMNLZService, AggregatesLService, AggregatesBurnerService
+from services.aggregates import AggregatesGMPService, AggregatesUKPService, AggregatesUVSService, \
+    AggregatesMNLZService, AggregatesLService, AggregatesBurnerService, AggregatesAllService
 from services.employees import EmployeesService
+from services.jwt import RefreshTokenService
+from services.ladles import LadlesService
 from utils import auth_utils
 from utils.service_base import ServiceBase
 from utils.unitofwork import AbstractUnitOfWork, UnitOfWork
+from utils import password_reset_utils
 
 
 UOWDep = Annotated[AbstractUnitOfWork, Depends(UnitOfWork)]
@@ -50,7 +59,10 @@ GetAccTypeDEP = Annotated[AccidentType, Depends(get_accident_type)]
 def error_raiser_if_none(obj: Any, message_name: str = 'Object'):
     """Вызывает ошибку, если нет такого объекта"""
     if not obj:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=f"{message_name} not found")
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"{message_name} not found"
+        )
 
 
 def is_object(uow, object_id: int, service: ServiceBase, message: str = 'Object'):
@@ -67,7 +79,34 @@ def is_author_and_accident_object(
 ):
     """Проверка наличия автора и агрегата с таким id"""
     is_object(uow, author_id, EmployeesService(), 'Author')
-    is_object(uow, object_id, service)
+    object_service = None
+    if type(service) == AggregatesAccidentService:
+        object_service = AggregatesAllService()
+    elif type(service) == LadlesAccidentService:
+        object_service = LadlesService()
+    elif type(service) == CranesAccidentService:
+        object_service = CranesService()
+    is_object(uow, object_id, object_service)
+
+
+def make_object_broken(
+    uow: AbstractUnitOfWork,
+    service: ServiceBase,
+    object_id: int,
+):
+    """Отмечает объект сломанным при создании отчёта"""
+    object_service = None
+    object_schema = None
+    if type(service) == AggregatesAccidentService:
+        object_service = AggregatesAllService()
+        object_schema = AggregatesUpdatePatchDTO(is_broken=True)
+    elif type(service) == LadlesAccidentService:
+        object_service = LadlesService()
+        object_schema = LadlesUpdatePatchDTO(is_broken=True)
+    elif type(service) == CranesAccidentService:
+        object_service = CranesService()
+        object_schema = CranesUpdatePatchDTO(is_broken=True)
+    object_service.update_one(uow, object_schema, id=object_id)
 
 
 def get_accident_service(acc_type: GetAccTypeDEP):
@@ -343,7 +382,8 @@ access_denied = HTTPException(
 )
 
 
-def get_current_token_payload(
+async def get_current_token_payload(
+    uow: UOWDep,
     token: Annotated[str, Depends(oauth2_scheme)]
 ) -> dict:
     """Получить payload токена работника"""
@@ -352,6 +392,9 @@ def get_current_token_payload(
             token=token
         )
     except InvalidTokenError:
+        raise invalid_token_exception
+    # проверка нет ли токена в blacklist
+    if RefreshTokenService().check_token(uow, token, payload.get('token_family')):
         raise invalid_token_exception
     return payload
 
@@ -424,3 +467,57 @@ def get_admin_permission(
 
 
 AdminPermissionDEP = Depends(get_admin_permission)
+
+
+async def validate_email(
+    uow: UOWDep,
+    email: Annotated[EmailStr, Form(max_length=254)]
+):
+    """Проверка email"""
+    if EmployeesService().retrieve_one(uow, email=email):
+        return email
+    raise HTTPException(
+        status_code=HTTPStatus.BAD_REQUEST,
+        detail="Employee with that email doesn't exist",
+    )
+
+
+emailDEP = Annotated[str, Depends(validate_email)]
+
+
+async def validate_passwords(
+    password: Annotated[str, Form(max_length=128)],
+    new_password: Annotated[str, Form(max_length=128)],
+) -> EmployeePasswordResetDTO:
+    """Валидировать 2 пароля при смене паролей"""
+    if password != new_password:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Passwords are different',
+        )
+    hashed_password = EmployeesService().hash_password(password)
+    return EmployeePasswordResetDTO(password=hashed_password)
+
+
+ResetPasswordDEP = Annotated[str, Depends(validate_passwords)]
+
+
+async def validate_reset_token(token: Annotated[str, Path()]) -> EmployeeResetPayloadDTO:
+    """Валидация reset токена"""
+    invalid_reset_token_exception = HTTPException(
+        status_code=HTTPStatus.BAD_REQUEST,
+        detail='Invalid token',
+    )
+    try:
+        payload = password_reset_utils.decode_token(token)
+    except InvalidResetToken:
+        raise invalid_reset_token_exception
+    # проверка не истёк ли токен
+    expire_date = datetime.datetime.fromtimestamp(payload.get('exp'))
+    now = datetime.datetime.now()
+    if expire_date < now:
+        raise invalid_reset_token_exception
+    return EmployeeResetPayloadDTO(**payload)
+
+
+ResetPayloadDEP = Annotated[EmployeeResetPayloadDTO, Depends(validate_reset_token)]

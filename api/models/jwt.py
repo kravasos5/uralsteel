@@ -20,7 +20,7 @@ class TokenBaseORM(Base):
     expire_date: Mapped[datetime]
     token_family: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
-        default=uuid.uuid4,
+        # default=uuid.uuid4,
         unique=True,
         nullable=False,
     )

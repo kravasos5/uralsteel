@@ -13,7 +13,7 @@ def encode_jwt(
     algorithm: str = settings.AUTH.algorithm,
     expire_timedelta: timedelta | None = None,
     expire_minutes: int = settings.AUTH.access_token_expire_minutes,
-    expire_minutes_refresh = settings.AUTH.refresh_token_expire_minutes,
+    expire_minutes_refresh=settings.AUTH.refresh_token_expire_minutes,
     is_refresh: bool = False,
 ):
     """Кодировать JWT"""

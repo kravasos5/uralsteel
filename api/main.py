@@ -10,6 +10,7 @@ api = FastAPI()
 
 api.include_router(auth.router)
 api.include_router(profile.router)
+api.include_router(profile.password_reset_router)
 api.include_router(cranes_employee.router)
 api.include_router(ladles_employee.router)
 api.include_router(admin.router)

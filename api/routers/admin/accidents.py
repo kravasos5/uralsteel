@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 from fastapi import APIRouter
 
-from dependencies import UOWDep, GetIdDEP, error_raiser_if_none, AccServiceDEP,\
-    is_author_and_accident_object
+from dependencies import UOWDep, GetIdDEP, error_raiser_if_none, AccServiceDEP, \
+    is_author_and_accident_object, make_object_broken
 from schemas.accidents import AccidentReadDTO, AccidentsUpdatePatchDTO, \
     AccidentReadShortDTO, AccidentsCreateUpdateDTO
 
@@ -26,6 +26,8 @@ def create_accident(uow: UOWDep, service: AccServiceDEP, accident_data: Accident
     # проверка есть ли такой автор и агрегат
     is_author_and_accident_object(uow, accident_data.author_id, accident_data.object_id, service)
     new_accident = service.create_one(uow, accident_data)
+    # отметить объект отчёта сломанным
+    make_object_broken(uow, service, accident_data.object_id)
     return new_accident
 
 

@@ -1,3 +1,4 @@
+import datetime
 import uuid
 from http import HTTPStatus
 from typing import Annotated
@@ -114,32 +115,50 @@ async def refresh_tokens(
         raise invalid_token_exception
     # инициализация сервисов
     rt_service = RefreshTokenService()
-    # rt_bl_service = RefreshTokenBlacklistService()
     # проверяю есть ли этот токен в blacklist, если есть, то заношу
     # всё семейство в blacklist
+    if rt_service.check_token(uow, refresh_token, token_family):
+        rt_service.delete_family(uow, token_family)
+        raise invalid_token_exception
+    # если токен используется впервые, то выполняю стандартные действия
+    else:
+        # переношу текущий токен в чёрный список и удаляю из таблицы токенов
+        rt_service.transfer_to_blacklist(
+            uow,
+            refresh_token,
+            employee_id,
+            token_family,
+        )
+        # создаю новый access и refresh токены
+        jwt_payload = {
+            'sub': employee_id,
+            'scopes': scopes,
+            'token_family': token_family,
+        }
 
-    # переношу текущий токен в чёрный список и удаляю из таблицы токенов
-    rt_service.transfer_to_blacklist(
-        uow,
-        refresh_token,
-        employee_id,
-        token_family,
-    )
-    # создаю новый access и refresh токены
-    jwt_payload = {
-        'sub': employee_id,
-        'scopes': scopes,
-        'token_family': token_family,
-    }
-
-    answer = await create_tokens(jwt_payload, uow)
-    return answer
+        answer = await create_tokens(jwt_payload, uow)
+        return answer
 
 
-@router.post('/logout')
+@router.post('/logout', status_code=HTTPStatus.NO_CONTENT)
 async def logout(
+    uow: UOWDep,
     token: Annotated[str, Depends(oauth2_scheme)]
 ):
     """Выйти из учётной записи"""
     # добавить refresh_token в black_list
-    ...
+    # расшифровать access_token
+    payload = auth_utils.decode_jwt(token)
+    token_family = payload.get('token_family')
+    # занести в чёрный список семейство refresh_token
+    RefreshTokenService().delete_family(uow, token_family)
+    # занести в чёрный список текущий access токен
+    creation_bl_schema = RefreshTokenBaseDTO(
+        refresh_token=token,
+        expire_date=datetime.datetime.fromtimestamp(payload.get('exp')),
+        token_family=payload.get('token_family'),
+    )
+    RefreshTokenBlacklistService().create_one(
+        uow,
+        creation_bl_schema
+    )

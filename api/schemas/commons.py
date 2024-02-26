@@ -50,6 +50,11 @@ class DataConverter(AbstractDataConverter):
         return dtos
 
     @staticmethod
+    def list_to_dto(list_data, schema: Type[BaseModel]) -> list[BaseModel]:
+        """Конвертация списка кортежей в dto"""
+        return [schema.model_validate(dict(zip(schema.model_fields, row))) for row in list_data]
+
+    @staticmethod
     def dto_to_dict(schema: BaseModel, exclude_unset: bool = False) -> dict:
         """Метод, конвертирующий dto в словарь"""
         return schema.model_dump(exclude_unset=exclude_unset)

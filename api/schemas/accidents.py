@@ -8,7 +8,13 @@ from schemas.employees import EmployeesReadDTO
 from schemas.ladles import LadlesReadDTO
 
 
-class AccidentsCreateUpdateDTO(BaseModel):
+class AccidentsCreateDTO(BaseModel):
+    """Схема обновления происшествий"""
+    report: str | None = None
+    object_id: int
+
+
+class AccidentsCreateUpdateDTO(AccidentsCreateDTO):
     """Схема обновления происшествий"""
     author_id: int
     report: str | None
