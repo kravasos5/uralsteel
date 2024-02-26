@@ -4,20 +4,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, UploadFile, File, Depends, HTTPException, Query
 
-from dependencies import UOWDep, is_object, GetIdDEP, error_raiser_if_none, AccServiceDEP, EmpUpdatePatchFieldsDEP, \
+from celery_back.tasks import archive_report_handler
+from dependencies import UOWDep, GetIdDEP, error_raiser_if_none, AccServiceDEP, EmpUpdatePatchFieldsDEP, \
     EmpUpdateFieldsDEP, oauth2_scheme, get_current_active_auth_user, employeeSlugPermissionDEP, emailDEP, \
     ResetPasswordDEP, ResetPayloadDEP, is_author_and_accident_object, access_denied, make_object_broken
 from schemas.accidents import AccidentReadDTO, AccidentsCreateUpdateDTO, AccidentsUpdatePatchDTO, AccidentsCreateDTO
-from schemas.aggregates import AggregatesUpdatePatchDTO
-from schemas.cranes import CranesUpdatePatchDTO
 from schemas.employees import EmployeesReadDTO, EmployeesUpdateDTO, EmployeesPatchUpdateDTO, \
     EmployeePasswordRestStartDTO
-from schemas.ladles import LadlesUpdatePatchDTO
-from services.accidents import AggregatesAccidentService, LadlesAccidentService, CranesAccidentService
-from services.aggregates import AggregatesAllService
-from services.cranes import CranesService
 from services.employees import EmployeesService
-from services.ladles import LadlesService
 from utils.utilities import Base64Converter, PhotoAddToSchema
 from utils import password_reset_utils
 
@@ -130,11 +124,13 @@ async def password_reset(
     return {'message': 'Password changed'}
 
 
-@router.get('/archive-report', include_in_schema=False)
-async def get_archive_report():
+@router.post('/archive-report')
+async def get_archive_report(
+    employee: Annotated[EmployeesReadDTO, Depends(get_current_active_auth_user)]
+):
     """Получение архивного отчёта"""
-    # Celery
-    ...
+    archive_report_handler.delay(employee.first_name, employee.email)
+    return {'message': 'Letter sent'}
 
 
 @router.post('/report/create', response_model=AccidentReadDTO)

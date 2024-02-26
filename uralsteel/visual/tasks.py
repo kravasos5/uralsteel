@@ -2,7 +2,7 @@ import os
 import time
 
 import pandas
-from celery import shared_task
+from celery_back import shared_task
 from django.core.mail import EmailMessage
 from uralsteel.settings import MEDIA_ROOT
 from visual.models import ArchiveDynamicTable
@@ -27,7 +27,7 @@ def archive_report_handler(user_first_name: str, user_email: str):
     with open(path_to_file, 'rb') as excel_file:
         mail.attach(path_to_file, excel_file.read(),
                     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    # эмулирую долгую операцию
+    # моделирую долгую операцию
     time.sleep(10)
     # отправляю письмо
     mail.send()

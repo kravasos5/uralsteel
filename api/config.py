@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     MEDIA_URL: str = '/media/'
     TIME_ZONE: str = 'Asia/Yekaterinburg'
     AUTH: AuthSettings = AuthSettings()
+    CELERY_BROKER_URL: str = 'redis://127.0.0.1:6379'
+    CELERY_RESULT_BACKENDS: str = 'redis://127.0.0.1:6379'
 
     @property
     def DATABASE_URL(self):
