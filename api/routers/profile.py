@@ -33,7 +33,7 @@ path_start: str = 'photos'
 
 
 @router.get('/me', response_model=EmployeesReadDTO)
-def get_profile_auth_user(
+async def get_profile_auth_user(
     employee: Annotated[EmployeesReadDTO, Depends(get_current_active_auth_user)]
 ):
     """Получить профиль аутентифицированного работника"""
@@ -47,8 +47,8 @@ async def get_profile(
     uow: UOWDep
 ):
     """Получить данные профиля работника"""
-    employee = EmployeesService().retrieve_one_by_slug(uow=uow, employee_slug=slug)
-    error_raiser_if_none(employee, 'Profile')
+    employee = await EmployeesService().retrieve_one_by_slug(uow=uow, employee_slug=slug)
+    await error_raiser_if_none(employee, 'Profile')
     answer_data = Base64Converter.key_to_base64(employee)
     return answer_data
 
@@ -66,8 +66,8 @@ async def change_profile_put(
         photo, path, updated_employee, EmployeesUpdateDTO,
         create_dir=True, created_dir=path
     )
-    employee = EmployeesService().update_one(uow=uow, data_schema=update_data, slug=slug)
-    error_raiser_if_none(employee, 'Profile')
+    employee = await EmployeesService().update_one(uow=uow, data_schema=update_data, slug=slug)
+    await error_raiser_if_none(employee, 'Profile')
     answer_data = Base64Converter.key_to_base64(employee)
     return answer_data
 
@@ -84,7 +84,7 @@ async def change_profile_patch(
     updated_employee = {key: value for key, value in updated_employee.items() if value is not None}
     if photo:
         if 'username' not in updated_employee:
-            empl = service.retrieve_one(uow, slug=slug)
+            empl = await service.retrieve_one(uow, slug=slug)
             path: str = os.path.join(path_start, empl.username)
         else:
             path: str = os.path.join(path_start, updated_employee["username"])
@@ -94,8 +94,8 @@ async def change_profile_patch(
         )
     else:
         update_data = EmployeesPatchUpdateDTO(**updated_employee)
-    employee = service.update_one(uow=uow, data_schema=update_data, slug=slug)
-    error_raiser_if_none(employee, 'Profile')
+    employee = await service.update_one(uow=uow, data_schema=update_data, slug=slug)
+    await error_raiser_if_none(employee, 'Profile')
     answer_data = Base64Converter.key_to_base64(employee)
     return answer_data
 
@@ -120,7 +120,7 @@ async def password_reset(
     hashed_password: ResetPasswordDEP,
 ):
     # сброс пароля
-    EmployeesService().update_one(uow=uow, data_schema=hashed_password, email=payload.email)
+    await EmployeesService().update_one(uow=uow, data_schema=hashed_password, email=payload.email)
     return {'message': 'Password changed'}
 
 
@@ -142,15 +142,15 @@ async def create_accident(
 ):
     """Создание отчёта о происшествии"""
     # проверка есть ли такой автор и агрегат
-    is_author_and_accident_object(uow, employee.id, accident_data.object_id, service)
+    await is_author_and_accident_object(uow, employee.id, accident_data.object_id, service)
     new_report = AccidentsCreateUpdateDTO(
         author_id=employee.id,
         report=accident_data.report,
         object_id=accident_data.object_id,
     )
-    new_accident = service.create_one(uow, new_report)
+    new_accident = await service.create_one(uow, new_report)
     # отметить объект отчёта сломанным
-    make_object_broken(uow, service, new_report.object_id)
+    await make_object_broken(uow, service, new_report.object_id)
     return new_accident
 
 
@@ -164,7 +164,7 @@ async def update_crane_patch(
 ):
     """Обновление комментария отчёта происшествия методом patch"""
     # проверка существует ли такой отчёт
-    if not (report := service.retrieve_one(uow, id=object_id)):
+    if not (report := await service.retrieve_one(uow, id=object_id)):
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail="Report with that id doesn't exist"
@@ -175,5 +175,5 @@ async def update_crane_patch(
     # получаю обновлённый dto происшествия
     new_report_data = AccidentsUpdatePatchDTO(report=updated_report)
     # обновляю происшествие
-    updated_acc = service.update_one(uow, new_report_data, id=object_id)
+    updated_acc = await service.update_one(uow, new_report_data, id=object_id)
     return updated_acc

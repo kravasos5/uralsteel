@@ -6,8 +6,8 @@ class AccidentsBaseService(ServiceBase):
     """Сервис инцидентов и отчётов"""
     repository = None
 
-    def retrieve_one_by_id(self, uow: AbstractUnitOfWork, accident_id: int):
-        return self.retrieve_one(uow, id=accident_id)
+    async def retrieve_one_by_id(self, uow: AbstractUnitOfWork, accident_id: int):
+        return await self.retrieve_one(uow, id=accident_id)
 
 
 class AggregatesAccidentService(AccidentsBaseService):

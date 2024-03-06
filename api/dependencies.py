@@ -33,7 +33,7 @@ from utils import password_reset_utils
 UOWDep = Annotated[AbstractUnitOfWork, Depends(UnitOfWork)]
 
 
-def get_object_id(object_id: Annotated[int, Path(gt=0)]):
+async def get_object_id(object_id: Annotated[int, Path(gt=0)]):
     """object_id зависимость"""
     return object_id
 
@@ -48,7 +48,7 @@ class AccidentType(str, Enum):
     aggregate: str = 'Aggregates'
 
 
-def get_accident_type(accident_type: Annotated[AccidentType, Query()]):
+async def get_accident_type(accident_type: Annotated[AccidentType, Query()]):
     """Зависимость типа инцидента"""
     return accident_type
 
@@ -56,7 +56,7 @@ def get_accident_type(accident_type: Annotated[AccidentType, Query()]):
 GetAccTypeDEP = Annotated[AccidentType, Depends(get_accident_type)]
 
 
-def error_raiser_if_none(obj: Any, message_name: str = 'Object'):
+async def error_raiser_if_none(obj: Any, message_name: str = 'Object'):
     """Вызывает ошибку, если нет такого объекта"""
     if not obj:
         raise HTTPException(
@@ -65,20 +65,20 @@ def error_raiser_if_none(obj: Any, message_name: str = 'Object'):
         )
 
 
-def is_object(uow, object_id: int, service: ServiceBase, message: str = 'Object'):
+async def is_object(uow, object_id: int, service: ServiceBase, message: str = 'Object'):
     """Проверка есть ли объект с таким id"""
-    obj = service.retrieve_one(uow, id=object_id)
-    error_raiser_if_none(obj, message)
+    obj = await service.retrieve_one(uow, id=object_id)
+    await error_raiser_if_none(obj, message)
 
 
-def is_author_and_accident_object(
+async def is_author_and_accident_object(
         uow: AbstractUnitOfWork,
         author_id: int,
         object_id: int,
         service: ServiceBase
 ):
     """Проверка наличия автора и агрегата с таким id"""
-    is_object(uow, author_id, EmployeesService(), 'Author')
+    await is_object(uow, author_id, EmployeesService(), 'Author')
     object_service = None
     if type(service) == AggregatesAccidentService:
         object_service = AggregatesAllService()
@@ -86,10 +86,10 @@ def is_author_and_accident_object(
         object_service = LadlesService()
     elif type(service) == CranesAccidentService:
         object_service = CranesService()
-    is_object(uow, object_id, object_service)
+    await is_object(uow, object_id, object_service)
 
 
-def make_object_broken(
+async def make_object_broken(
     uow: AbstractUnitOfWork,
     service: ServiceBase,
     object_id: int,
@@ -106,10 +106,10 @@ def make_object_broken(
     elif type(service) == CranesAccidentService:
         object_service = CranesService()
         object_schema = CranesUpdatePatchDTO(is_broken=True)
-    object_service.update_one(uow, object_schema, id=object_id)
+    await object_service.update_one(uow, object_schema, id=object_id)
 
 
-def get_accident_service(acc_type: GetAccTypeDEP):
+async def get_accident_service(acc_type: GetAccTypeDEP):
     """Зависимость сервиса происшествий"""
     service = None
     match acc_type:
@@ -135,7 +135,7 @@ class AggregateType(str, Enum):
     burner: str = 'Burner'
 
 
-def get_aggregate_type(aggregate_type: Annotated[AggregateType, Query()]):
+async def get_aggregate_type(aggregate_type: Annotated[AggregateType, Query()]):
     """Зависимость типа агрегата"""
     return aggregate_type
 
@@ -143,7 +143,7 @@ def get_aggregate_type(aggregate_type: Annotated[AggregateType, Query()]):
 GetAggTypeDEP = Annotated[AggregateType, Depends(get_aggregate_type)]
 
 
-def get_aggregate_service(agg_type: GetAggTypeDEP):
+async def get_aggregate_service(agg_type: GetAggTypeDEP):
     """Зависимость сервиса агрегатов"""
     service = None
     match agg_type:
@@ -171,7 +171,7 @@ class DynamicTableType(str, Enum):
     archive: str = 'archive'
 
 
-def get_dynamic_type(dynamic_type: Annotated[DynamicTableType, Query()]):
+async def get_dynamic_type(dynamic_type: Annotated[DynamicTableType, Query()]):
     """Зависимость типов динамических таблиц"""
     return dynamic_type
 
@@ -179,7 +179,7 @@ def get_dynamic_type(dynamic_type: Annotated[DynamicTableType, Query()]):
 GetDynTypeDEP = Annotated[DynamicTableType, Depends(get_dynamic_type)]
 
 
-def get_dynamic_service(dyn_type: GetDynTypeDEP):
+async def get_dynamic_service(dyn_type: GetDynTypeDEP):
     """Зависимость сервиса динамических таблиц"""
     service = None
     match dyn_type:
@@ -193,7 +193,7 @@ def get_dynamic_service(dyn_type: GetDynTypeDEP):
 DynamicServiceDEP = Annotated[ServiceBase, Depends(get_dynamic_service)]
 
 
-def get_ladle_operation_type(ladle_operation_type: Annotated[LadleOperationTypes, Query()]):
+async def get_ladle_operation_type(ladle_operation_type: Annotated[LadleOperationTypes, Query()]):
     """Зависимость типов операций над ковшами"""
     return ladle_operation_type
 
@@ -201,7 +201,7 @@ def get_ladle_operation_type(ladle_operation_type: Annotated[LadleOperationTypes
 GetOpTypeDEP = Annotated[LadleOperationTypes, Depends(get_ladle_operation_type)]
 
 
-def crane_fields_getter(
+async def crane_fields_getter(
     title: Annotated[str, Form(max_length=100)],
     size_x: Annotated[int, Form(gt=0)],
     size_y: Annotated[int, Form(gt=0)],
@@ -215,7 +215,7 @@ def crane_fields_getter(
 CraneFieldsDEP = Annotated[dict, Depends(crane_fields_getter)]
 
 
-def crane_fields_patch_getter(
+async def crane_fields_patch_getter(
     title: Annotated[str | None, Form(max_length=100)] = None,
     size_x: Annotated[int | None, Form(gt=0)] = None,
     size_y: Annotated[int | None, Form(gt=0)] = None,
@@ -229,7 +229,7 @@ def crane_fields_patch_getter(
 CraneFieldsPatchDEP = Annotated[dict, Depends(crane_fields_patch_getter)]
 
 
-def aggregates_fields_getter(
+async def aggregates_fields_getter(
     title: Annotated[str, Form(max_length=100)],
     num_agg: Annotated[str, Form(max_length=100)],
     num_pos: Annotated[str, Form(max_length=100)],
@@ -253,7 +253,7 @@ def aggregates_fields_getter(
 AggFieldsDEP = Annotated[dict, Depends(aggregates_fields_getter)]
 
 
-def aggregates_fields_patch_getter(
+async def aggregates_fields_patch_getter(
     title: Annotated[str | None, Form(max_length=100)] = None,
     num_agg: Annotated[str | None, Form(max_length=100)] = None,
     num_pos: Annotated[str | None, Form(max_length=100)] = None,
@@ -277,7 +277,7 @@ def aggregates_fields_patch_getter(
 AggFieldsPatchDEP = Annotated[dict, Depends(aggregates_fields_patch_getter)]
 
 
-def employees_create_fields_getter(
+async def employees_create_fields_getter(
     email: Annotated[EmailStr, Form(max_length=254)],
     username: Annotated[str, Form(max_length=150)],
     password: Annotated[str, Form(max_length=128)],
@@ -305,7 +305,7 @@ def employees_create_fields_getter(
 EmpCreateFieldsDEP = Annotated[dict, Depends(employees_create_fields_getter)]
 
 
-def employees_update_fields_getter(
+async def employees_update_fields_getter(
     email: Annotated[EmailStr, Form(max_length=254)],
     username: Annotated[str, Form(max_length=150)],
     first_name: Annotated[str, Form(max_length=150)],
@@ -329,7 +329,7 @@ def employees_update_fields_getter(
 EmpUpdateFieldsDEP = Annotated[dict, Depends(employees_update_fields_getter)]
 
 
-def employees_update_fields_patch_getter(
+async def employees_update_fields_patch_getter(
         email: Annotated[EmailStr | None, Form(max_length=254)] = None,
         username: Annotated[str | None, Form(max_length=150)] = None,
         first_name: Annotated[str | None, Form(max_length=150)] = None,
@@ -392,14 +392,24 @@ async def get_current_token_payload(
             token=token
         )
     except InvalidTokenError:
+        print('get_current_token_payload')
+        print('get_current_token_payload')
+        print('get_current_token_payload')
+        print('get_current_token_payload')
+        print('get_current_token_payload')
         raise invalid_token_exception
     # проверка нет ли токена в blacklist
-    if RefreshTokenService().check_token(uow, token, payload.get('token_family')):
+    if await RefreshTokenService().check_token(uow, token, payload.get('token_family')):
+        print('get_current_token_payload 111111111111')
+        print('get_current_token_payload 111111111111')
+        print('get_current_token_payload 111111111111')
+        print('get_current_token_payload 111111111111')
+        print('get_current_token_payload 111111111111')
         raise invalid_token_exception
     return payload
 
 
-def get_current_auth_user(
+async def get_current_auth_user(
     security_scopes: SecurityScopes,
     payload: Annotated[dict, Depends(get_current_token_payload)],
     uow: UOWDep,
@@ -421,6 +431,11 @@ def get_current_auth_user(
         scopes: list[str] = payload.get('scopes')
         token_data = TokenScopesData(scopes=scopes, id=employee_id)
     except ValidationError:
+        print('get_current_auth_user')
+        print('get_current_auth_user')
+        print('get_current_auth_user')
+        print('get_current_auth_user')
+        print('get_current_auth_user')
         raise invalid_token_scopes_exception
     # проверка прав доступа
     for scope in security_scopes.scopes:
@@ -431,13 +446,18 @@ def get_current_auth_user(
                 headers={'WWW-Authenticate': authenticate_value},
             )
     # если получилось найти такого пользователя, то вернуть его
-    if employee := EmployeesService().retrieve_one_by_id(uow, token_data.id):
+    if employee := await EmployeesService().retrieve_one_by_id(uow, token_data.id):
         return employee
     # otherwise вызвать ошибку
+    print('get_current_auth_user 1111111111')
+    print('get_current_auth_user 1111111111')
+    print('get_current_auth_user 1111111111')
+    print('get_current_auth_user 1111111111')
+    print('get_current_auth_user 1111111111')
     raise invalid_token_exception
 
 
-def get_current_active_auth_user(
+async def get_current_active_auth_user(
     employee: Annotated[EmployeesReadDTO, Security(get_current_auth_user, scopes=['employee'])]
 ) -> EmployeesReadDTO:
     """Получить активного аутентифицированного работника"""
@@ -446,7 +466,7 @@ def get_current_active_auth_user(
     raise inactive_user_exception
 
 
-def get_change_by_slug_permission(
+async def get_change_by_slug_permission(
     slug: Annotated[str, Path(max_length=200)],
     cur_employee: Annotated[EmployeesReadDTO, Depends(get_current_active_auth_user)]
 ):
@@ -459,7 +479,7 @@ def get_change_by_slug_permission(
 employeeSlugPermissionDEP = Annotated[EmployeesReadDTO, Depends(get_change_by_slug_permission)]
 
 
-def get_admin_permission(
+async def get_admin_permission(
     cur_employee: Annotated[EmployeesAdminReadDTO, Security(get_current_auth_user, scopes=['admin'])]
 ):
     """Получение доступа к админ контроллерам"""
@@ -474,7 +494,7 @@ async def validate_email(
     email: Annotated[EmailStr, Form(max_length=254)]
 ):
     """Проверка email"""
-    if EmployeesService().retrieve_one(uow, email=email):
+    if await EmployeesService().retrieve_one(uow, email=email):
         return email
     raise HTTPException(
         status_code=HTTPStatus.BAD_REQUEST,
@@ -495,7 +515,7 @@ async def validate_passwords(
             status_code=HTTPStatus.BAD_REQUEST,
             detail='Passwords are different',
         )
-    hashed_password = EmployeesService().hash_password(password)
+    hashed_password = await EmployeesService().hash_password(password)
     return EmployeePasswordResetDTO(password=hashed_password)
 
 

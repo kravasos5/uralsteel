@@ -10,23 +10,23 @@ class AbstractService(ABC):
     repository = None
 
     @abstractmethod
-    def create_one(self, *args, **kwargs):
+    async def create_one(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def retrieve_one(self, *args, **kwargs):
+    async def retrieve_one(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def retrieve_all(self, *args, **kwargs):
+    async def retrieve_all(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_one(self, *args, **kwargs):
+    async def delete_one(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def update_one(self, *args, **kwargs):
+    async def update_one(self, *args, **kwargs):
         raise NotImplementedError
 
 
@@ -34,20 +34,20 @@ class ServiceBase(AbstractService):
     """Базовый сервис"""
     repository = None
 
-    def create_one(self, uow: AbstractUnitOfWork, data_schema: BaseModel):
+    async def create_one(self, uow: AbstractUnitOfWork, data_schema: BaseModel):
         """Создания одного объекта в БД"""
-        with uow:
-            result = uow.repositories[self.repository].create_one(data_schema=data_schema)
-            uow.commit()
+        async with uow:
+            result = await uow.repositories[self.repository].create_one(data_schema=data_schema)
+            await uow.commit()
             return result
 
-    def retrieve_one(self, uow: AbstractUnitOfWork, **filters):
+    async def retrieve_one(self, uow: AbstractUnitOfWork, **filters):
         """Получение одного объекта из БД"""
-        with uow:
-            result = uow.repositories[self.repository].retrieve_one(**filters)
+        async with uow:
+            result = await uow.repositories[self.repository].retrieve_one(**filters)
             return result
 
-    def retrieve_all(
+    async def retrieve_all(
         self,
         uow: AbstractUnitOfWork,
         offset: int = 0,
@@ -55,27 +55,27 @@ class ServiceBase(AbstractService):
         **filters
     ):
         """Получение списка объектов из БД"""
-        with uow:
-            result = uow.repositories[self.repository].retrieve_all(offset=offset, limit=limit, **filters)
+        async with uow:
+            result = await uow.repositories[self.repository].retrieve_all(offset=offset, limit=limit, **filters)
             return result
 
-    def delete_one(self, uow: AbstractUnitOfWork, **filters):
+    async def delete_one(self, uow: AbstractUnitOfWork, **filters):
         """Удаление одного объекта в БД"""
-        with uow:
-            result = uow.repositories[self.repository].delete_one(**filters)
-            uow.commit()
+        async with uow:
+            result = await uow.repositories[self.repository].delete_one(**filters)
+            await uow.commit()
             return result
 
-    def delete_by_ids(self, uow: AbstractUnitOfWork, ids: list[int]):
+    async def delete_by_ids(self, uow: AbstractUnitOfWork, ids: list[int]):
         """Удаление одного объекта в БД"""
-        with uow:
-            result = uow.repositories[self.repository].delete_by_ids(ids)
-            uow.commit()
+        async with uow:
+            result = await uow.repositories[self.repository].delete_by_ids(ids)
+            await uow.commit()
             return result
 
-    def update_one(self, uow: AbstractUnitOfWork, data_schema: BaseModel, **filters):
+    async def update_one(self, uow: AbstractUnitOfWork, data_schema: BaseModel, **filters):
         """Обновление одного объекта в БД"""
-        with uow:
-            result = uow.repositories[self.repository].update_one(data_schema=data_schema, **filters)
-            uow.commit()
+        async with uow:
+            result = await uow.repositories[self.repository].update_one(data_schema=data_schema, **filters)
+            await uow.commit()
             return result

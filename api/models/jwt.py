@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, BigInteger, ForeignKey, UUID
+from sqlalchemy import String, BigInteger, ForeignKey, UUID, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base, idpk
@@ -17,7 +17,7 @@ class TokenBaseORM(Base):
         unique=True,
         nullable=False,
     )
-    expire_date: Mapped[datetime]
+    expire_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     token_family: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         # default=uuid.uuid4,

@@ -2,7 +2,7 @@ import os
 import time
 
 import pandas
-from celery_back import shared_task
+from celery import shared_task
 from django.core.mail import EmailMessage
 from uralsteel.settings import MEDIA_ROOT
 from visual.models import ArchiveDynamicTable

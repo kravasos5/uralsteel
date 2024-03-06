@@ -18,7 +18,7 @@ router = APIRouter(
 error_raiser_message: str = 'Dynamic Table object'
 
 
-def is_bs_agg_ladle_route(
+async def is_bs_agg_ladle_route(
     uow: AbstractUnitOfWork,
     brand_steel_id: int | None,
     aggregate_id: int | None,
@@ -30,41 +30,41 @@ def is_bs_agg_ladle_route(
     brand_steel, aggregate_id, ladle_id, route_id
     """
     if brand_steel_id is not None:
-        is_object(uow, brand_steel_id, BrandSteelService(), 'Brand steel')
+        await is_object(uow, brand_steel_id, BrandSteelService(), 'Brand steel')
     if aggregate_id is not None:
-        is_object(uow, aggregate_id, AggregatesAllService(), 'Aggregate')
+        await is_object(uow, aggregate_id, AggregatesAllService(), 'Aggregate')
     if ladle_id is not None:
-        is_object(uow, ladle_id, LadlesService(), 'Ladle')
+        await is_object(uow, ladle_id, LadlesService(), 'Ladle')
     if route_id is not None:
-        is_object(uow, route_id, RoutesService(), 'Route')
+        await is_object(uow, route_id, RoutesService(), 'Route')
 
 
 @router.get('/all', response_model=list[DynamicTableReadDTO])
-def get_dyn(uow: UOWDep, service: DynamicServiceDEP, offset: int = 0, limit: int = 100):
+async def get_dyn(uow: UOWDep, service: DynamicServiceDEP, offset: int = 0, limit: int = 100):
     """Получение плана из динамической таблицы"""
-    dyn = service.retrieve_all(uow, offset, limit)
+    dyn = await service.retrieve_all(uow, offset, limit)
     return dyn
 
 
 @router.post('/create', response_model=DynamicTableReadDTO)
-def create_dyn(uow: UOWDep, service: DynamicServiceDEP, dyn_data: DynamicTableCreateUpdateDTO):
+async def create_dyn(uow: UOWDep, service: DynamicServiceDEP, dyn_data: DynamicTableCreateUpdateDTO):
     """Создание записи плана в динамической таблице"""
     # проверка
-    is_bs_agg_ladle_route(uow, dyn_data.brand_steel_id, dyn_data.aggregate_id, dyn_data.ladle_id, dyn_data.route_id)
-    new_dyn = service.create_one(uow, dyn_data)
+    await is_bs_agg_ladle_route(uow, dyn_data.brand_steel_id, dyn_data.aggregate_id, dyn_data.ladle_id, dyn_data.route_id)
+    new_dyn = await service.create_one(uow, dyn_data)
     return new_dyn
 
 
 @router.get('/{object_id}', response_model=DynamicTableReadDTO)
-def get_dyn(uow: UOWDep, service: DynamicServiceDEP, object_id: GetIdDEP):
+async def get_dyn(uow: UOWDep, service: DynamicServiceDEP, object_id: GetIdDEP):
     """Получение плана из динамической таблицы"""
-    dyn = service.retrieve_one(uow, id=object_id)
-    error_raiser_if_none(dyn, error_raiser_message)
+    dyn = await service.retrieve_one(uow, id=object_id)
+    await error_raiser_if_none(dyn, error_raiser_message)
     return dyn
 
 
 @router.put('/update/{object_id}', response_model=DynamicTableReadDTO)
-def update_dyn_put(
+async def update_dyn_put(
         uow: UOWDep,
         service: DynamicServiceDEP,
         object_id: GetIdDEP,
@@ -72,14 +72,14 @@ def update_dyn_put(
 ):
     """Обновление плана методом put"""
     # проверка
-    is_bs_agg_ladle_route(uow, dyn_data.brand_steel_id, dyn_data.aggregate_id, dyn_data.ladle_id, dyn_data.route_id)
-    updated_dyn = service.update_one(uow, dyn_data, id=object_id)
-    error_raiser_if_none(updated_dyn, error_raiser_message)
+    await is_bs_agg_ladle_route(uow, dyn_data.brand_steel_id, dyn_data.aggregate_id, dyn_data.ladle_id, dyn_data.route_id)
+    updated_dyn = await service.update_one(uow, dyn_data, id=object_id)
+    await error_raiser_if_none(updated_dyn, error_raiser_message)
     return updated_dyn
 
 
 @router.patch('/update/{object_id}', response_model=DynamicTableReadDTO)
-def update_dyn_patch(
+async def update_dyn_patch(
         uow: UOWDep,
         service: DynamicServiceDEP,
         object_id: GetIdDEP,
@@ -87,14 +87,14 @@ def update_dyn_patch(
 ):
     """Обновление плана методом patch"""
     # проверка
-    is_bs_agg_ladle_route(uow, dyn_data.brand_steel_id, dyn_data.aggregate_id, dyn_data.ladle_id, dyn_data.route_id)
-    updated_dyn = service.update_one(uow, dyn_data, id=object_id)
-    error_raiser_if_none(updated_dyn, error_raiser_message)
+    await is_bs_agg_ladle_route(uow, dyn_data.brand_steel_id, dyn_data.aggregate_id, dyn_data.ladle_id, dyn_data.route_id)
+    updated_dyn = await service.update_one(uow, dyn_data, id=object_id)
+    await error_raiser_if_none(updated_dyn, error_raiser_message)
     return updated_dyn
 
 
 @router.delete('/delete/{object_id}', status_code=HTTPStatus.NO_CONTENT)
-def delete_dyn(uow: UOWDep, service: DynamicServiceDEP, object_id: GetIdDEP):
+async def delete_dyn(uow: UOWDep, service: DynamicServiceDEP, object_id: GetIdDEP):
     """Удаление плана из динамической таблицы по id записи"""
-    deleted_dyn = service.delete_one(uow, id=object_id)
-    error_raiser_if_none(deleted_dyn, error_raiser_message)
+    deleted_dyn = await service.delete_one(uow, id=object_id)
+    await error_raiser_if_none(deleted_dyn, error_raiser_message)

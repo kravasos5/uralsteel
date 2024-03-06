@@ -12,11 +12,12 @@ class EmployeesRepo(SqlAlchemyRepo):
     read_schema = EmployeesReadDTO
     auth_schema = EmployeeAuthReadDTO
 
-    def retrieve_one_by_username(self, **filters):
+    async def retrieve_one_by_username(self, **filters):
         """Получение одной записи из бд"""
         stmt = select(self.model).filter_by(**filters)
-        res = self.session.execute(stmt).scalar_one_or_none()
+        res = await self.session.execute(stmt)
+        res = res.scalar_one_or_none()
         if res:
-            result = DataConverter.model_to_dto(res, self.auth_schema)
+            result = await DataConverter.model_to_dto(res, self.auth_schema)
             return result
         return res

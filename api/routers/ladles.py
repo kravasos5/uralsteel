@@ -16,16 +16,16 @@ router = APIRouter(
 
 
 @router.get('/time')
-def get_time() -> dict:
+async def get_time() -> dict:
     """Получение информации о времени в форме времени на странице ковшей."""
     # проверка на авторизацию
     # написать схему ответа
-    data = ActiveDynamicTableService().get_ladle_timeform()
+    data = await ActiveDynamicTableService().get_ladle_timeform()
     return data
 
 
 @router.post('/ladles-info', response_model=dict[int, DynamicLadleInfoAnswerNested])
-def get_ladles_info(
+async def get_ladles_info(
     uow: UOWDep,
     hours: Annotated[int, Query(ge=0, le=23)],
     minutes: Annotated[int, Query(ge=0, le=60)]
@@ -34,15 +34,15 @@ def get_ladles_info(
     # проверка на авторизацию
     # написать схему ответа
     service = ActiveDynamicTableService()
-    date = service.time_convert(hours, minutes)
+    date = await service.time_convert(hours, minutes)
     data, deletion_ids = service.get_ladles_info(uow, date)
-    service.delete_by_ids(uow, deletion_ids)
+    await service.delete_by_ids(uow, deletion_ids)
     data = Base64Converter.key_to_base64(data, is_nested=True)
     return data
 
 
 @router.post('/ladle-operation/{object_id}')
-def ladle_operation(
+async def ladle_operation(
     uow: UOWDep,
     object_id: GetIdDEP,
     operation_type: GetOpTypeDEP,
@@ -52,8 +52,8 @@ def ladle_operation(
     """Завершение операции над ковшами"""
     service = ActiveDynamicTableService()
     # проверяю есть ли такой объект
-    operation = service.retrieve_one(uow, id=object_id)
-    error_raiser_if_none(operation, 'Operation')
+    operation = await service.retrieve_one(uow, id=object_id)
+    await error_raiser_if_none(operation, 'Operation')
     # валидация соответствия типа операции и ковша в конкретной операции
     match operation_type.value:
         case LadleOperationTypes.TRANSPORTING.value:
@@ -81,11 +81,11 @@ def ladle_operation(
                     status_code=HTTPStatus.BAD_REQUEST,
                     detail=f"Ladle in that operation isn't waiting"
                 )
-            end_date = service.time_convert(hours, minutes)
-            if not service.is_end_time_gt_start_time(operation.actual_start, end_date):
+            end_date = await service.time_convert(hours, minutes)
+            if not await service.is_end_time_gt_start_time(operation.actual_start, end_date):
                 raise HTTPException(
                     status_code=HTTPStatus.BAD_REQUEST,
                     detail=f"Actual end time must be greater than actual start time"
                 )
-    data = service.get_ladle_operation_id(uow, object_id, operation_type, hours, minutes)
+    data = await service.get_ladle_operation_id(uow, object_id, operation_type, hours, minutes)
     return data

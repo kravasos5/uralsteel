@@ -12,10 +12,10 @@ router = APIRouter(
 
 
 @router.get('/data')
-def get_cranes_data(uow: UOWDep) -> dict:
+async def get_cranes_data(uow: UOWDep) -> dict:
     """Получить положения кранов и их картинки"""
     # проверка на авторизацию
     # написать схему ответа
-    data = CranesService().get_cranes_pos_info(uow)
+    data = await CranesService().get_cranes_pos_info(uow)
     data['cranes_info'] = Base64Converter.key_to_base64(data['cranes_info'], is_nested=True)
     return data

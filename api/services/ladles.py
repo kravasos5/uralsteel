@@ -6,6 +6,6 @@ class LadlesService(ServiceBase):
     """Сервис для работы с ковшами"""
     repository = 'ladles_repo'
 
-    def retrieve_one_by_id(self, uow: AbstractUnitOfWork, ladle_id: int, **filters):
+    async def retrieve_one_by_id(self, uow: AbstractUnitOfWork, ladle_id: int, **filters):
         """Получение ковша по id"""
-        return self.retrieve_one(uow, id=ladle_id, **filters)
+        return await self.retrieve_one(uow, id=ladle_id, **filters)

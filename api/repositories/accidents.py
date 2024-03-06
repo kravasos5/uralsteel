@@ -16,18 +16,19 @@ class AccidentsRepoBase(SqlAlchemyRepo):
     read_schema = None
     aggregate_model = None
 
-    def create_one(self, data_schema: BaseModel):
+    async def create_one(self, data_schema: BaseModel):
         """Создание новой записи в бд"""
-        data = DataConverter.dto_to_dict(data_schema)
+        data = await DataConverter.dto_to_dict(data_schema)
         # нужно обновить статус крана, ковша или агрегата и отметить его как сломанный
         # извлекаю его id
         aggregate_id = data.get('object_id')
-        stmt_object = update(self.aggregate_model).filter_by(id=aggregate_id).values(is_broken=True)
+        stmt_object = await update(self.aggregate_model).filter_by(id=aggregate_id).values(is_broken=True)
         self.session.execute(stmt_object)
-        stmt = insert(self.model).values(**data).returning(self.model)
-        res = self.session.execute(stmt).scalar_one()
+        stmt = await insert(self.model).values(**data).returning(self.model)
+        res = await self.session.execute(stmt)
+        res = res.scalar_one()
         # конвертация данных
-        result = DataConverter.model_to_dto(res, self.read_schema)
+        result = await DataConverter.model_to_dto(res, self.read_schema)
         return result
 
 

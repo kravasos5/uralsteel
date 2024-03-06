@@ -2,16 +2,17 @@ from datetime import datetime
 from typing import Annotated
 
 import pytz
-from sqlalchemy import create_engine, TIMESTAMP, text
-from sqlalchemy.orm import sessionmaker, DeclarativeBase, mapped_column
+from sqlalchemy import TIMESTAMP, text
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, mapped_column
 
 from config import settings
 
-engine = create_engine(
+engine = create_async_engine(
     settings.DATABASE_URL, connect_args={}
 )
 
-session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+session_factory = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 idpk = Annotated[int, mapped_column(primary_key=True)]
 created_at = Annotated[TIMESTAMP, mapped_column(

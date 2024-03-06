@@ -30,19 +30,19 @@ class AbstractUnitOfWork(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __enter__(self):
+    async def __aenter__(self):
         raise NotImplementedError
 
     @abstractmethod
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
         raise NotImplementedError
 
     @abstractmethod
-    def commit(self):
+    async def commit(self):
         raise NotImplementedError
 
     @abstractmethod
-    def rollback(self):
+    async def rollback(self):
         raise NotImplementedError
 
 
@@ -73,7 +73,7 @@ class UnitOfWork(AbstractUnitOfWork):
     def __init__(self):
         self.session_factory = session_factory
 
-    def __enter__(self):
+    async def __aenter__(self):
         self.session: Session = self.session_factory()
 
         # объявление репозиториев
@@ -82,12 +82,12 @@ class UnitOfWork(AbstractUnitOfWork):
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.session.rollback()
-        self.session.close()
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.session.rollback()
+        await self.session.close()
 
-    def commit(self):
-        self.session.commit()
+    async def commit(self):
+        await self.session.commit()
 
-    def rollback(self):
-        self.session.rollback()
+    async def rollback(self):
+        await self.session.rollback()

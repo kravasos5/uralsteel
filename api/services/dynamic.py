@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from http import HTTPStatus
 
 import pytz
 
@@ -22,25 +21,25 @@ class ActiveDynamicTableService(ServiceBase):
     repository = 'active_dyn_repo'
     archive_repo = 'archive_dyn_repo'
 
-    def from_active_to_archive(self, uow: AbstractUnitOfWork, dyn_ids: list[int]):
+    async def from_active_to_archive(self, uow: AbstractUnitOfWork, dyn_ids: list[int]):
         """Перенос данных из активной динамической таблицы в архивную"""
-        with uow:
+        async with uow:
             answer: list[tuple] = []
             for dyn_id in dyn_ids:
                 # получаю информацию для трансфера из одной таблицы в другую
-                transfer_info = uow.repositories[self.repository].retrieve_one(id=dyn_id)
+                transfer_info = await uow.repositories[self.repository].retrieve_one(id=dyn_id)
                 # преобразую эту информацию в нужную схему создания
-                create_schema = uow.repositories[self.repository].convert_to_create_schema(transfer_info)
+                create_schema = await uow.repositories[self.repository].convert_to_create_schema(transfer_info)
                 # удаляю из активной динамической таблицы
-                deleted_one = uow.repositories[self.repository].delete_one(id=dyn_id)
+                deleted_one = await uow.repositories[self.repository].delete_one(id=dyn_id)
                 # добавляю в архивную
-                created_one = uow.repositories[self.archive_repo].create_one(create_schema)
+                created_one = await uow.repositories[self.archive_repo].create_one(create_schema)
                 answer.append((deleted_one, created_one))
             # провожу транзакцию
-            uow.commit()
+            await uow.commit()
             return answer
 
-    def time_convert(self, hours: int, minutes: int) -> datetime:
+    async def time_convert(self, hours: int, minutes: int) -> datetime:
         """Метод, переводящий время в удобный формат без использования django timezone"""
         # записываю время в redis-cache
         RedisRepo.set_key_redis('ltimeform', f'{hours}:{minutes}', 120)
@@ -57,13 +56,13 @@ class ActiveDynamicTableService(ServiceBase):
         ############
         return aware_datetime
 
-    def is_end_time_gt_start_time(self, start_time: datetime, end_time: datetime) -> bool:
+    async def is_end_time_gt_start_time(self, start_time: datetime, end_time: datetime) -> bool:
         """Сравнивает время конца и начала операции"""
         if end_time > start_time:
             return True
         return False
 
-    def get_ladle_operation_id(
+    async def get_ladle_operation_id(
             self,
             uow: AbstractUnitOfWork,
             operation_id: int,
@@ -71,34 +70,34 @@ class ActiveDynamicTableService(ServiceBase):
             hours: int,
             minutes: int
     ):
-        with uow:
+        async with uow:
             """Запрос с операцией над ковшом"""
             data: dict = {}
             # получаю объект операции
-            operation = uow.repositories[self.repository].retrieve_one(id=operation_id)
+            operation = await uow.repositories[self.repository].retrieve_one(id=operation_id)
             # получаю время
-            time = self.time_convert(hours, minutes)
+            time = await self.time_convert(hours, minutes)
             # удаляю старые ключи из хранилища redis
             RedisRepo.delete_keys_redis('*ltime:*')
             match operation_type.value:
                 case LadleOperationTypes.TRANSPORTING.value:
                     # если ковш "транспортируемый"
                     # перезаписываю запись в архивную таблицу
-                    self.from_active_to_archive(uow, [operation.id])
+                    await self.from_active_to_archive(uow, [operation.id])
                     data['st'] = 'Ladle moved into archive dynamic table'
                 case LadleOperationTypes.STARTING.value:
                     # если ковш "начинающий"
                     # перезаписываю дату в операции Активной Таблицы,
                     # то есть теперь ковш стаёт "ожидающим"
                     operation.actual_start = time
-                    uow.repositories[self.repository].update_one(operation, id=operation_id)
+                    await uow.repositories[self.repository].update_one(operation, id=operation_id)
                     data['st'] = 'Now ladle is waiting'
                 case LadleOperationTypes.WAITING.value:
                     # если ковш "ожидающий"
                     # перезаписываю дату в операции Активной Таблицы,
                     # то есть теперь ковш стаёт "транспортируемым"
                     operation.actual_end = time
-                    uow.repositories[self.repository].update_one(operation, id=operation_id)
+                    await uow.repositories[self.repository].update_one(operation, id=operation_id)
                     data['st'] = 'Now ladle is transporting'
                 case _:
                     # в таком случае status=400, то есть пользователь
@@ -106,7 +105,7 @@ class ActiveDynamicTableService(ServiceBase):
                     data['st'] = 'Invalid operation_type'
             return data
 
-    def get_ladle_timeform(self):
+    async def get_ladle_timeform(self):
         """
         Получение информации о времени в форме времени на странице ковшей.
         Проходит проверка наличия значения времени в кэше, оно будет передано
@@ -117,9 +116,9 @@ class ActiveDynamicTableService(ServiceBase):
             return {'timeformvalue': ladle_timeform}
         return {}
 
-    def get_ladles_info(self, uow: AbstractUnitOfWork, date: datetime) -> tuple[dict, list[int]] | None:
+    async def get_ladles_info(self, uow: AbstractUnitOfWork, date: datetime) -> tuple[dict, list[int]] | None:
         """Получение информации о положении ковшей на странице"""
-        with uow:
+        async with uow:
             ladles_info: dict = {}
             deletion_ids: list[int] = []
             # получаю имя ключа, которое используется при кэшировании
@@ -132,21 +131,21 @@ class ActiveDynamicTableService(ServiceBase):
             # она автоматически добавится в кэш в конце этого метода, перед return
             # Извлекаю "транспортируемые" ковши и
             # добавляю всю нужную информацию в словарь
-            ladles_info, deletion_ids = uow.repositories[self.repository].retrieve_transporting(
+            ladles_info, deletion_ids = await uow.repositories[self.repository].retrieve_transporting(
                 date=date,
                 ladles_info=ladles_info,
                 deletion_ids=deletion_ids
             )
             # Извлекаю "ожидающие" ковши и
             # добавляю всю нужную информацию в словарь
-            ladles_info, deletion_ids = uow.repositories[self.repository].retrieve_waiting(
+            ladles_info, deletion_ids = await uow.repositories[self.repository].retrieve_waiting(
                 date=date,
                 ladles_info=ladles_info,
                 deletion_ids=deletion_ids
             )
             # Извлекаю "начинающие" ковши и
             # добавляю всю нужную информацию в словарь
-            ladles_info, deletion_ids = uow.repositories[self.repository].retrieve_starting(
+            ladles_info, deletion_ids = await uow.repositories[self.repository].retrieve_starting(
                 date=date,
                 ladles_info=ladles_info,
                 deletion_ids=deletion_ids

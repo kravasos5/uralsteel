@@ -15,27 +15,27 @@ class AbstractRepo(ABC):
     """Абстрактный репозиторий"""
 
     @abstractmethod
-    def create_one(self, *args, **kwargs):
+    async def create_one(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_one(self, *args, **kwargs):
+    async def delete_one(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_by_ids(self, *args, **kwargs):
+    async def delete_by_ids(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def update_one(self, *args, **kwargs):
+    async def update_one(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def retrieve_one(self, *args, **kwargs):
+    async def retrieve_one(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def retrieve_all(self, *args, **kwargs):
+    async def retrieve_all(self, *args, **kwargs):
         raise NotImplementedError
 
 
@@ -47,63 +47,69 @@ class SqlAlchemyRepo(AbstractRepo):
     def __init__(self, session: Session):
         self.session = session
 
-    def create_one(self, data_schema: BaseModel):
+    async def create_one(self, data_schema: BaseModel):
         """Создание новой записи в бд"""
-        data = DataConverter.dto_to_dict(data_schema)
+        data = await DataConverter.dto_to_dict(data_schema)
         # запрос
         stmt = insert(self.model).values(**data).returning(self.model)
-        res = self.session.execute(stmt).scalar_one()
+        res = await self.session.execute(stmt)
+        res = res.scalar_one()
         # конвертация данных
-        result = DataConverter.model_to_dto(res, self.read_schema)
+        result = await DataConverter.model_to_dto(res, self.read_schema)
         return result
 
-    def delete_one(self, **filters):
+    async def delete_one(self, **filters):
         """Удаление записи из бд"""
         # запрос
         stmt = delete(self.model).filter_by(**filters).returning(self.model.id)
-        result = self.session.execute(stmt).scalar_one_or_none()
+        result = await self.session.execute(stmt)
+        result = result.scalar_one_or_none()
         if result:
             return result
         return None
 
-    def delete_by_ids(self, ids: list[int]):
+    async def delete_by_ids(self, ids: list[int]):
         """Удаление записи из бд"""
         # запрос
         stmt = delete(self.model).where(self.model.id.in_(ids)).returning(self.model.id)
-        result = self.session.execute(stmt).scalars().all()
+        result = await self.session.execute(stmt)
+        result = result.scalars().all()
         if result:
             return result
         return None
 
-    def update_one(self, data_schema: BaseModel, **filters):
+    async def update_one(self, data_schema: BaseModel, **filters):
         """Обновление записи в бд"""
-        data = DataConverter.dto_to_dict(data_schema, exclude_unset=True)
+        data = await DataConverter.dto_to_dict(data_schema, exclude_unset=True)
         # запрос
         stmt = update(self.model).filter_by(**filters).values(**data).returning(self.model)
-        res = self.session.execute(stmt).scalar_one_or_none()
+        res = await self.session.execute(stmt)
+        res = res.scalar_one_or_none()
         if res:
-            result = DataConverter.model_to_dto(res, self.read_schema)
+            result = await DataConverter.model_to_dto(res, self.read_schema)
             return result
         return res
 
-    def retrieve_one(self, read_schema: Type[BaseModel] | None = None, **filters):
+    async def retrieve_one(self, read_schema: Type[BaseModel] | None = None, **filters):
         """Получение одной записи из бд"""
         stmt = select(self.model).filter_by(**filters)
-        res = self.session.execute(stmt).scalar_one_or_none()
+        res = await self.session.execute(stmt)
+        res = res.scalar_one_or_none()
         if res:
             if read_schema is not None:
                 read_schema = read_schema
             else:
                 read_schema = self.read_schema
-            result = DataConverter.model_to_dto(res, read_schema)
+            result = await DataConverter.model_to_dto(res, read_schema)
             return result
         return res
 
-    def retrieve_all(self, offset: int = 0, limit: int = 100, **filters):
+    async def retrieve_all(self, offset: int = 0, limit: int = 100, **filters):
         """Получение списка записей из бд"""
         stmt = select(self.model).filter_by(**filters).offset(offset).limit(limit)
-        res = self.session.execute(stmt).scalars().all()
-        result = DataConverter.models_to_dto(res, self.read_schema)
+        res = await self.session.execute(stmt)
+        res = res.scalars().all()
+        result = await DataConverter.models_to_dto(res, self.read_schema)
         return result
 
 

@@ -19,7 +19,7 @@ path: str = 'photos/cranes/'
 @router.get('/cranes', response_model=list[CranesReadDTO], description='photo кодируется с помощью base64')
 async def get_cranes(uow: UOWDep, offset: int = 0, limit: int = 100):
     """Получение кранов"""
-    cranes = CranesService().retrieve_all(uow, offset, limit)
+    cranes = await CranesService().retrieve_all(uow, offset, limit)
     answer_data = Base64Converter.key_to_base64(cranes, is_list=True)
     return answer_data
 
@@ -32,7 +32,7 @@ async def create_crane(
 ):
     """Создание крана"""
     create_data = await PhotoAddToSchema.file_add(photo, path, crane_data, CranesCreateUpdateDTO)
-    new_crane = CranesService().create_one(uow, create_data)
+    new_crane = await CranesService().create_one(uow, create_data)
     answer_data = Base64Converter.key_to_base64(new_crane)
     return answer_data
 
@@ -40,8 +40,8 @@ async def create_crane(
 @router.get('/{object_id}', response_model=CranesReadDTO)
 async def get_crane(uow: UOWDep, object_id: GetIdDEP):
     """Получение крана"""
-    crane = CranesService().retrieve_one_by_id(uow, object_id)
-    error_raiser_if_none(crane, 'Crane')
+    crane = await CranesService().retrieve_one_by_id(uow, object_id)
+    await error_raiser_if_none(crane, 'Crane')
     answer_data = Base64Converter.key_to_base64(crane)
     return answer_data
 
@@ -55,8 +55,8 @@ async def update_crane_put(
 ):
     """Обновление крана методом put"""
     update_data = await PhotoAddToSchema.file_add(photo, path, crane_data, CranesCreateUpdateDTO)
-    updated_crane = CranesService().update_one(uow, update_data, id=object_id)
-    error_raiser_if_none(updated_crane, 'Crane')
+    updated_crane = await CranesService().update_one(uow, update_data, id=object_id)
+    await error_raiser_if_none(updated_crane, 'Crane')
     answer_data = Base64Converter.key_to_base64(updated_crane)
     return answer_data
 
@@ -74,8 +74,8 @@ async def update_crane_patch(
         update_data = await PhotoAddToSchema.file_add(photo, path, crane_data, CranesUpdatePatchDTO)
     else:
         update_data = CranesUpdatePatchDTO(**crane_data)
-    updated_crane = CranesService().update_one(uow, update_data, id=object_id)
-    error_raiser_if_none(updated_crane, 'Crane')
+    updated_crane = await CranesService().update_one(uow, update_data, id=object_id)
+    await error_raiser_if_none(updated_crane, 'Crane')
     answer_data = Base64Converter.key_to_base64(updated_crane)
     return answer_data
 
@@ -83,5 +83,5 @@ async def update_crane_patch(
 @router.delete('/delete/{object_id}', status_code=HTTPStatus.NO_CONTENT)
 async def delete_crane(uow: UOWDep, object_id: GetIdDEP):
     """Удаление крана по id"""
-    deleted_crane = CranesService().delete_one(uow, id=object_id)
-    error_raiser_if_none(deleted_crane, 'Crane')
+    deleted_crane = await CranesService().delete_one(uow, id=object_id)
+    await error_raiser_if_none(deleted_crane, 'Crane')

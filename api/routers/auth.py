@@ -30,7 +30,7 @@ async def validate_auth_employee(
         status_code=HTTPStatus.UNAUTHORIZED,
         detail='Invalid username or password'
     )
-    if not (employee := EmployeesService().retrieve_one_by_username(uow=uow, username=username)):
+    if not (employee := await EmployeesService().retrieve_one_by_username(uow=uow, username=username)):
         raise unauthed_exp
 
     if not auth_utils.validate_password(
@@ -70,7 +70,7 @@ async def create_tokens(
         employee_id=jwt_payload.get('sub'),
     )
     # сохраняю refresh_token в бд
-    RefreshTokenService().create_one(uow, refresh_token_create_schema)
+    await RefreshTokenService().create_one(uow, refresh_token_create_schema)
 
     return TokenInfo(
         access_token=access_token,
@@ -117,13 +117,13 @@ async def refresh_tokens(
     rt_service = RefreshTokenService()
     # проверяю есть ли этот токен в blacklist, если есть, то заношу
     # всё семейство в blacklist
-    if rt_service.check_token(uow, refresh_token, token_family):
-        rt_service.delete_family(uow, token_family)
+    if await rt_service.check_token(uow, refresh_token, token_family):
+        await rt_service.delete_family(uow, token_family)
         raise invalid_token_exception
     # если токен используется впервые, то выполняю стандартные действия
     else:
         # переношу текущий токен в чёрный список и удаляю из таблицы токенов
-        rt_service.transfer_to_blacklist(
+        await rt_service.transfer_to_blacklist(
             uow,
             refresh_token,
             employee_id,
@@ -151,14 +151,14 @@ async def logout(
     payload = auth_utils.decode_jwt(token)
     token_family = payload.get('token_family')
     # занести в чёрный список семейство refresh_token
-    RefreshTokenService().delete_family(uow, token_family)
+    await RefreshTokenService().delete_family(uow, token_family)
     # занести в чёрный список текущий access токен
     creation_bl_schema = RefreshTokenBaseDTO(
         refresh_token=token,
         expire_date=datetime.datetime.fromtimestamp(payload.get('exp')),
         token_family=payload.get('token_family'),
     )
-    RefreshTokenBlacklistService().create_one(
+    await RefreshTokenBlacklistService().create_one(
         uow,
         creation_bl_schema
     )

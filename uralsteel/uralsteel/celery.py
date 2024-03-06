@@ -1,6 +1,6 @@
 import os
 
-from celery_back import Celery
+from celery import Celery
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'uralsteel.settings')
 app = Celery('uralsteel')

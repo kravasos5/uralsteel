@@ -11,11 +11,11 @@ class CranesService(ServiceBase):
     """Сервис для работы с кранами"""
     repository = 'cranes_repo'
 
-    def retrieve_one_by_id(self, uow: AbstractUnitOfWork, crane_id: int):
+    async def retrieve_one_by_id(self, uow: AbstractUnitOfWork, crane_id: int):
         """Получение крана по id"""
-        return self.retrieve_one(uow, id=crane_id)
+        return await self.retrieve_one(uow, id=crane_id)
 
-    def get_cranes_info(self, uow: AbstractUnitOfWork, **filters):
+    async def get_cranes_info(self, uow: AbstractUnitOfWork, **filters):
         """Получить фото кранов и кареток"""
         # имя ключа в redis
         key_name = 'cranes_info:1'
@@ -24,7 +24,7 @@ class CranesService(ServiceBase):
         if result is not None:
             return result
         # получаю информацию
-        cranes = self.retrieve_all(uow, **filters)
+        cranes = await self.retrieve_all(uow, **filters)
         cranes_dict: dict = {}
         # формирую словарь
         # информация ниже это размеры фото и само фото,
@@ -39,7 +39,7 @@ class CranesService(ServiceBase):
         RedisRepo.set_key_redis_json(key_name=key_name, data=cranes_dict, ttl=360)
         return cranes_dict
 
-    def get_cranes_pos(self):
+    async def get_cranes_pos(self):
         """
         Функция, распаковывующая json-данные в рамках модуляции
         с помощью pygame интерфейса
@@ -54,7 +54,7 @@ class CranesService(ServiceBase):
         files = glob2.glob(path + '/*.json')
         data: dict = {}
         for file in files:
-            with open(file, 'r') as f:
+            async with open(file, 'r') as f:
                 crane_data = json.load(f)
             for key, value in crane_data.items():
                 new_value = {
@@ -67,7 +67,7 @@ class CranesService(ServiceBase):
         RedisRepo.set_key_redis_json(key_name=key_name, data=data, ttl=10)
         return data
 
-    def get_cranes_pos_info(self, uow: AbstractUnitOfWork, **filters):
+    async def get_cranes_pos_info(self, uow: AbstractUnitOfWork, **filters):
         """Получение информации о кранах"""
         data: dict = {
             'cranes_pos': self.get_cranes_pos(),

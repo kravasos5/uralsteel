@@ -53,6 +53,7 @@ class LadlesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Обработка post-запроса"""
+        print(request.POST)
         if request.POST.get('operation_id'):
             # если запрос диспетчера, то есть подтвердили перемещение
             # ковша или начало операции или подтвердили завершение операции

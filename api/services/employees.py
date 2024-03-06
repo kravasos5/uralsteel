@@ -14,7 +14,7 @@ class EmployeesService(ServiceBase):
     """Сервис взаимодействия с Employees"""
     repository = 'employees_repo'
 
-    def hash_password(self, password: str) -> str:
+    async def hash_password(self, password: str) -> str:
         # Создаю объект CryptContext для хэширования пароля
         # password_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
         password_context = CryptContext(
@@ -25,29 +25,29 @@ class EmployeesService(ServiceBase):
         hashed_password = password_context.hash(password)
         return hashed_password
 
-    def retrieve_one_by_id(self, uow: AbstractUnitOfWork, employee_id: int, read_schema: Type[BaseModel] | None = None):
+    async def retrieve_one_by_id(self, uow: AbstractUnitOfWork, employee_id: int, read_schema: Type[BaseModel] | None = None):
         """Получение пользователя по id"""
-        with uow:
-            employee = uow.repositories[self.repository].retrieve_one(read_schema=read_schema, id=employee_id)
+        async with uow:
+            employee = await uow.repositories[self.repository].retrieve_one(read_schema=read_schema, id=employee_id)
             return employee
 
-    def retrieve_one_by_username(self, uow: AbstractUnitOfWork, username: str):
+    async def retrieve_one_by_username(self, uow: AbstractUnitOfWork, username: str):
         """Получение пользователя по id"""
-        with uow:
-            employee = uow.repositories[self.repository].retrieve_one_by_username(username=username)
+        async with uow:
+            employee = await uow.repositories[self.repository].retrieve_one_by_username(username=username)
             return employee
 
-    def retrieve_one_by_slug(self, uow: AbstractUnitOfWork, employee_slug: str):
+    async def retrieve_one_by_slug(self, uow: AbstractUnitOfWork, employee_slug: str):
         """Получение пользователя по slug"""
-        with uow:
-            employee = uow.repositories[self.repository].retrieve_one(slug=employee_slug)
+        async with uow:
+            employee = await uow.repositories[self.repository].retrieve_one(slug=employee_slug)
             return employee
 
-    def create_one(self, uow: AbstractUnitOfWork, data: EmployeesCreateDTO):
+    async def create_one(self, uow: AbstractUnitOfWork, data: EmployeesCreateDTO):
         """Создание нового пользователя"""
         # хэширую пароль и привожу slug к корректному формату
         password: str = data.password
-        hashed_password: str = self.hash_password(password)
+        hashed_password: str = await self.hash_password(password)
         if data.slug:
             slug = slugify(f'{data.slug}')
         else:
@@ -55,8 +55,8 @@ class EmployeesService(ServiceBase):
         # обновляю пароль и slug
         data.password = hashed_password
         data.slug = slug
-        with uow:
+        async with uow:
             # создание пользователя
-            new_employee = uow.repositories[self.repository].create_one(data_schema=data)
-            uow.commit()
+            new_employee = await uow.repositories[self.repository].create_one(data_schema=data)
+            await uow.commit()
             return new_employee

@@ -24,13 +24,13 @@ class ActiveDynamicTableRepo(SqlAlchemyRepo):
     read_schema = DynamicTableReadDTO
     create_schema = DynamicTableCreateUpdateDTO
 
-    def convert_to_create_schema(self, read_data_schema: BaseModel):
+    async def convert_to_create_schema(self, read_data_schema: BaseModel):
         """Перевести информацию из схемы чтения в схему создания"""
-        read_data_dict = DataConverter.dto_to_dict(read_data_schema)
-        create_schema = DataConverter.model_to_dto(read_data_dict, self.create_schema)
+        read_data_dict = await DataConverter.dto_to_dict(read_data_schema)
+        create_schema = await DataConverter.model_to_dto(read_data_dict, self.create_schema)
         return create_schema
 
-    def retrieve_transporting(self, date: datetime, ladles_info: dict, deletion_ids: list[int]):
+    async def retrieve_transporting(self, date: datetime, ladles_info: dict, deletion_ids: list[int]):
         """Получить транспортируемые ковши"""
         stmt = (
             select(self.model)
@@ -41,7 +41,8 @@ class ActiveDynamicTableRepo(SqlAlchemyRepo):
                     self.model.actual_end.isnot(None),
                     self.model.actual_start <= date)
         )
-        ladles_queryset = self.session.execute(stmt).scalars().all()
+        ladles_queryset = await self.session.execute(stmt)
+        ladles_queryset = ladles_queryset.scalars().all()
         ladles_info, deletion_ids = self.ladles_into_dict(
             ladles_queryset=ladles_queryset,
             ladles_info=ladles_info,
@@ -50,7 +51,7 @@ class ActiveDynamicTableRepo(SqlAlchemyRepo):
         )
         return ladles_info, deletion_ids
 
-    def retrieve_waiting(self, date: datetime, ladles_info: dict, deletion_ids: list[int]):
+    async def retrieve_waiting(self, date: datetime, ladles_info: dict, deletion_ids: list[int]):
         """Получить ожидающие ковши"""
         stmt = (
             select(self.model)
@@ -61,7 +62,8 @@ class ActiveDynamicTableRepo(SqlAlchemyRepo):
                     self.model.actual_end.is_(None),
                     self.model.actual_start <= date)
         )
-        ladles_queryset = self.session.execute(stmt).scalars().all()
+        ladles_queryset = await self.session.execute(stmt)
+        ladles_queryset = ladles_queryset.scalars().all()
         ladles_info, deletion_ids = self.ladles_into_dict(
             ladles_queryset=ladles_queryset,
             ladles_info=ladles_info,
@@ -70,7 +72,7 @@ class ActiveDynamicTableRepo(SqlAlchemyRepo):
         )
         return ladles_info, deletion_ids
 
-    def retrieve_starting(self, date: datetime, ladles_info: dict, deletion_ids: list[int]):
+    async def retrieve_starting(self, date: datetime, ladles_info: dict, deletion_ids: list[int]):
         """Получить начинающие ковши"""
         stmt = (
             select(self.model)
@@ -82,7 +84,8 @@ class ActiveDynamicTableRepo(SqlAlchemyRepo):
                     self.model.plan_start < date,
                     self.model.plan_end > date)
         )
-        ladles_queryset = self.session.execute(stmt).scalars().all()
+        ladles_queryset = await self.session.execute(stmt)
+        ladles_queryset = ladles_queryset.scalars().all()
         ladles_info, deletion_ids = self.ladles_into_dict(
             ladles_queryset=ladles_queryset,
             ladles_info=ladles_info,
@@ -90,7 +93,7 @@ class ActiveDynamicTableRepo(SqlAlchemyRepo):
         )
         return ladles_info, deletion_ids
 
-    def ladles_into_dict(
+    async def ladles_into_dict(
             self,
             ladles_queryset,
             ladles_info: dict,
@@ -147,7 +150,8 @@ class ActiveDynamicTableRepo(SqlAlchemyRepo):
                         self.model.plan_start > elem.plan_end)
                 .order_by(self.model.plan_start)
             )
-            next_elems = self.session.execute(next_elems_stmt).scalars().all()
+            next_elems = await self.session.execute(next_elems_stmt)
+            next_elems = next_elems.scalars().all()
             # если следующая позиция присутствует, то обновляю
             # соответствующие поля словаря
             if next_elems:

@@ -6,10 +6,10 @@ class AggregatesAllService(ServiceBase):
     """Сервис взаимодействия с Aggregates базовый"""
     repository = 'aggregates_all'
 
-    def retrieve_one_by_id(self, uow: AbstractUnitOfWork, ag_id: int):
+    async def retrieve_one_by_id(self, uow: AbstractUnitOfWork, ag_id: int):
         """Получение агрегата по id"""
-        with uow:
-            result = uow.repositories[self.repository].retrieve_one(id=ag_id)
+        async with uow:
+            result = await uow.repositories[self.repository].retrieve_one(id=ag_id)
             return result
 
 

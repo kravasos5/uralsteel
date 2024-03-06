@@ -19,7 +19,7 @@ path_start: str = 'photos/'
 @router.get('/employees', response_model=list[EmployeesReadDTO])
 async def get_employees(uow: UOWDep, offset: int = 0, limit: int = 100):
     """Получить работников"""
-    employees = EmployeesService().retrieve_all(uow, offset, limit)
+    employees = await EmployeesService().retrieve_all(uow, offset, limit)
     answer_data = Base64Converter.key_to_base64(employees, is_list=True)
     return answer_data
 
@@ -36,7 +36,7 @@ async def create_employee(
         photo, path, new_user, EmployeesCreateDTO,
         create_dir=True, created_dir=path
     )
-    employee = EmployeesService().create_one(uow, create_data)
+    employee = await EmployeesService().create_one(uow, create_data)
     answer_data = Base64Converter.key_to_base64(employee)
     return answer_data
 
@@ -44,8 +44,8 @@ async def create_employee(
 @router.delete('/delete/{employee_id}', status_code=HTTPStatus.NO_CONTENT)
 async def delete_employee(uow: UOWDep, employee_id: int):
     """Удаление работника"""
-    deleted_employee = EmployeesService().delete_one(uow, id=employee_id)
-    error_raiser_if_none(deleted_employee, 'Employee')
+    deleted_employee = await EmployeesService().delete_one(uow, id=employee_id)
+    await error_raiser_if_none(deleted_employee, 'Employee')
 
 
 @router.put('/{employee_id}/change', response_model=EmployeesReadDTO)
@@ -61,8 +61,8 @@ async def change_employee_put(
         photo, path, updated_employee, EmployeesUpdateDTO,
         create_dir=True, created_dir=path
     )
-    employee = EmployeesService().update_one(uow=uow, data_schema=update_data, id=employee_id)
-    error_raiser_if_none(employee, 'Employee')
+    employee = await EmployeesService().update_one(uow=uow, data_schema=update_data, id=employee_id)
+    await error_raiser_if_none(employee, 'Employee')
     answer_data = Base64Converter.key_to_base64(employee)
     return answer_data
 
@@ -79,7 +79,7 @@ async def change_employee_patch(
     updated_employee = {key: value for key, value in updated_employee.items() if value is not None}
     if photo:
         if 'username' not in updated_employee:
-            empl = service.retrieve_one_by_id(uow, employee_id)
+            empl = await service.retrieve_one_by_id(uow, employee_id)
             path: str = f'{path_start}{empl.username}/'
         else:
             path: str = f'{path_start}{updated_employee["username"]}/'
@@ -89,8 +89,8 @@ async def change_employee_patch(
         )
     else:
         update_data = EmployeesPatchUpdateDTO(**updated_employee)
-    employee = service.update_one(uow=uow, data_schema=update_data, id=employee_id)
-    error_raiser_if_none(employee, 'Employee')
+    employee = await service.update_one(uow=uow, data_schema=update_data, id=employee_id)
+    await error_raiser_if_none(employee, 'Employee')
     answer_data = Base64Converter.key_to_base64(employee)
     return answer_data
 
@@ -98,7 +98,7 @@ async def change_employee_patch(
 @router.get('/{employee_id}', response_model=EmployeesReadDTO)
 async def get_employee(employee_id: Annotated[int, Path(gt=0)], uow: UOWDep):
     """Получить данные работника"""
-    employee = EmployeesService().retrieve_one_by_id(uow=uow, employee_id=employee_id)
-    error_raiser_if_none(employee, 'Employee')
+    employee = await EmployeesService().retrieve_one_by_id(uow=uow, employee_id=employee_id)
+    await error_raiser_if_none(employee, 'Employee')
     answer_data = Base64Converter.key_to_base64(employee)
     return answer_data
