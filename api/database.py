@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated
 
 import pytz
-from sqlalchemy import TIMESTAMP, text
+from sqlalchemy import TIMESTAMP, text, DateTime
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, mapped_column
 
@@ -16,9 +16,9 @@ session_factory = async_sessionmaker(autocommit=False, autoflush=False, bind=eng
 
 idpk = Annotated[int, mapped_column(primary_key=True)]
 created_at = Annotated[TIMESTAMP, mapped_column(
-    TIMESTAMP,
+    TIMESTAMP(timezone=True),
     server_default=text('TIMEZONE("utc+5", now()'),
-    default=datetime.now(pytz.timezone(settings.TIME_ZONE)))
+    default=datetime.now(pytz.timezone(settings.TIME_ZONE))),
 ]
 
 

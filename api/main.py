@@ -1,4 +1,9 @@
-from fastapi import FastAPI
+from http import HTTPStatus
+
+from asyncpg import UniqueViolationError
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 
 from routers import profile, auth
 from routers import cranes as cranes_employee
@@ -14,6 +19,23 @@ api.include_router(profile.password_reset_router)
 api.include_router(cranes_employee.router)
 api.include_router(ladles_employee.router)
 api.include_router(admin.router)
+
+
+@api.middleware('http')
+async def put_patch_create_unique_constraint_handler(request: Request, call_next):
+    """Отлавливает ошибку при несоблюдении уникальности столбца в бд"""
+    try:
+        # попытка выполнения эндпоинта
+        response = await call_next(request)
+        return response
+    except IntegrityError as ex:
+        # если ошибка IntegrityError, то пользователь ввёл неправильные данные
+        # if isinstance(ex.orig, UniqueViolationError):
+        if 'UniqueViolationError' in str(ex.orig):
+            error_message = 'Unique violation'
+        else:
+            error_message = 'Invalid data'
+        return JSONResponse(status_code=HTTPStatus.BAD_REQUEST, content={'detail': error_message})
 
 
 @api.get("/")

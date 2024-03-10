@@ -65,6 +65,14 @@ async def error_raiser_if_none(obj: Any, message_name: str = 'Object'):
         )
 
 
+async def error_raiser(message: str, status_code: int):
+    """Вызывает ошибку, с необходимым сообщением и статусом"""
+    raise HTTPException(
+        status_code=status_code,
+        detail=message,
+    )
+
+
 async def is_object(uow, object_id: int, service: ServiceBase, message: str = 'Object'):
     """Проверка есть ли объект с таким id"""
     obj = await service.retrieve_one(uow, id=object_id)
@@ -392,19 +400,9 @@ async def get_current_token_payload(
             token=token
         )
     except InvalidTokenError:
-        print('get_current_token_payload')
-        print('get_current_token_payload')
-        print('get_current_token_payload')
-        print('get_current_token_payload')
-        print('get_current_token_payload')
         raise invalid_token_exception
     # проверка нет ли токена в blacklist
     if await RefreshTokenService().check_token(uow, token, payload.get('token_family')):
-        print('get_current_token_payload 111111111111')
-        print('get_current_token_payload 111111111111')
-        print('get_current_token_payload 111111111111')
-        print('get_current_token_payload 111111111111')
-        print('get_current_token_payload 111111111111')
         raise invalid_token_exception
     return payload
 
@@ -431,11 +429,6 @@ async def get_current_auth_user(
         scopes: list[str] = payload.get('scopes')
         token_data = TokenScopesData(scopes=scopes, id=employee_id)
     except ValidationError:
-        print('get_current_auth_user')
-        print('get_current_auth_user')
-        print('get_current_auth_user')
-        print('get_current_auth_user')
-        print('get_current_auth_user')
         raise invalid_token_scopes_exception
     # проверка прав доступа
     for scope in security_scopes.scopes:
@@ -449,11 +442,6 @@ async def get_current_auth_user(
     if employee := await EmployeesService().retrieve_one_by_id(uow, token_data.id):
         return employee
     # otherwise вызвать ошибку
-    print('get_current_auth_user 1111111111')
-    print('get_current_auth_user 1111111111')
-    print('get_current_auth_user 1111111111')
-    print('get_current_auth_user 1111111111')
-    print('get_current_auth_user 1111111111')
     raise invalid_token_exception
 
 

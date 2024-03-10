@@ -26,7 +26,8 @@ class RefreshTokenRepo(SqlAlchemyRepo):
                 self.model.token_family,
             )
         )
-        res = await self.session.execute(stmt).all()
+        res = await self.session.execute(stmt)
+        res = res.all()
         if res:
             transfer_tokens = await DataConverter.list_to_dto(res, RefreshTokenBaseDTO)
             transfer_tokens_dict = await DataConverter.dtos_to_dict(transfer_tokens)

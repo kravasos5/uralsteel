@@ -8,7 +8,8 @@ from celery_back.tasks import archive_report_handler
 from dependencies import UOWDep, GetIdDEP, error_raiser_if_none, AccServiceDEP, EmpUpdatePatchFieldsDEP, \
     EmpUpdateFieldsDEP, oauth2_scheme, get_current_active_auth_user, employeeSlugPermissionDEP, emailDEP, \
     ResetPasswordDEP, ResetPayloadDEP, is_author_and_accident_object, access_denied, make_object_broken
-from schemas.accidents import AccidentReadDTO, AccidentsCreateUpdateDTO, AccidentsUpdatePatchDTO, AccidentsCreateDTO
+from schemas.accidents import AccidentsCreateUpdateDTO, AccidentsUpdatePatchDTO, AccidentsCreateDTO, \
+    AccidentReadShortDTO
 from schemas.employees import EmployeesReadDTO, EmployeesUpdateDTO, EmployeesPatchUpdateDTO, \
     EmployeePasswordRestStartDTO
 from services.employees import EmployeesService
@@ -119,7 +120,7 @@ async def password_reset(
     payload: ResetPayloadDEP,
     hashed_password: ResetPasswordDEP,
 ):
-    # сброс пароля
+    """Cброс пароля"""
     await EmployeesService().update_one(uow=uow, data_schema=hashed_password, email=payload.email)
     return {'message': 'Password changed'}
 
@@ -133,7 +134,7 @@ async def get_archive_report(
     return {'message': 'Letter sent'}
 
 
-@router.post('/report/create', response_model=AccidentReadDTO)
+@router.post('/report/create', response_model=AccidentReadShortDTO)
 async def create_accident(
     uow: UOWDep,
     service: AccServiceDEP,
@@ -154,7 +155,7 @@ async def create_accident(
     return new_accident
 
 
-@router.patch('/report/update/{object_id}', response_model=AccidentReadDTO)
+@router.patch('/report/update/{object_id}', response_model=AccidentReadShortDTO)
 async def update_crane_patch(
     uow: UOWDep,
     service: AccServiceDEP,

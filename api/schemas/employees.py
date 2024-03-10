@@ -83,4 +83,4 @@ class EmployeePasswordResetDTO(BaseModel):
 class EmployeeResetPayloadDTO(BaseModel):
     """Схема данных, кодируемых в токен для сброса пароля"""
     email: str
-    expire: datetime
+    exp: datetime

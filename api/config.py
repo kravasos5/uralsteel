@@ -11,7 +11,7 @@ class AuthSettings(BaseSettings):
     private_key_path: Path = BASE_DIR / 'api' / 'auth' / 'private.pem'
     public_key_path: Path = BASE_DIR / 'api' / 'auth' / 'public.pem'
     algorithm: str = 'RS256'
-    access_token_expire_minutes: int = 15
+    access_token_expire_minutes: int = 1440
     # access_token_expire_minutes: int = 3
     refresh_token_expire_minutes: int = 1440
     RESET_KEY: str
