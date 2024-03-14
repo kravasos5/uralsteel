@@ -16,10 +16,10 @@ class DynamicTableORMMixin(Base):
     brand_steel_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_brandsteel.id'))
     route_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_routes.id'))
     aggregate_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('visual_aggregates.id'))
-    plan_start: Mapped[datetime] = mapped_column(TIMESTAMP)
-    plan_end: Mapped[datetime] = mapped_column(TIMESTAMP)
-    actual_start: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
-    actual_end: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
+    plan_start: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True))
+    plan_end: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True))
+    actual_start: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    actual_end: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
 
     @declared_attr
     def ladle_info(self) -> Mapped['LadlesORM']:

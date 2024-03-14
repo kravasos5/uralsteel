@@ -43,7 +43,7 @@ class ActiveDynamicTableRepo(SqlAlchemyRepo):
         )
         ladles_queryset = await self.session.execute(stmt)
         ladles_queryset = ladles_queryset.scalars().all()
-        ladles_info, deletion_ids = self.ladles_into_dict(
+        ladles_info, deletion_ids = await self.ladles_into_dict(
             ladles_queryset=ladles_queryset,
             ladles_info=ladles_info,
             is_transporting=True,
@@ -64,7 +64,7 @@ class ActiveDynamicTableRepo(SqlAlchemyRepo):
         )
         ladles_queryset = await self.session.execute(stmt)
         ladles_queryset = ladles_queryset.scalars().all()
-        ladles_info, deletion_ids = self.ladles_into_dict(
+        ladles_info, deletion_ids = await self.ladles_into_dict(
             ladles_queryset=ladles_queryset,
             ladles_info=ladles_info,
             deletion_ids=deletion_ids,
@@ -86,7 +86,7 @@ class ActiveDynamicTableRepo(SqlAlchemyRepo):
         )
         ladles_queryset = await self.session.execute(stmt)
         ladles_queryset = ladles_queryset.scalars().all()
-        ladles_info, deletion_ids = self.ladles_into_dict(
+        ladles_info, deletion_ids = await self.ladles_into_dict(
             ladles_queryset=ladles_queryset,
             ladles_info=ladles_info,
             deletion_ids=deletion_ids

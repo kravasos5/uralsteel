@@ -103,6 +103,7 @@ class ActiveDynamicTableService(ServiceBase):
                     # в таком случае status=400, то есть пользователь
                     # клиент неверно указал operation_type
                     data['st'] = 'Invalid operation_type'
+            await uow.commit()
             return data
 
     async def get_ladle_timeform(self):

@@ -54,7 +54,7 @@ class CranesService(ServiceBase):
         files = glob2.glob(path + '/*.json')
         data: dict = {}
         for file in files:
-            async with open(file, 'r') as f:
+            with open(file, 'r') as f:
                 crane_data = json.load(f)
             for key, value in crane_data.items():
                 new_value = {
@@ -69,8 +69,10 @@ class CranesService(ServiceBase):
 
     async def get_cranes_pos_info(self, uow: AbstractUnitOfWork, **filters):
         """Получение информации о кранах"""
+        cranes_pos = await self.get_cranes_pos()
+        cranes_info = await self.get_cranes_info(uow, **filters)
         data: dict = {
-            'cranes_pos': self.get_cranes_pos(),
-            'cranes_info': self.get_cranes_info(uow, **filters)
+            'cranes_pos': cranes_pos,
+            'cranes_info': cranes_info
         }
         return data

@@ -1,6 +1,6 @@
-from datetime import time
+from datetime import time as datetime_time
 
-from sqlalchemy import String, TIMESTAMP, Boolean, SmallInteger, BigInteger, ForeignKey
+from sqlalchemy import String, TIME, Boolean, SmallInteger, BigInteger, ForeignKey
 from sqlalchemy.orm import relationship, declared_attr, mapped_column, Mapped
 
 from database import Base, idpk
@@ -16,7 +16,7 @@ class AggregatesORM(Base):
     num_pos: Mapped[str] = mapped_column(String(100))
     coord_x: Mapped[int] = mapped_column(SmallInteger)
     coord_y: Mapped[int] = mapped_column(SmallInteger)
-    stay_time: Mapped[time] = mapped_column(TIMESTAMP)
+    stay_time: Mapped[datetime_time] = mapped_column(TIME)
     photo: Mapped[str] = mapped_column(String(100))
     is_broken: Mapped[bool] = mapped_column(Boolean)
 

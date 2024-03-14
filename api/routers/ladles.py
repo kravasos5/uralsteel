@@ -35,7 +35,7 @@ async def get_ladles_info(
     # написать схему ответа
     service = ActiveDynamicTableService()
     date = await service.time_convert(hours, minutes)
-    data, deletion_ids = service.get_ladles_info(uow, date)
+    data, deletion_ids = await service.get_ladles_info(uow, date)
     await service.delete_by_ids(uow, deletion_ids)
     data = Base64Converter.key_to_base64(data, is_nested=True)
     return data

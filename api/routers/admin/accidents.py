@@ -20,18 +20,18 @@ async def get_accidents(uow: UOWDep, service: AccServiceDEP, offset: int = 0, li
     return accidents
 
 
-@router.post('/create', response_model=AccidentReadDTO)
+@router.post('/create', response_model=AccidentReadShortDTO)
 async def create_accident(uow: UOWDep, service: AccServiceDEP, accident_data: AccidentsCreateUpdateDTO):
     """Создание происшествия"""
     # проверка есть ли такой автор и агрегат
     await is_author_and_accident_object(uow, accident_data.author_id, accident_data.object_id, service)
-    new_accident = service.create_one(uow, accident_data)
+    new_accident = await service.create_one(uow, accident_data)
     # отметить объект отчёта сломанным
     await make_object_broken(uow, service, accident_data.object_id)
     return new_accident
 
 
-@router.get('/{object_id}', response_model=AccidentReadDTO)
+@router.get('/{object_id}', response_model=AccidentReadShortDTO)
 async def get_crane(uow: UOWDep, service: AccServiceDEP, object_id: GetIdDEP):
     """Получение происшествия"""
     accident = await service.retrieve_one_by_id(uow, object_id)
@@ -39,7 +39,7 @@ async def get_crane(uow: UOWDep, service: AccServiceDEP, object_id: GetIdDEP):
     return accident
 
 
-@router.put('/update/{object_id}', response_model=AccidentReadDTO)
+@router.put('/update/{object_id}', response_model=AccidentReadShortDTO)
 async def update_crane_put(
         uow: UOWDep,
         service: AccServiceDEP,
@@ -49,12 +49,12 @@ async def update_crane_put(
     """Обновление происшествия методом put"""
     # проверка есть ли такой автор и агрегат
     await is_author_and_accident_object(uow, accident_data.author_id, accident_data.object_id, service)
-    updated_acc = service.update_one(uow, accident_data, id=object_id)
+    updated_acc = await service.update_one(uow, accident_data, id=object_id)
     await error_raiser_if_none(updated_acc)
     return updated_acc
 
 
-@router.patch('/update/{object_id}', response_model=AccidentReadDTO)
+@router.patch('/update/{object_id}', response_model=AccidentReadShortDTO)
 async def update_crane_patch(
         uow: UOWDep,
         service: AccServiceDEP,
