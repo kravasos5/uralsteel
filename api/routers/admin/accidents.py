@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Type
 
 from fastapi import APIRouter
 
@@ -13,7 +14,7 @@ router = APIRouter(
 )
 
 
-@router.get('/accidents', response_model=list[AccidentReadShortDTO])
+@router.get('/accidents')
 async def get_accidents(uow: UOWDep, service: AccServiceDEP, offset: int = 0, limit: int = 100):
     """Получение отчётов инцидентов"""
     accidents = await service.retrieve_all(uow, offset, limit)
@@ -31,7 +32,7 @@ async def create_accident(uow: UOWDep, service: AccServiceDEP, accident_data: Ac
     return new_accident
 
 
-@router.get('/{object_id}', response_model=AccidentReadShortDTO)
+@router.get('/{object_id}')
 async def get_crane(uow: UOWDep, service: AccServiceDEP, object_id: GetIdDEP):
     """Получение происшествия"""
     accident = await service.retrieve_one_by_id(uow, object_id)

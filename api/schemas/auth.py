@@ -37,6 +37,15 @@ class RefreshTokenCreateUpdateDTO(RefreshTokenBaseDTO):
     employee_id: int
 
 
+class RefreshTokenUpdatePatchDTO(BaseModel):
+    """Схема обновления refresh токена методом patch"""
+    refresh_token: str | None = None
+    expire_date: datetime | None = None
+    token_family: uuid.UUID | None = None
+    employee_id: int | None = None
+
+
 class RefreshTokenReadDTO(RefreshTokenCreateUpdateDTO):
     """Схема refresh токена"""
     id: int
+    employee_id: int | None = None

@@ -14,8 +14,8 @@ class DynamicTableCreateUpdateDTO(BaseModel):
     brand_steel_id: int
     plan_start: datetime
     plan_end: datetime
-    actual_start: datetime | None
-    actual_end: datetime | None
+    actual_start: datetime | None = None
+    actual_end: datetime | None = None
     aggregate_id: int
     ladle_id: int
     route_id: int

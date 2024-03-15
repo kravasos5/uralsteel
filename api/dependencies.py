@@ -22,7 +22,7 @@ from services.dynamic import ActiveDynamicTableService, ArchiveDynamicTableServi
 from services.aggregates import AggregatesGMPService, AggregatesUKPService, AggregatesUVSService, \
     AggregatesMNLZService, AggregatesLService, AggregatesBurnerService, AggregatesAllService
 from services.employees import EmployeesService
-from services.jwt import RefreshTokenService
+from services.jwt import RefreshTokenService, RefreshTokenBlacklistService
 from services.ladles import LadlesService
 from utils import auth_utils
 from utils.service_base import ServiceBase
@@ -529,3 +529,31 @@ async def validate_reset_token(token: Annotated[str, Path()]) -> EmployeeResetPa
 
 
 ResetPayloadDEP = Annotated[EmployeeResetPayloadDTO, Depends(validate_reset_token)]
+
+
+class JwtType(str, Enum):
+    """Перечисление типов токенов (обычный и в чёрном списке)"""
+    white: str = 'white'
+    black: str = 'black'
+
+
+async def get_jwt_wb_type(jwt_type: Annotated[JwtType, Query()]):
+    """Зависимость типов токенов"""
+    return jwt_type
+
+
+GetJwtTypeDEP = Annotated[JwtType, Depends(get_jwt_wb_type)]
+
+
+async def get_jwt_service(token_type: GetJwtTypeDEP):
+    """Зависимость сервиса jwt токенов"""
+    service = None
+    match token_type:
+        case JwtType.white:
+            service = RefreshTokenService()
+        case JwtType.black:
+            service = RefreshTokenBlacklistService()
+    return service
+
+
+JwtServiceDEP = Annotated[ServiceBase, Depends(get_jwt_service)]

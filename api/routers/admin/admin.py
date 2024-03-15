@@ -11,6 +11,7 @@ from . import (
     employees,
     ladles,
     routes,
+    jwt,
 )
 
 
@@ -29,3 +30,4 @@ router.include_router(dynamics.router)
 router.include_router(employees.router)
 router.include_router(ladles.router)
 router.include_router(routes.router)
+router.include_router(jwt.router)
