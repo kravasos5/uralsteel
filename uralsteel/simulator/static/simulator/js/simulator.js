@@ -1,5 +1,5 @@
 window.addEventListener("load", function(){
-    // получаем ссылки, связанные с холстом
+    // получаем ссылки, связанные с холст
     const canvas = document.querySelector('.canvas');
     const ctx = canvas.getContext("2d");
     const BB = canvas.getBoundingClientRect();
@@ -7,22 +7,16 @@ window.addEventListener("load", function(){
     const offsetY = BB.top;
     const WIDTH = canvas.width;
     const HEIGHT = canvas.height;
-
     // получаем кнопки
-
     const down_button_1 = document.querySelector('.down__button__1');
     const down_button_2 = document.querySelector('.down__button__2');
     const down_button_3 = document.querySelector('.down__button__3');
     const down_button_4 = document.querySelector('.down__button__4');
-
     const take_ladle_1 = document.querySelector('.take__ladle__1');
     const take_ladle_2 = document.querySelector('.take__ladle__2');
     const take_ladle_3 = document.querySelector('.take__ladle__3');
     const take_ladle_4 = document.querySelector('.take__ladle__4');
-
-
     // получаем текстовые элементы
-
     const span_1 = document.querySelector('.span__1');
     const span_2 = document.querySelector('.span__2');
     const span_3 = document.querySelector('.span__3');
@@ -31,16 +25,13 @@ window.addEventListener("load", function(){
     const span_6 = document.querySelector('.span__6');
     const span_7 = document.querySelector('.span__7');
     const span_8 = document.querySelector('.span__8');
-
     // переменные, связанные с перетаскиванием
     let dragok = false;
     let startX;
     let startY;
-
     // массив объектов, определяющих разные формы
     const cases = [];
     const carriages = [];
-
     // определяем 4 прямоугольника
     cases.push({
         x: 150,
@@ -76,36 +67,63 @@ window.addEventListener("load", function(){
     });
 
     // определяем 4 круга
-    carriages.push({ x: 160, y: 100, r: 10, fill: "#ffffff", isDragging: false, is_upper: true, with_ladle: false });
-    carriages.push({ x: 460, y: 100, r: 10, fill: "#ffffff", isDragging: false, is_upper: true, with_ladle: false });
-    carriages.push({ x: 510, y: 100, r: 10, fill: "#ffffff", isDragging: false, is_upper: true, with_ladle: false });
-    carriages.push({ x: 910, y: 100, r: 10, fill: "#ffffff", isDragging: false, is_upper: true, with_ladle: false });
-
+    carriages.push({
+        x: 160,
+        y: 100,
+        r: 10,
+        fill:"#c0c0c0",
+        isDragging: false,
+        is_upper: true,
+        with_ladle: false
+    });
+    carriages.push({
+        x: 460,
+        y: 100,
+        r: 10,
+        fill: "#c0c0c0",
+        isDragging: false,
+        is_upper: true,
+        with_ladle: false
+    });
+    carriages.push({
+        x: 510,
+        y: 100,
+        r: 10,
+        fill: "#c0c0c0",
+        isDragging: false,
+        is_upper: true,
+        with_ladle: false
+    });
+    carriages.push({
+        x: 910,
+        y: 100,
+        r: 10,
+        fill: "#c0c0c0",
+        isDragging: false,
+        is_upper: true,
+        with_ladle: false
+    });
+    // переменные для прямоугольников
     const case1 = cases[0];
     const case2 = cases[1];
     const case3 = cases[2];
     const case4 = cases[3];
-
+    // переменные для кругов
     const carriage1 = carriages[0];
     const carriage2 = carriages[1];
     const carriage3 = carriages[2];
     const carriage4 = carriages[3];
-
     // слушаем события мыши
     canvas.onmousedown = myDown;
     canvas.onmouseup = myUp;
     canvas.onmousemove = myMove;
-
     // вызов рисования сцены
     draw();
-
     // рисуем один прямоугольник
     function rect(r) {
         ctx.fillStyle = r.fill;
         ctx.fillRect(r.x, r.y, r.width, r.height);
     }
-
-
     // рисуем один круг
     function circle(c) {
         ctx.fillStyle = c.fill;
@@ -114,16 +132,13 @@ window.addEventListener("load", function(){
         ctx.closePath();
         ctx.fill();
     }
-
     // очищаем холст
     function clear() {
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
     }
-
     // перерисовываем сцену
     function draw() {
         clear();
-
         for (let i = 0; i < cases.length; i++) {
             rect(cases[i]);
         }
@@ -131,93 +146,73 @@ window.addEventListener("load", function(){
             circle(carriages[k]);
         }
     }
-
     // обрабатываем события mousedown
     function myDown(e) {
         // сообщаем браузеру, что мы обрабатываем это событие мыши
         e.preventDefault();
         e.stopPropagation();
-
         // получаем текущую позицию мыши
         const mx = parseInt(e.clientX - offsetX);
         const my = parseInt(e.clientY - offsetY);
-
-
         // проверяем каждую фигуру, чтобы увидеть, находится ли внутри мышь
         dragok = false;
-
-
         const d1x = carriage1.x - mx;
         const d1y = carriage1.y - my;
-
         if (!dragok &&
             d1x * d1x + d1y * d1y < carriage1.r * carriage1.r &&
             mx > case1.x &&
             mx < case1.x + case1.width &&
             my > case1.y &&
             my < case1.y + case1.height) {
-
-            dragok = true;
-            carriage1.isDragging = true;
-            case1.isDragging = true;
-        }
-
+                dragok = true;
+                carriage1.isDragging = true;
+                case1.isDragging = true;
+            }
         const d2x = carriage2.x - mx;
         const d2y = carriage2.y - my;
-
         if (!dragok &&
             d2x * d2x + d2y * d2y < carriage2.r * carriage2.r &&
             mx > case2.x &&
             mx < case2.x + case2.width &&
             my > case2.y &&
             my < case2.y + case2.height) {
-
-            dragok = true;
-            carriage2.isDragging = true;
-            case2.isDragging = true;
-        }
-
+                dragok = true;
+                carriage2.isDragging = true;
+                case2.isDragging = true;
+            }
         const d3x = carriage3.x - mx;
         const d3y = carriage3.y - my;
-
         if (!dragok &&
             d3x * d3x + d3y * d3y < carriage3.r * carriage3.r &&
             mx > case3.x &&
             mx < case3.x + case3.width &&
             my > case3.y &&
             my < case3.y + case3.height) {
-
-            dragok = true;
-            carriage3.isDragging = true;
-            case3.isDragging = true;
-        }
-
+                dragok = true;
+                carriage3.isDragging = true;
+                case3.isDragging = true;
+            }
         const d4x = carriage4.x - mx;
         const d4y = carriage4.y - my;
-
         if (!dragok &&
             d4x * d4x + d4y * d4y < carriage4.r * carriage4.r &&
             mx > case4.x &&
             mx < case4.x + case4.width &&
             my > case4.y &&
             my < case4.y + case4.height) {
-
-            dragok = true;
-            carriage4.isDragging = true;
-            case4.isDragging = true;
-        }
-
+                dragok = true;
+                carriage4.isDragging = true;
+                case4.isDragging = true;
+            }
         // сохраняем текущую позицию мыши
         startX = mx;
         startY = my;
     }
-
     // обрабатываем события нажатия мыши
     function myUp(e) {
         // сообщаем браузеру, что мы обрабатываем это событие мыши
         e.preventDefault();
         e.stopPropagation();
-
         // очищаем все флаги перетаскивания
         dragok = false;
         for (let i = 0; i < cases.length; i++) {
@@ -227,7 +222,6 @@ window.addEventListener("load", function(){
             }
         }
     }
-
     // обрабатываем движения мыши
     function myMove(e) {
         // если мы что-то перетаскиваем...
@@ -235,20 +229,16 @@ window.addEventListener("load", function(){
             // сообщаем браузеру, что мы обрабатываем это событие мыши
             e.preventDefault();
             e.stopPropagation();
-
             // получаем текущую позицию мыши
             const mx = parseInt(e.clientX - offsetX);
             const my = parseInt(e.clientY - offsetY);
-
             // вычисляем расстояние, на которое переместилась мышь
             // с момента последнего перемещения мыши
             const dx = mx - startX;
             const dy = my - startY;
-
-            // перемещаем каждый прямоугольник, который является перетаскиванием
+            // перемещаем каждый прямоугольник, который является перетаскиваемым
             // по расстоянию, на которое переместилась мышь
             // с момента последнего перемещения мыши
-
             if (case1.isDragging) {
                 case1.x += dx;
             }
@@ -261,21 +251,22 @@ window.addEventListener("load", function(){
             if (case4.isDragging) {
                 case4.x += dx;
             }
-
             // ограничения движений
-
+            // ограничения первого крана
             if (case1.x < 0) {case1.x = 0};
             if (case1.x + 20 > case2.x && case1.isDragging == true) {case1.x = case2.x - 20};
-
+            // ограничения второго крана
             if (case2.x < case1.x + 20) {case2.x = case1.x + 20};
             if (case2.x + 20 > case3.x && case2.isDragging == true) {case2.x = case3.x - 20};
-
+            // ограничения третьего крана
             if (case3.x < case2.x + 20) {case3.x = case2.x + 20};
             if (case3.x + 20 > case4.x && case3.isDragging == true) {case3.x = case4.x - 20};
-
+            // ограничения четвертого крана
             if (case4.x < case3.x + 20) {case4.x = case3.x + 20};
             if (case4.x + 20 > WIDTH) {case4.x = WIDTH - 20};
-
+            // перемещаем каждый круг, который является перетаскиваемым
+            // по расстоянию, на которое переместилась мышь
+            // с момента последнего перемещения мыши
             if (carriage1.isDragging){
                 carriage1.x += dx;
                 carriage1.y += dy;
@@ -292,43 +283,41 @@ window.addEventListener("load", function(){
                 carriage4.x += dx;
                 carriage4.y += dy;
             }
-
+            // ограничения движений
+            // ограничения первого круга
             if (carriage1.x < 10) {carriage1.x = 10};
             if (carriage1.y + 10 > 138) {carriage1.y = 138 - 10};
             if (carriage1.y < 24) {carriage1.y = 24};
-
+            // ограничения второго круга
             if (carriage2.y + 10 > 138) {carriage2.y = 138 - 10};
             if (carriage2.y < 24) {carriage2.y = 24};
-
+            // ограничения третьего круга
             if (carriage3.y + 10 > 138) {carriage3.y = 138 - 10};
             if (carriage3.y < 24) {carriage3.y = 24};
-
+            // ограничения четвертого круга
             if (carriage4.x + 10 > WIDTH) {carriage4.x = WIDTH - 10};
             if (carriage4.y + 10 > 138) {carriage4.y = 138 - 10};
             if (carriage4.y < 24) {carriage4.y = 24};
-
+            // краны не могут заезжать друг за друга
+            // поэтому просто будут сталкиваться и оставаться на месте
+            // ограничение первого
             if (carriage1.x + 20 > carriage2.x && carriage1.isDragging == true) {carriage1.x = carriage2.x - 20};
-
+            // ограничение второго
             if (carriage2.x < carriage1.x + 20) {carriage2.x = carriage1.x + 20};
             if (carriage2.x + 20 > carriage3.x && carriage2.isDragging == true) {carriage2.x = carriage3.x - 20};
-
+            // ограничение третьего
             if (carriage3.x < carriage2.x + 20) {carriage3.x = carriage2.x + 20};
             if (carriage3.x + 20 > carriage4.x && carriage3.isDragging == true) {carriage3.x = carriage4.x - 20};
-
+            // ограничение четвертого
             if (carriage4.x < carriage3.x + 20) {carriage4.x = carriage3.x + 20};
-
-
             // перерисовываем сцену с новыми позициями прямоугольников
             draw();
-
             // сбрасываем начальную позицию мыши для следующего перемещения мыши
             startX = mx;
             startY = my;
         }
     }
-
     // функции опускания кареток кранов
-
     down_button_1.onclick = function(){
         if (carriage1.is_upper){
             carriage1.is_upper = false;
@@ -381,9 +370,7 @@ window.addEventListener("load", function(){
             span_7.style.color = '#0000FF';
         }
     }
-
     // функции подцепливания ковша кранами
-
     take_ladle_1.onclick = function(){
         if (carriage1.with_ladle && !carriage1.is_upper){
             carriage1.with_ladle = false;
@@ -436,47 +423,75 @@ window.addEventListener("load", function(){
             span_8.style.color = '#ff0000';
         }
     }
-
+    // Функция получения куки, нужна для получения CSRF-Токена
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                // const cookie = jQuery.trim(cookies[i]);
+                const cookie = cookies[i].trim();
+                //if (cookie.startsWith(name + '=')) {
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break; // Выходим, как только найдём нужное cookie
+                }
+            }
+        }
+        return cookieValue;
+    }
+    // Функция отправки данных
     const createData = setInterval(function() {
-        var data = `
-        {
-            "cranes_pos":
-                {
-	                "Crane_7": {
-                        "position_x": ${Math.round(carriage1.x/18)},
-                        "position_y": ${Math.round((carriage1.y-10)/18)},
-                        "with_ladle": ${carriage1.with_ladle},
-                        "is_upper":   ${carriage1.is_upper}
-                    },
-                    "Crane_8": {
-                        "position_x": ${Math.round(carriage2.x/18)},
-                        "position_y": ${Math.round((carriage2.y-10)/18)},
-                        "with_ladle": ${carriage2.with_ladle},
-                        "is_upper":   ${carriage2.is_upper}
-                    },
-                    "Crane_9": {
-                        "position_x": ${Math.round(carriage3.x/18)},
-                        "position_y": ${(carriage3.y-10)/18},
-                        "with_ladle": ${carriage3.with_ladle},
-                        "is_upper":   ${carriage3.is_upper}
-                    },
-                    "Crane_10": {
-                        "position_x": ${Math.round(carriage4.x/18)},
-                        "position_y": ${Math.round((carriage4.y-10)/18)},
-                        "with_ladle": ${carriage4.with_ladle},
-                        "is_upper":   ${carriage4.is_upper}
-                    },
-                },
-            "cranes_info":
-                {
-                    "тут информация из базы данных, из модели Cranes, а именно картинки кранов и ковшей, их габариты": "например",
-                    "aggregate_title": {
-                        "size_x": 338,
-                        "size_y": 22,
-                        "photo": "photo_url"
-                    },
-                },
-        }`
-        console.log(data)
+        let data = {
+            "Crane_7": {
+                "position_x": Math.round(carriage1.x/18),
+                "position_y": Math.round((carriage1.y-10)/18),
+                "with_ladle": carriage1.with_ladle,
+                "is_upper":   carriage1.is_upper
+            },
+            "Crane_8": {
+                "position_x": Math.round(carriage2.x/18),
+                "position_y": Math.round((carriage2.y-10)/18),
+                "with_ladle": carriage2.with_ladle,
+                "is_upper":   carriage2.is_upper
+            },
+            "Crane_9": {
+                "position_x": Math.round(carriage3.x/18),
+                "position_y": Math.round((carriage3.y-10)/18),
+                "with_ladle": carriage3.with_ladle,
+                "is_upper":   carriage3.is_upper
+            },
+            "Crane_10": {
+                "position_x": Math.round(carriage4.x/18),
+                "position_y": Math.round((carriage4.y-10)/18),
+                "with_ladle": carriage4.with_ladle,
+                "is_upper":   carriage4.is_upper
+            },
+            /* cranes_info: {
+                "тут информация из базы данных, из модели Cranes, а именно картинки кранов и ковшей, их габариты": "например",
+                "aggregate_title": {
+                    "size_x": 338,
+                    "size_y": 22,
+                    "photo": "photo_url"
+            }, */
+        };
+        // Создание форм-даты и добавление информации
+        let formdata = new FormData();
+        formdata.append("cranes_pos", JSON.stringify(data));
+        // ajax post запрос
+        $.ajax({
+            url: '',         /* Куда отправить запрос */
+            type: 'POST',             /* Метод запроса (post или get) */
+            processData: false,       // Отключаем обработку данных
+            contentType: false,       // Отказываемся от автоматического определения типа содержимого
+            data: formdata,     /* Передаваемые данные */
+            headers: {'X-CSRFToken': getCookie('csrftoken')}, // Установка CSRF-токена в заголовок
+            success: function(){   /* функция которая будет выполнена после успешного запроса.  */
+                 console.log('Ajax post success');
+            },
+            error: function(response){
+                console.log(response);
+            }
+        });
     }, 1000)
 });
