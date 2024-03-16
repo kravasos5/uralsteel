@@ -1,7 +1,7 @@
-import datetime, os, json
-from typing import List, Type, Optional
+import datetime
+from http import HTTPStatus
+from typing import Type
 
-import glob2
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetDoneView, \
     PasswordResetConfirmView, PasswordResetCompleteView
@@ -13,12 +13,13 @@ from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.views.generic import TemplateView, UpdateView, CreateView
 
-from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, AggregatAccidentForm, \
-    LadlesAccidentDetailForm, CranesAccidentDetailForm, AggregatAccidentDetailForm, AccidentStartingForm
-from visual.mixins import RedisCacheMixin
-from visual.models import Employees, CranesAccident, LadlesAccident, AggregatAccident, Ladles, Cranes, Aggregates, \
+from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, AggregateAccidentForm, \
+    LadlesAccidentDetailForm, CranesAccidentDetailForm, AggregateAccidentDetailForm, AccidentStartingForm
+from visual.redis_interface import RedisCacheMixin
+from visual.models import Employees, CranesAccident, LadlesAccident, AggregateAccident, Ladles, Cranes, Aggregates, \
     ActiveDynamicTable, ArchiveDynamicTable
-from visual.utilities import archive_report_signal
+from visual.signals import archive_report_signal
+from visual.utilities import CraneMixin, LadleOperationTypes
 
 
 class MainView(TemplateView):
@@ -26,7 +27,7 @@ class MainView(TemplateView):
     template_name = 'visual/main.html'
 
 
-class ArchiveReportMessage(TemplateView):
+class ArchiveReportMessage(LoginRequiredMixin, TemplateView):
     """Представление уведомления об отправке письма с отчётом на почту"""
     template_name = 'visual/archive_report_message.html'
 
@@ -37,7 +38,7 @@ class ArchiveReportMessage(TemplateView):
         return render(request, self.template_name)
 
 
-class LadlesView(RedisCacheMixin, TemplateView):
+class LadlesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
     """Представление страницы с ковшами"""
     template_name = 'visual/ladles.html'
 
@@ -46,12 +47,13 @@ class LadlesView(RedisCacheMixin, TemplateView):
         context = {}
         # проверяю нет ли в redis ключа-времени
         result: str = LadlesView.get_key_redis('ltimeform')
-        if result is not None:
+        if result:
             context['timeformvalue'] = result
         return render(request, self.template_name, context=context)
 
     def post(self, request, *args, **kwargs):
         """Обработка post-запроса"""
+        print(request.POST)
         if request.POST.get('operation_id'):
             # если запрос диспетчера, то есть подтвердили перемещение
             # ковша или начало операции или подтвердили завершение операции
@@ -64,22 +66,22 @@ class LadlesView(RedisCacheMixin, TemplateView):
             # получаю время
             time = LadlesView.time_convert(request.POST.get('time'))
             # удаляю старые ключи из хранилища redis
-            LadlesView.delete_keyy_redis('*ltime:*')
-            status: int = 200
+            LadlesView.delete_keys_redis('*ltime:*')
+            status: int = HTTPStatus.OK
             match operation_type:
-                case 'transporting':
+                case LadleOperationTypes.TRANSPORTING.value:
                     # если ковш "транспортируемый"
                     # перезаписываю запись в архивную таблицу
                     LadlesView.from_active_to_archive(operation)
                     data: dict = {'st': 'перемещён в архив'}
-                case 'starting':
+                case LadleOperationTypes.STARTING.value:
                     # если ковш "начинающий"
                     # перезаписываю дату в операции Активной Таблицы,
                     # то есть теперь ковш стаёт "ожидающим"
                     operation.actual_start = time
                     operation.save()
-                    data: dict = {'st': 'теперь ковш ожидающим'}
-                case 'ending':
+                    data: dict = {'st': 'теперь ковш ожидающий'}
+                case LadleOperationTypes.ENDING.value:
                     # если ковш "ожидающий"
                     # перезаписываю дату в операции Активной Таблицы,
                     # то есть теперь ковш стаёт "транспортируемым"
@@ -90,20 +92,20 @@ class LadlesView(RedisCacheMixin, TemplateView):
                     # в таком случае status=400, то есть пользователь
                     # клиент неверно указал operation_type
                     data: dict = {'st': 'неверно указан operation_type'}
-                    status: int = 400
+                    status: int = HTTPStatus.BAD_REQUEST
         else:
             # если нужно отобразить ковши
             # получение времени
             date = LadlesView.time_convert(request.POST.get('time'))
             # получаю ковши и формирую ответ
             data: dict = LadlesView.get_ladles_info(date)
-            status: int = 200
+            status: int = HTTPStatus.OK
         return JsonResponse(data=data, status=status)
 
     @staticmethod
     def time_convert(time: str) -> datetime:
         """Метод, переводящий время в удобный формат"""
-        t: List[str, str] = time.split(':')
+        t: list[str, str] = time.split(':')
         hours: int = int(t[0])
         minutes: int = int(t[1])
         # записываю время в redis-cache
@@ -149,7 +151,7 @@ class LadlesView(RedisCacheMixin, TemplateView):
         # получаю имя ключа, которое используется при кэшировании
         key_name: str = f"ltime:{date.strftime('%H-%M')}"
         # проверка наличия ключа в redis-cache
-        result: Optional[dict] = LadlesView.get_key_redis_json(key_name)
+        result: dict | None = LadlesView.get_key_redis_json(key_name)
         if result is not None:
             return result
         # если ключа нет, то брать информацию из базы данных,
@@ -160,28 +162,32 @@ class LadlesView(RedisCacheMixin, TemplateView):
                     actual_start__lte=date)
         # actual_start__lte=date, actual_end__gte=date)
         # добавляю всю нужную информацию в словарь
-        ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info, is_transporting=True)
+        ladles_info = LadlesView.ladles_into_dict(ladles_queryset, ladles_info, is_transporting=True)
         # Извлекаю "ожидающие" ковши
         ladles_queryset = ActiveDynamicTable.objects \
             .select_related('ladle', 'brand_steel', 'aggregate') \
             .filter(actual_start__isnull=False, actual_end__isnull=True,
                     actual_start__lte=date)
         # добавляю всю нужную информацию в словарь
-        ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info)
+        ladles_info = LadlesView.ladles_into_dict(ladles_queryset, ladles_info)
         # Извлекаю "начинающие" ковши
         ladles_queryset = ActiveDynamicTable.objects \
             .select_related('ladle', 'brand_steel', 'aggregate') \
             .filter(actual_start__isnull=True, actual_end__isnull=True,
                     plan_start__lt=date, plan_end__gt=date)
         # добавляю всю нужную информацию в словарь
-        ladles_info = LadlesView.cranes_into_dict(ladles_queryset, ladles_info, is_plan=True)
+        ladles_info = LadlesView.ladles_into_dict(ladles_queryset, ladles_info, is_plan=True)
         # добавление ключа в redis
         LadlesView.set_key_redis_json(key_name, ladles_info, 300)
         return ladles_info
 
     @staticmethod
-    def cranes_into_dict(ladles_queryset, ladles_info: dict, is_transporting: bool = False,
-                         is_plan: bool = False) -> dict:
+    def ladles_into_dict(
+        ladles_queryset,
+        ladles_info: dict,
+        is_transporting: bool = False,
+        is_plan: bool = False
+    ) -> dict:
         """
         Метод, преобразующий queryset ковшей в dict.
         Этот метод создаёт единый фундамент для всех видов
@@ -272,45 +278,18 @@ class LadlesView(RedisCacheMixin, TemplateView):
         operation.delete()
 
 
-class CranesView(RedisCacheMixin, TemplateView):
+class CranesView(LoginRequiredMixin, CraneMixin, TemplateView):
     """Представление страницы с кранами"""
     template_name = 'visual/cranes.html'
 
     def post(self, request, *args, **kwargs):
         """Обработка post-запроса"""
         # формирование ответа
-        data: dict = {}
-        data['cranes_pos'] = CranesView.get_cranes_pos()
-        data['cranes_info'] = CranesView.get_cranes_info()
-        return JsonResponse(data=data, status=200)
-
-    @staticmethod
-    def get_cranes_pos() -> dict:
-        """
-        Функция, распаковывующая json-данные в рамках модуляции
-        с помощью pygame интерфейса
-        """
-        # ключ для redis
-        key_name = 'cranes_pos:1'
-        # проверяю нет ли этой информации в redis
-        result: Optional[dict] = CranesView.get_key_redis_json(key_name)
-        if result is not None:
-            return result
-        path = os.path.join(os.getcwd(), 'visual\\static\\visual\\jsons')
-        files = glob2.glob(path + '\\*.json')
-        data: dict = {}
-        for file in files:
-            with open(file, 'r') as f:
-                crane_data = json.load(f)
-            for key, value in crane_data.items():
-                new_value = {}
-                new_value['x'] = value[0][0]
-                new_value['y'] = value[0][-1]
-                new_value['is_ladle'] = value[1]
-                data[str(key)] = new_value
-        # если в redis нет такого ключа, то запишу его, время жизни 10 секунд
-        CranesView.set_key_redis_json(key_name, data, 10)
-        return data
+        data: dict = {
+            'cranes_pos': CranesView.get_cranes_pos(),
+            'cranes_info': CranesView.get_cranes_info()
+        }
+        return JsonResponse(data=data, status=HTTPStatus.OK)
 
     @staticmethod
     def get_cranes_info() -> dict:
@@ -318,7 +297,7 @@ class CranesView(RedisCacheMixin, TemplateView):
         # имя ключа в redis
         key_name = 'cranes_info:1'
         # проверяю нет ли этой информации в redis
-        result: Optional[dict] = CranesView.get_key_redis_json(key_name)
+        result: dict | None = CranesView.get_key_redis_json(key_name)
         if result is not None:
             return result
         # получаю информацию
@@ -346,13 +325,13 @@ class AccessDeniedView(TemplateView):
 ##############################################################################
 # Проишествия
 
-class AccidentStartingView(TemplateView):
+class AccidentStartingView(LoginRequiredMixin, TemplateView):
     """Представление начала отчёта об аварии/проишествии"""
     template_name = 'visual/accident_starting.html'
 
     def get(self, request, *args, **kwargs):
         """Вывод формы"""
-        context = super().get_context_data(*args, **kwargs)
+        context = super().get_context_data(**kwargs)
         form = AccidentStartingForm()
         context['form'] = form
         return render(request, self.template_name, context=context)
@@ -377,7 +356,7 @@ class AccidentStartingView(TemplateView):
             return render(request, self.template_name, context={'form': form})
 
 
-class AccidentViewBase(CreateView):
+class AccidentViewBase(LoginRequiredMixin, CreateView):
     """Представление страницы с проишествиями"""
     template_name = 'visual/accident.html'
 
@@ -413,7 +392,7 @@ class AccidentViewBase(CreateView):
             return self.form_invalid(form, *args, **kwargs)
 
 
-class AccidentDetailStartingViewBase(TemplateView):
+class AccidentDetailStartingViewBase(LoginRequiredMixin, TemplateView):
     """
     Представление детального комментария отчёта об аварии/поломке
     Метод get_success_url нужно переопределить, а метод get_context_data
@@ -422,7 +401,7 @@ class AccidentDetailStartingViewBase(TemplateView):
     template_name = 'visual/accident_detail_starting.html'
 
 
-class AccidentDetailViewBase(UpdateView):
+class AccidentDetailViewBase(LoginRequiredMixin, UpdateView):
     """Представление страницы с формой заполнения подробного описания проишествия"""
     template_name = 'visual/accident_detail.html'
     success_url = reverse_lazy('main')
@@ -501,8 +480,8 @@ class CraneAccidentDetailView(AccidentDetailViewBase):
 
 class AggregateAccidentView(AccidentViewBase):
     """Представление обработчик проишествия агрегата"""
-    form_class = AggregatAccidentForm
-    model = AggregatAccident
+    form_class = AggregateAccidentForm
+    model = AggregateAccident
     check_model = Aggregates
 
     def get_success_url(self, *agrs, **kwargs):
@@ -530,8 +509,8 @@ class AggregateAccidentDetailView(AccidentDetailViewBase):
     Представление обработчик написания дополнительного
     комментария при проишествии с агрегатом
     """
-    form_class = AggregatAccidentDetailForm
-    model = AggregatAccident
+    form_class = AggregateAccidentDetailForm
+    model = AggregateAccident
 
 
 ##############################################################################
@@ -581,7 +560,7 @@ class ChangeEmployeeInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView
         is_crop_photo = str(form.cleaned_data.get('photo')) == 'photo.png'
         # и если пользователь добавил фото, то отправляю ссылку для перехода
         if is_crop_photo:
-            return JsonResponse(data={'url': self.get_success_url()}, status=200)
+            return JsonResponse(data={'url': self.get_success_url()}, status=HTTPStatus.OK)
         # если пользователь не добавлял новое фото, то отправляется
         # стандартный ответ
         return HttpResponseRedirect(self.get_success_url())
