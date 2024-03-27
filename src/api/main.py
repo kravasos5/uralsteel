@@ -1,6 +1,10 @@
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent))
+
 from http import HTTPStatus
 
-from asyncpg import UniqueViolationError
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
@@ -11,7 +15,6 @@ from routers import ladles as ladles_employee
 from routers.admin import admin
 
 api = FastAPI()
-
 
 api.include_router(auth.router)
 api.include_router(profile.router)

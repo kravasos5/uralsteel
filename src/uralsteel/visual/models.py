@@ -42,6 +42,7 @@ class Employees(AbstractUser):
     class Meta(AbstractUser.Meta):
         verbose_name = 'Работник'
         verbose_name_plural = 'Работники'
+        app_label = 'visual'
 
     def __str__(self):
         return f'<{self.username}>'

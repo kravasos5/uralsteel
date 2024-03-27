@@ -50,7 +50,7 @@ class CranesService(ServiceBase):
         result: dict | None = RedisRepo.get_key_redis_json(key_name=key_name)
         if result is not None:
             return result
-        path = 'K:/python/python/uralsteel/uralsteel/visual/static/visual/jsons'
+        path = '/uralsteel/visual/static/visual/jsons'
         files = glob2.glob(path + '/*.json')
         data: dict = {}
         for file in files:

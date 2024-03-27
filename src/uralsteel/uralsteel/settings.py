@@ -1,11 +1,15 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)uwzj*#yz&x(j80l$r^z_y-l)v_%@33#8++9(0eus7wzb1g)zw'
+dotenv_path = os.path.join(BASE_DIR.parent.parent, '.env')
+load_dotenv(dotenv_path)
+
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -56,18 +60,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'uralsteel.wsgi.application'
 
-
 # Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'uralsteel',
-        'USER': 'postgres',
-        'PASSWORD': 'qwerty123',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASS'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -78,8 +79,9 @@ CACHES = {
         'LOCATION': 'redis://127.0.0.1:6379',
     }
 }
-REDIS_HOST = 'localhost'
-REDIS_PORT = 6379
+
+REDIS_HOST = os.getenv('REDIS_HOST')
+REDIS_PORT = os.getenv('REDIS_PORT')
 
 # Celery settings
 CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
@@ -126,25 +128,21 @@ USE_TZ = True
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = '/static/'
 
-#media
+# media
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
-# подгружаю параметры из .env
-email_host = os.getenv('EMAIL_HOST')
-email_host_user = os.getenv('EMAIL_HOST_USER')
-email_host_pass = os.getenv('EMAIL_HOST_PASSWORD')
-#Email
+# Email
 # тестирование
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # продакшн
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = email_host
+EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_PORT = 587
-EMAIL_HOST_USER = email_host_user
-EMAIL_HOST_PASSWORD = email_host_pass
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

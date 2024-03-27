@@ -13,10 +13,12 @@ from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.views.generic import TemplateView, UpdateView, CreateView
 
-from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, AggregateAccidentForm, \
+from visual.forms import ChangeEmployeeInfoForm, CranesAccidentForm, LadlesAccidentForm, \
+    AggregateAccidentForm, \
     LadlesAccidentDetailForm, CranesAccidentDetailForm, AggregateAccidentDetailForm, AccidentStartingForm
 from visual.redis_interface import RedisCacheMixin
-from visual.models import Employees, CranesAccident, LadlesAccident, AggregateAccident, Ladles, Cranes, Aggregates, \
+from visual.models import Employees, CranesAccident, LadlesAccident, AggregateAccident, Ladles, Cranes, \
+    Aggregates, \
     ActiveDynamicTable, ArchiveDynamicTable
 from visual.signals import archive_report_signal
 from visual.utilities import CraneMixin, LadleOperationTypes
@@ -56,7 +58,7 @@ class LadlesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
         print(request.POST)
         if request.POST.get('operation_id'):
             # если запрос диспетчера, то есть подтвердили перемещение
-            # ковша или начало операции или подтвердили завершение операции
+            # ковша или начало операции, или подтвердили завершение операции
             # получаю id объекта модели ActiveDynamicTable
             operation_id: int = int(request.POST.get('operation_id'))
             # получаю тип операции
@@ -127,7 +129,7 @@ class LadlesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
     def get_ladles_info(date: datetime) -> dict:
         """Функция, извлекающая из БД информацию по положениям ковшей"""
         ladles_info: dict = {}
-        # получаю все ковши, находящиеся в цеху в момент времени date
+        # Получаю все ковши, находящиеся в цеху в момент времени date
         # использую select_related, чтобы получить сразу в одном запросе
         # всю нужную информацию, по ковшу, по марке стали, по агрегату
         # На мнемосхеме будет отображаться "3 типа ковшей".
@@ -183,10 +185,10 @@ class LadlesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
 
     @staticmethod
     def ladles_into_dict(
-        ladles_queryset,
-        ladles_info: dict,
-        is_transporting: bool = False,
-        is_plan: bool = False
+            ladles_queryset,
+            ladles_info: dict,
+            is_transporting: bool = False,
+            is_plan: bool = False
     ) -> dict:
         """
         Метод, преобразующий queryset ковшей в dict.

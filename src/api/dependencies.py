@@ -88,11 +88,11 @@ async def is_author_and_accident_object(
     """Проверка наличия автора и агрегата с таким id"""
     await is_object(uow, author_id, EmployeesService(), 'Author')
     object_service = None
-    if type(service) == AggregatesAccidentService:
+    if type(service) is AggregatesAccidentService:
         object_service = AggregatesAllService()
-    elif type(service) == LadlesAccidentService:
+    elif type(service) is LadlesAccidentService:
         object_service = LadlesService()
-    elif type(service) == CranesAccidentService:
+    elif type(service) is CranesAccidentService:
         object_service = CranesService()
     await is_object(uow, object_id, object_service)
 
@@ -105,13 +105,13 @@ async def make_object_broken(
     """Отмечает объект сломанным при создании отчёта"""
     object_service = None
     object_schema = None
-    if type(service) == AggregatesAccidentService:
+    if type(service) is AggregatesAccidentService:
         object_service = AggregatesAllService()
         object_schema = AggregatesUpdatePatchDTO(is_broken=True)
-    elif type(service) == LadlesAccidentService:
+    elif type(service) is LadlesAccidentService:
         object_service = LadlesService()
         object_schema = LadlesUpdatePatchDTO(is_broken=True)
-    elif type(service) == CranesAccidentService:
+    elif type(service) is CranesAccidentService:
         object_service = CranesService()
         object_schema = CranesUpdatePatchDTO(is_broken=True)
     await object_service.update_one(uow, object_schema, id=object_id)
@@ -470,7 +470,7 @@ employeeSlugPermissionDEP = Annotated[EmployeesReadDTO, Depends(get_change_by_sl
 async def get_admin_permission(
     cur_employee: Annotated[EmployeesAdminReadDTO, Security(get_current_auth_user, scopes=['admin'])]
 ):
-    """Получение доступа к админ контроллерам"""
+    """Получение доступа к админ-контроллерам"""
     pass
 
 

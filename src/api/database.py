@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated
 
 import pytz
-from sqlalchemy import TIMESTAMP, text, DateTime
+from sqlalchemy import TIMESTAMP, text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, mapped_column
 
