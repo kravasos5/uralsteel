@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     EMAIL_HOST: str
     EMAIL_HOST_USER: str
     EMAIL_HOST_PASSWORD: str
+    MODE: str
 
     @property
     def DATABASE_URL(self):
