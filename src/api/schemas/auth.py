@@ -23,7 +23,7 @@ class RefreshTokenBaseDTO(BaseModel):
     expire_date: datetime
     token_family: uuid.UUID
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 

@@ -48,7 +48,7 @@ class EmployeesReadDTO(EmployeesBaseDTO):
     date_joined: datetime
     slug: str
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 

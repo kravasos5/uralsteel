@@ -31,5 +31,5 @@ class AggregatesReadDTO(AggregatesCreateUpdateDTO):
     """Схема агрегатов для чтения"""
     id: int
 
-    class Config:
+    class ConfigDict:
         from_attributes = True

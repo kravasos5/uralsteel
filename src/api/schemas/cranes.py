@@ -23,5 +23,5 @@ class CranesReadDTO(CranesCreateUpdateDTO):
     """Схема кранов для чтения"""
     id: int
 
-    class Config:
+    class ConfigDict:
         from_attributes = True

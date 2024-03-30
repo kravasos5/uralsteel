@@ -24,7 +24,7 @@ class RoutersReadShortDTO(RoutersCreateUpdateDTO):
     """Схема создания маршрутов"""
     id: int
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 

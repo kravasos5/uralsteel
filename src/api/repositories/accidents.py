@@ -8,7 +8,7 @@ from models.accidents import LadlesAccidentORM, CranesAccidentORM, AggregatesAcc
 from models.aggregates import AggregatesORM
 from models.cranes import CranesORM
 from models.ladles import LadlesORM
-from schemas.accidents import AccidentReadShortDTO, AccidentReadDTO, LadlesAccidentReadDTO, CranesAccidentReadDTO, \
+from schemas.accidents import AccidentReadShortDTO, LadlesAccidentReadDTO, CranesAccidentReadDTO, \
     AggregateAccidentReadDTO
 from schemas.commons import DataConverter
 from utils.repositories_base import SqlAlchemyRepo

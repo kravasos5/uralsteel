@@ -15,5 +15,5 @@ class BrandSteelReadDTO(BrandSteelCreateUpdateDTO):
     """Схема марок стали для чтения"""
     id: int
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
