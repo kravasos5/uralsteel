@@ -25,21 +25,24 @@ class DBModeException(BaseException):
         return str(self.detail)
 
 
-@pytest.fixture  # (scope='package', autouse=True)
-def setup_db():
+@pytest.fixture(scope='package')
+async def setup_db():
     """Инициализация БД"""
     # Проверка режима БД. Тут нужно убедиться, что изменения будут происходить
     # с тестовой БД.
     if settings.MODE != 'TEST':
         raise DBModeException
-    Base.metadata.drop_all(engine)
-    Base.metadata.create_all(engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+        await conn.execute()
 
 
 # @pytest.mark.usefixtures('setup_db')
 @pytest.fixture(scope='package', autouse=True)
-def add_db_info(setup_db):
+async def add_db_info(setup_db):
     """Добавить данные в БД"""
+    await setup_db
     with engine.connect() as conn:
         conn.execute(
             text(

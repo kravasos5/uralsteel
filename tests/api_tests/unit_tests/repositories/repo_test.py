@@ -210,8 +210,8 @@ class TestLadleAccidentRepo(BaseRepoMethodsCheck):
             self,
             answer: list[BaseModel],
             expectation,
-            offset: int = 0,
-            limit: int = 100
+            offset: int,
+            limit: int
     ):
         """Проверка метода retrieve_all"""
         with expectation:
