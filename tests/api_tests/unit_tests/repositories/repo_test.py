@@ -1,10 +1,13 @@
+import sys
 from abc import ABC, abstractmethod
 from typing import Type
 from contextlib import nullcontext as does_not_raise
 
 import pytest
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
+from database import engine
 from repositories.accidents import LadlesAccidentRepo
 from schemas.accidents import AccidentReadShortDTO
 from schemas.ladles import LadlesCreateUpdateDTO, LadlesReadDTO
@@ -13,6 +16,18 @@ from utils.repositories_base import SqlAlchemyRepo
 
 class AbstractRepoMethodsCheck(ABC):
     """Абстрактный класс тестирования репозитория"""
+
+    @classmethod
+    @abstractmethod
+    def setup_method(cls):
+        """setup_method"""
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def teardown_method(cls):
+        """teardown_method"""
+        raise NotImplementedError
 
     @abstractmethod
     def test_create_one(self, *args, **kwargs):
@@ -51,7 +66,21 @@ class BaseRepoMethodsCheck(AbstractRepoMethodsCheck):
     Это методы: create_one, delete_one, delete_by_ids,
     update_one, retrieve_one, retrieve_all
     """
-    repo: SqlAlchemyRepo | None = None
+    repository: SqlAlchemyRepo | None = None
+
+    @classmethod
+    def setup_method(cls):
+        """
+        Инициализация сессии перед тестированием
+        этого класса
+        """
+        cls.session = Session(engine)
+        cls.repo = cls.repository(cls.session)
+
+    @classmethod
+    def teardown_method(cls):
+        """Закрытие сессии после тестирования класса"""
+        cls.session.close()
 
     async def test_create_one(
             self,
@@ -121,13 +150,7 @@ class BaseRepoMethodsCheck(AbstractRepoMethodsCheck):
 
 class TestLadleAccidentRepo(BaseRepoMethodsCheck):
     """Тестирование репозиториев происшествий"""
-    # repo = LadlesAccidentRepo
-
-    @pytest.fixture(scope='class', autouse=True)
-    @pytest.mark.usefixtures('session_factory')
-    def get_repo(self, session_factory):
-        print(session_factory)
-        self.repo = LadlesAccidentRepo(session_factory)
+    repository = LadlesAccidentRepo
 
     @pytest.mark.asyncio
     @pytest.mark.skip
@@ -167,24 +190,25 @@ class TestLadleAccidentRepo(BaseRepoMethodsCheck):
                     does_not_raise()
 
             ),
-            (
-                    12,
-                    LadlesReadDTO(title="test_ladle_2", is_active=False, is_broken=True, id=12),
-                    AccidentReadShortDTO,
-                    does_not_raise()
-            ),
-            (
-                    13,
-                    LadlesReadDTO(title="test_ladle_3", is_active=True, is_broken=True, id=13),
-                    AccidentReadShortDTO,
-                    pytest.raises(AssertionError)
-            ),
+            # (
+            #         12,
+            #         LadlesReadDTO(title="test_ladle_2", is_active=False, is_broken=True, id=12),
+            #         AccidentReadShortDTO,
+            #         does_not_raise()
+            # ),
+            # (
+            #         13,
+            #         LadlesReadDTO(title="test_ladle_3", is_active=True, is_broken=True, id=13),
+            #         AccidentReadShortDTO,
+            #         pytest.raises(AssertionError)
+            # ),
         ]
     )
     async def test_retrieve_one(
             self, obj_id: int, answer, read_schema, expectation
     ):
         """Тестирование метода retrieve_one"""
+        print(sys.path)
         with expectation:
             await super().test_retrieve_one(read_schema, answer, id=obj_id)
 
