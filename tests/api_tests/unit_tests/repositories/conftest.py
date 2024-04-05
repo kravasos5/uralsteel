@@ -9,5 +9,5 @@ from src.api.database import engine
 def session_factory():
     """Инициализация сессии"""
     with Session(engine) as session:
-        yield
+        yield session
         session.commit()

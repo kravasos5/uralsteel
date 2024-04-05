@@ -25,7 +25,8 @@ class DBModeException(BaseException):
         return str(self.detail)
 
 
-@pytest.fixture(scope='package')
+@pytest.mark.asyncio
+@pytest.fixture(scope='package', autouse=False)
 async def setup_db():
     """Инициализация БД"""
     # Проверка режима БД. Тут нужно убедиться, что изменения будут происходить
@@ -39,6 +40,7 @@ async def setup_db():
 
 
 # @pytest.mark.usefixtures('setup_db')
+@pytest.mark.asyncio
 @pytest.fixture(scope='package', autouse=True)
 async def add_db_info(setup_db):
     """Добавить данные в БД"""
