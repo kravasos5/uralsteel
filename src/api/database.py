@@ -3,13 +3,13 @@ from typing import Annotated
 
 import pytz
 from sqlalchemy import TIMESTAMP, text
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, mapped_column
 
 from config import settings
 
 engine = create_async_engine(
-    settings.DATABASE_URL, connect_args={}
+    settings.DATABASE_URL, connect_args={}#, echo=True,
 )
 
 session_factory = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -17,12 +17,12 @@ session_factory = async_sessionmaker(autocommit=False, autoflush=False, bind=eng
 idpk = Annotated[int, mapped_column(primary_key=True)]
 created_at = Annotated[TIMESTAMP, mapped_column(
     TIMESTAMP(timezone=True),
-    server_default=text('TIMEZONE("utc+5", now()'),
+    server_default=text("TIMEZONE('utc+5', now())"),
     default=datetime.now(pytz.timezone(settings.TIME_ZONE))),
 ]
 
 
-class Base(DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     """Базовый класс для всех моделей"""
     repr_cols_num = 3
     repr_cols = tuple()

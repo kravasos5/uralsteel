@@ -1,11 +1,12 @@
 import sys
+import time
 from abc import ABC, abstractmethod
 from typing import Type
 from contextlib import nullcontext as does_not_raise
 
 import pytest
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import engine
 from repositories.accidents import LadlesAccidentRepo
@@ -74,13 +75,13 @@ class BaseRepoMethodsCheck(AbstractRepoMethodsCheck):
         Инициализация сессии перед тестированием
         этого класса
         """
-        cls.session = Session(engine)
+        cls.session = AsyncSession(engine, expire_on_commit=False)
         cls.repo = cls.repository(cls.session)
 
     @classmethod
-    def teardown_method(cls):
+    async def teardown_method(cls):
         """Закрытие сессии после тестирования класса"""
-        cls.session.close()
+        await cls.session.close()
 
     async def test_create_one(
             self,
@@ -99,6 +100,7 @@ class BaseRepoMethodsCheck(AbstractRepoMethodsCheck):
             **filters
     ):
         """Проверка метода retrieve_one"""
+
         repo_answer = await self.repo.retrieve_one(read_schema, **filters)
         print(repo_answer)
         assert repo_answer == answer
@@ -209,7 +211,8 @@ class TestLadleAccidentRepo(BaseRepoMethodsCheck):
     ):
         """Тестирование метода retrieve_one"""
         print(sys.path)
-        with expectation:
+        # time.sleep(60)
+        async with expectation:
             await super().test_retrieve_one(read_schema, answer, id=obj_id)
 
     @pytest.mark.asyncio

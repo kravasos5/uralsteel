@@ -107,7 +107,7 @@ class LadlesView(LoginRequiredMixin, RedisCacheMixin, TemplateView):
     @staticmethod
     def time_convert(time: str) -> datetime:
         """Метод, переводящий время в удобный формат"""
-        t: list[str, str] = time.split(':')
+        t: list[str] = time.split(':')
         hours: int = int(t[0])
         minutes: int = int(t[1])
         # записываю время в redis-cache

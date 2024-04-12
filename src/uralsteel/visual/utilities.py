@@ -1,6 +1,7 @@
 import json
 import os
 from enum import Enum
+from uralsteel.settings import BASE_DIR
 
 import glob2
 
@@ -32,7 +33,7 @@ class CraneMixin(RedisCacheMixin):
         result: dict | None = CraneMixin.get_key_redis_json(key_name)
         if result is not None:
             return result
-        path = os.path.join(os.getcwd(), 'visual\\static\\visual\\jsons')
+        path = os.path.join(BASE_DIR, 'visual\\static\\visual\\jsons')
         files = glob2.glob(path + '\\*.json')
         data: dict = {}
         for file in files:
