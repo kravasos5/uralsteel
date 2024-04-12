@@ -1,9 +1,11 @@
 from django.contrib import admin
 
 from visual.models import *
+from django.contrib import admin
+
 
 class EmployeesAdmin(admin.ModelAdmin):
-    '''Редактор ползователя'''
+    """Редактор ползователя"""
     list_display = ('__str__', 'date_joined')
     search_fields = ('username', 'email', 'first_name', 'last_name', 'patronymic')
     fields = (('username', 'email'), ('first_name', 'last_name', 'patronymic'),
@@ -17,7 +19,7 @@ class EmployeesAdmin(admin.ModelAdmin):
     readonly_fields = ('last_login', 'date_joined')
 
 class AggregatesAdmin(admin.ModelAdmin):
-    '''Редактор агрегатов'''
+    """Редактор агрегатов"""
     list_display = ('__str__',)
     search_fields = ('title',)
     fields = (('title', 'num_agg', 'num_pos'),
@@ -26,12 +28,12 @@ class AggregatesAdmin(admin.ModelAdmin):
               'photo')
 
 class RoutesAdmin(admin.ModelAdmin):
-    '''Редактор маршрутов'''
+    """Редактор маршрутов"""
     list_display = ('__str__',)
     fields = ('aggregate_1', 'aggregate_2', 'aggregate_3', 'aggregate_4')
 
 class CranesAdmin(admin.ModelAdmin):
-    '''Редактор кранов'''
+    """Редактор кранов"""
     list_display = ('__str__',)
     search_fields = ('title',)
     fields = ('title',
@@ -39,19 +41,19 @@ class CranesAdmin(admin.ModelAdmin):
               'photo', 'is_broken')
 
 class LadlesAdmin(admin.ModelAdmin):
-    '''Редактор кранов'''
+    """Редактор кранов"""
     list_display = ('__str__',)
     search_fields = ('title',)
     fields = ('title', 'is_active', 'is_broken')
 
 class BrandSteelAdmin(admin.ModelAdmin):
-    '''Редактор марок стали'''
+    """Редактор марок стали"""
     list_display = ('__str__',)
     search_fields = ('title',)
     fields = ('title',)
 
 class DynamicTableAdmin(admin.ModelAdmin):
-    '''Редактор динамической таблицы'''
+    """Редактор динамической таблицы"""
     list_display = ('__str__',)
     search_fields = ('ladle', 'num_melt', 'brand_steel', 'route', 'aggregate')
     fields = (('ladle', 'num_melt', 'brand_steel', 'route', 'aggregate'),
@@ -59,7 +61,7 @@ class DynamicTableAdmin(admin.ModelAdmin):
               ('actual_start', 'actual_end'))
 
 class AccidentAdmin(admin.ModelAdmin):
-    '''Редактор происшетсвий'''
+    """Редактор происшетсвий"""
     list_display = ('__str__',)
     search_fields = ('author', 'object', 'created_at')
     fields = ('object', 'author', 'report', 'created_at')
@@ -81,4 +83,4 @@ admin.site.register(ArchiveDynamicTable, DynamicTableAdmin)
 admin.site.register(ActiveDynamicTable, DynamicTableAdmin)
 admin.site.register(LadlesAccident, AccidentAdmin)
 admin.site.register(CranesAccident, AccidentAdmin)
-admin.site.register(AggregatAccident, AccidentAdmin)
+admin.site.register(AggregateAccident, AccidentAdmin)

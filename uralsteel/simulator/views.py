@@ -3,7 +3,7 @@ import json
 from django.shortcuts import render
 from django.views.generic import TemplateView
 
-from visual.mixins import RedisCacheMixin
+from visual.redis_interface import RedisCacheMixin
 
 
 # Create your views here.

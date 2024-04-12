@@ -22,6 +22,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'visual.apps.VisualConfig',
     'simulator.apps.SimulatorConfig',
+    'debug_toolbar',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -32,6 +34,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'uralsteel.urls'
@@ -69,6 +72,23 @@ DATABASES = {
     }
 }
 
+# redis-cache
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379',
+    }
+}
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+
+# Celery settings
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
+CELERY_CACHE_BACKEND = 'default'
+CELERY_RESULT_BACKENDS = [
+    'redis://127.0.0.1:6379',
+    'db://default',
+]
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -102,7 +122,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
@@ -133,20 +152,6 @@ EMAIL_HOST_PASSWORD = email_host_pass
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# redis-cache
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379',
-    }
-}
-REDIS_HOST = 'localhost'
-REDIS_PORT = 6379
-
-# Celery settings
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
-CELERY_CACHE_BACKEND = 'default'
-CELERY_RESULT_BACKENDS = [
-    'redis://127.0.0.1:6379',
-    'db://default',
+INTERNAL_IPS = [
+    '127.0.0.1',
 ]

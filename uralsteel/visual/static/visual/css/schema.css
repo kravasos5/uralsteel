@@ -1,7 +1,5 @@
 #canvas {
     width: 80%;
-    background-image: url('images/canvas_background.jpg');
-    background-size: cover;
 }
 
 #timeform {
@@ -21,4 +19,8 @@
     background-color: #A9E0FF;
     color: #0F0080;
     font-size: 1em;
+}
+
+.modal-body {
+    text-align: left;
 }
