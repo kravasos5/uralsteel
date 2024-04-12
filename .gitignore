@@ -1,0 +1,13 @@
+# Default ignored files
+*.gitignore
+*.idea/uralsteel.iml
+/shelf/
+/workspace.xml
+*.env
+uralsteel/visual/migrations/*
+venv/
+uralsteel/media/
+uralsteel/uralsteel/__pycache__/
+uralsteel/visual/__pycache__/
+__pycache__/
+auth/
