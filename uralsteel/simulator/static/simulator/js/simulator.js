@@ -480,7 +480,7 @@ window.addEventListener("load", function(){
         formdata.append("cranes_pos", JSON.stringify(data));
         // ajax post запрос
         $.ajax({
-            url: '',         /* Куда отправить запрос */
+            url: 'http://127.0.0.1:8000/cranes/',         /* Куда отправить запрос */
             type: 'POST',             /* Метод запроса (post или get) */
             processData: false,       // Отключаем обработку данных
             contentType: false,       // Отказываемся от автоматического определения типа содержимого

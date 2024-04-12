@@ -27,8 +27,6 @@ class MainView(TemplateView):
 class LadlesView(TemplateView):
     '''Представление страницы с ковшами'''
     template_name = 'visual/ladles.html'
-
-class CranesView(TemplateView):
     def get(self, request, *args, **kwargs):
         '''Обработка get-запроса'''
         context = {}
@@ -255,11 +253,9 @@ class CranesView(TemplateView):
             actual_end=operation.actual_end)
         # удаляю запись из активной таблицы
         operation.delete()
-
-class CranesView(RedisCacheMixin, TemplateView):
+class CranesView(TemplateView):
     '''Представление страницы с кранами'''
     template_name = 'visual/cranes.html'
-
 class AccessDeniedView(TemplateView):
     '''Представление страницы с кранами'''
     template_name = 'visual/access_denied.html'
