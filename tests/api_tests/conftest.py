@@ -1,6 +1,6 @@
-import pytest
 import pytest_asyncio
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.accidents import *
 from models.aggregates import *
@@ -12,7 +12,7 @@ from models.jwt import *
 from models.ladles import *
 from models.routes import *
 from config import settings
-from database import Base, engine
+from database import Base, engine, session_factory
 
 
 class DBModeException(BaseException):
@@ -36,7 +36,7 @@ class DBModeException(BaseException):
 
 
 @pytest_asyncio.fixture(scope='package', autouse=False)
-async def setup_db():
+async def session() -> AsyncSession:
     """Инициализация БД"""
     # Проверка режима БД. Тут нужно убедиться, что изменения будут происходить
     # с тестовой БД.
@@ -45,13 +45,6 @@ async def setup_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-
-
-# @pytest.mark.usefixtures('setup_db')
-@pytest_asyncio.fixture(scope='package', autouse=True)
-async def add_db_info(setup_db):
-    """Добавить данные в БД"""
-    async with engine.begin() as conn:
         await conn.execute(
             text(
                 '''
@@ -167,17 +160,17 @@ async def add_db_info(setup_db):
         await conn.execute(
             text(
                 '''
-                INSERT INTO public.visual_ladles (id, title, is_active, is_broken) VALUES
-                    (1, 'Ковш 1', false, false),
-                    (2, 'Ковш 2', false, false),
-                    (3, 'Ковш 3', false, false),
-                    (4, 'Ковш 4', false, false),
-                    (5, 'Ковш 5', false, false),
-                    (6, 'Ковш 6', false, false),
-                    (7, 'Ковш 7', false, false),
-                    (8, 'Ковш 8', false, false),
-                    (9, 'Ковш 9', false, false),
-                    (10, 'Ковш 10', false, false);
+                INSERT INTO public.visual_ladles (title, is_active, is_broken) VALUES
+                    ('Ковш 1', false, false),
+                    ('Ковш 2', false, false),
+                    ('Ковш 3', false, false),
+                    ('Ковш 4', false, false),
+                    ('Ковш 5', false, false),
+                    ('Ковш 6', false, false),
+                    ('Ковш 7', false, false),
+                    ('Ковш 8', false, false),
+                    ('Ковш 9', false, false),
+                    ('Ковш 10', false, false);
                 '''
             )
         )
@@ -211,7 +204,10 @@ async def add_db_info(setup_db):
                 '''
             )
         )
-        await conn.commit()
+        async with session_factory(bind=conn) as session:
+            yield session
+            await session.commit()
+            await session.rollback()
 
 
 @pytest_asyncio.fixture

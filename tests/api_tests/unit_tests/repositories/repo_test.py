@@ -1,34 +1,21 @@
-import sys
-import time
 from abc import ABC, abstractmethod
 from typing import Type
 from contextlib import nullcontext as does_not_raise
 
 import pytest
+import pytest_asyncio
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import engine
-from repositories.accidents import LadlesAccidentRepo
-from schemas.accidents import AccidentReadShortDTO
+from repositories.ladles import LadlesRepo
 from schemas.ladles import LadlesCreateUpdateDTO, LadlesReadDTO
 from utils.repositories_base import SqlAlchemyRepo
 
 
+pytestmark = pytest.mark.asyncio(scope='package')
+
+
 class AbstractRepoMethodsCheck(ABC):
     """Абстрактный класс тестирования репозитория"""
-
-    @classmethod
-    @abstractmethod
-    def setup_method(cls):
-        """setup_method"""
-        raise NotImplementedError
-
-    @classmethod
-    @abstractmethod
-    def teardown_method(cls):
-        """teardown_method"""
-        raise NotImplementedError
 
     @abstractmethod
     def test_create_one(self, *args, **kwargs):
@@ -69,93 +56,86 @@ class BaseRepoMethodsCheck(AbstractRepoMethodsCheck):
     """
     repository: SqlAlchemyRepo | None = None
 
-    @classmethod
-    def setup_method(cls):
-        """
-        Инициализация сессии перед тестированием
-        этого класса
-        """
-        cls.session = AsyncSession(engine, expire_on_commit=False)
-        cls.repo = cls.repository(cls.session)
-
-    @classmethod
-    async def teardown_method(cls):
-        """Закрытие сессии после тестирования класса"""
-        await cls.session.close()
-
     async def test_create_one(
             self,
+            repo: SqlAlchemyRepo,
             data: BaseModel,
             answer: BaseModel
     ):
         """Проверка метода create_one"""
-        repo_answer = await self.repo.create_one(data)
-        print(repo_answer)
+        repo_answer = await repo.create_one(data)
         assert repo_answer == answer
 
     async def test_retrieve_one(
             self,
+            repo: SqlAlchemyRepo,
             read_schema: Type[BaseModel],
             answer: BaseModel,
             **filters
     ):
         """Проверка метода retrieve_one"""
 
-        repo_answer = await self.repo.retrieve_one(read_schema, **filters)
-        print(repo_answer)
+        repo_answer = await repo.retrieve_one(read_schema, **filters)
         assert repo_answer == answer
 
     async def test_retrieve_all(
             self,
+            repo: SqlAlchemyRepo,
             answer: list[BaseModel],
             offset: int = 0,
             limit: int = 100,
             **filters
     ):
         """Проверка метода retrieve_all"""
-        repo_answer = await self.repo.retrieve_all(offset, limit, **filters)
-        print(repo_answer)
+        repo_answer = await repo.retrieve_all(offset, limit, **filters)
         assert repo_answer == answer
 
     async def test_update_one(
             self,
+            repo: SqlAlchemyRepo,
             data_schema: BaseModel,
             answer: BaseModel,
             **filters
     ):
         """Проверка метода update_one"""
-        repo_answer = await self.repo.update_one(data_schema, **filters)
-        print(repo_answer)
+        repo_answer = await repo.update_one(data_schema, **filters)
         assert repo_answer == answer
 
     async def test_delete_one(
             self,
+            repo: SqlAlchemyRepo,
             answer,
             *args,
             **filters
     ):
         """Проверка метода delete_one"""
-        repo_answer = await self.repo.delete_one(**filters)
-        print(repo_answer)
+        repo_answer = await repo.delete_one(**filters)
         assert repo_answer == answer
 
     async def test_delete_by_ids(
             self,
+            repo: SqlAlchemyRepo,
             ids: list[int],
             answer: list[int]
     ):
         """Проверка метода delete_by_ids"""
-        repo_answer = await self.repo.delete_one(ids)
-        print(repo_answer)
+        repo_answer = await repo.delete_by_ids(ids)
         assert repo_answer == answer
 
 
-class TestLadleAccidentRepo(BaseRepoMethodsCheck):
-    """Тестирование репозиториев происшествий"""
-    repository = LadlesAccidentRepo
+@pytest_asyncio.fixture(scope='package')
+async def repo(session):
+    """
+    Инициализация репозитория
+    """
+    repo: SqlAlchemyRepo = LadlesRepo(session)
+    yield repo
 
-    @pytest.mark.asyncio
-    @pytest.mark.skip
+
+class TestLadlesRepo(BaseRepoMethodsCheck):
+    """Тестирование репозиториев происшествий"""
+    # repository = LadlesRepo
+
     @pytest.mark.parametrize(
         'data_schema, answer, expectation',
         [
@@ -176,47 +156,42 @@ class TestLadleAccidentRepo(BaseRepoMethodsCheck):
             ),
         ]
     )
-    async def test_create_one(self, data_schema, answer, expectation):
+    async def test_create_one(self, data_schema, answer, expectation, repo):
         """Тестирование метода create_one"""
         with expectation:
-            await super().test_create_one(data_schema, answer)
+            await super().test_create_one(repo, data_schema, answer)
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         'obj_id, answer, read_schema, expectation',
         [
             (
                     11,
                     LadlesReadDTO(title="test_ladle_1", is_active=True, is_broken=False, id=11),
-                    AccidentReadShortDTO,
+                    LadlesReadDTO,
                     does_not_raise()
 
             ),
-            # (
-            #         12,
-            #         LadlesReadDTO(title="test_ladle_2", is_active=False, is_broken=True, id=12),
-            #         AccidentReadShortDTO,
-            #         does_not_raise()
-            # ),
-            # (
-            #         13,
-            #         LadlesReadDTO(title="test_ladle_3", is_active=True, is_broken=True, id=13),
-            #         AccidentReadShortDTO,
-            #         pytest.raises(AssertionError)
-            # ),
+            (
+                    12,
+                    LadlesReadDTO(title="test_ladle_2", is_active=False, is_broken=True, id=12),
+                    LadlesReadDTO,
+                    does_not_raise()
+            ),
+            (
+                    13,
+                    LadlesReadDTO(title="test_ladle_3", is_active=True, is_broken=True, id=13),
+                    LadlesReadDTO,
+                    pytest.raises(AssertionError)
+            ),
         ]
     )
     async def test_retrieve_one(
-            self, obj_id: int, answer, read_schema, expectation
+            self, obj_id: int, answer, read_schema, expectation, repo
     ):
         """Тестирование метода retrieve_one"""
-        print(sys.path)
-        # time.sleep(60)
-        async with expectation:
-            await super().test_retrieve_one(read_schema, answer, id=obj_id)
+        with expectation:
+            await super().test_retrieve_one(repo, read_schema, answer, id=obj_id)
 
-    @pytest.mark.asyncio
-    @pytest.mark.skip
     @pytest.mark.parametrize(
         'answer, expectation, offset, limit',
         [
@@ -253,14 +228,13 @@ class TestLadleAccidentRepo(BaseRepoMethodsCheck):
             answer: list[BaseModel],
             expectation,
             offset: int,
-            limit: int
+            limit: int,
+            repo
     ):
         """Проверка метода retrieve_all"""
         with expectation:
-            await super().test_retrieve_one(answer, offset, limit)
+            await super().test_retrieve_all(repo, answer, offset, limit)
 
-    @pytest.mark.asyncio
-    @pytest.mark.skip
     @pytest.mark.parametrize(
         'data_schema, answer, updated_obj_id, expectation',
         [
@@ -289,14 +263,13 @@ class TestLadleAccidentRepo(BaseRepoMethodsCheck):
             data_schema: BaseModel,
             answer: BaseModel,
             expectation,
-            updated_obj_id: int
+            updated_obj_id: int,
+            repo
     ):
         """Проверка метода update_one"""
         with expectation:
-            await super().test_update_one(data_schema, answer)
+            await super().test_update_one(repo, data_schema, answer, id=updated_obj_id)
 
-    @pytest.mark.asyncio
-    @pytest.mark.skip
     @pytest.mark.parametrize(
         'deleted_obj_id, answer, expectation',
         [
@@ -306,7 +279,7 @@ class TestLadleAccidentRepo(BaseRepoMethodsCheck):
                     does_not_raise()
             ),
             (
-                    123213124354234,
+                    12321312,
                     13,
                     pytest.raises(AssertionError)
             ),
@@ -316,14 +289,13 @@ class TestLadleAccidentRepo(BaseRepoMethodsCheck):
             self,
             answer,
             expectation,
-            deleted_obj_id: int
+            deleted_obj_id: int,
+            repo
     ):
         """Проверка метода delete_one"""
         with expectation:
-            await super().test_delete_one(answer, id=deleted_obj_id)
+            await super().test_delete_one(repo, answer, id=deleted_obj_id)
 
-    @pytest.mark.asyncio
-    @pytest.mark.skip
     @pytest.mark.parametrize(
         'ids, answer, expectation',
         [
@@ -333,7 +305,7 @@ class TestLadleAccidentRepo(BaseRepoMethodsCheck):
                     does_not_raise()
             ),
             (
-                    [123213124354234, 123213124354235],
+                    [12321312, 12321312],
                     [12, 13],
                     pytest.raises(AssertionError)
             ),
@@ -343,8 +315,9 @@ class TestLadleAccidentRepo(BaseRepoMethodsCheck):
             self,
             ids: list[int],
             answer,
-            expectation
+            expectation,
+            repo
     ):
         """Проверка метода delete_by_ids"""
         with expectation:
-            await super().test_delete_by_ids(ids, answer)
+            await super().test_delete_by_ids(repo, ids, answer)
