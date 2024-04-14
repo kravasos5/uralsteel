@@ -3,13 +3,10 @@ from typing import Type
 from contextlib import nullcontext as does_not_raise
 
 import pytest
-import pytest_asyncio
 from pydantic import BaseModel
 
-from repositories.ladles import LadlesRepo
 from schemas.ladles import LadlesCreateUpdateDTO, LadlesReadDTO
 from utils.repositories_base import SqlAlchemyRepo
-
 
 pytestmark = pytest.mark.asyncio(scope='package')
 
@@ -54,7 +51,7 @@ class BaseRepoMethodsCheck(AbstractRepoMethodsCheck):
     Это методы: create_one, delete_one, delete_by_ids,
     update_one, retrieve_one, retrieve_all
     """
-    repository: SqlAlchemyRepo | None = None
+    repository: dict | None = None
 
     async def test_create_one(
             self,
@@ -123,18 +120,9 @@ class BaseRepoMethodsCheck(AbstractRepoMethodsCheck):
         assert repo_answer == answer
 
 
-@pytest_asyncio.fixture(scope='package')
-async def repo(session):
-    """
-    Инициализация репозитория
-    """
-    repo: SqlAlchemyRepo = LadlesRepo(session)
-    yield repo
-
-
 class TestLadlesRepo(BaseRepoMethodsCheck):
     """Тестирование репозиториев происшествий"""
-    # repository = LadlesRepo
+    repository = 'ladles_repo'
 
     @pytest.mark.parametrize(
         'data_schema, answer, expectation',
@@ -156,10 +144,10 @@ class TestLadlesRepo(BaseRepoMethodsCheck):
             ),
         ]
     )
-    async def test_create_one(self, data_schema, answer, expectation, repo):
+    async def test_create_one(self, data_schema, answer, expectation, repo_collector):
         """Тестирование метода create_one"""
         with expectation:
-            await super().test_create_one(repo, data_schema, answer)
+            await super().test_create_one(repo_collector.repositories[self.repository], data_schema, answer)
 
     @pytest.mark.parametrize(
         'obj_id, answer, read_schema, expectation',
@@ -186,11 +174,11 @@ class TestLadlesRepo(BaseRepoMethodsCheck):
         ]
     )
     async def test_retrieve_one(
-            self, obj_id: int, answer, read_schema, expectation, repo
+            self, obj_id: int, answer, read_schema, expectation, repo_collector
     ):
         """Тестирование метода retrieve_one"""
         with expectation:
-            await super().test_retrieve_one(repo, read_schema, answer, id=obj_id)
+            await super().test_retrieve_one(repo_collector.repositories[self.repository], read_schema, answer, id=obj_id)
 
     @pytest.mark.parametrize(
         'answer, expectation, offset, limit',
@@ -229,11 +217,11 @@ class TestLadlesRepo(BaseRepoMethodsCheck):
             expectation,
             offset: int,
             limit: int,
-            repo
+            repo_collector
     ):
         """Проверка метода retrieve_all"""
         with expectation:
-            await super().test_retrieve_all(repo, answer, offset, limit)
+            await super().test_retrieve_all(repo_collector.repositories[self.repository], answer, offset, limit)
 
     @pytest.mark.parametrize(
         'data_schema, answer, updated_obj_id, expectation',
@@ -264,11 +252,11 @@ class TestLadlesRepo(BaseRepoMethodsCheck):
             answer: BaseModel,
             expectation,
             updated_obj_id: int,
-            repo
+            repo_collector
     ):
         """Проверка метода update_one"""
         with expectation:
-            await super().test_update_one(repo, data_schema, answer, id=updated_obj_id)
+            await super().test_update_one(repo_collector.repositories[self.repository], data_schema, answer, id=updated_obj_id)
 
     @pytest.mark.parametrize(
         'deleted_obj_id, answer, expectation',
@@ -290,11 +278,11 @@ class TestLadlesRepo(BaseRepoMethodsCheck):
             answer,
             expectation,
             deleted_obj_id: int,
-            repo
+            repo_collector
     ):
         """Проверка метода delete_one"""
         with expectation:
-            await super().test_delete_one(repo, answer, id=deleted_obj_id)
+            await super().test_delete_one(repo_collector.repositories[self.repository], answer, id=deleted_obj_id)
 
     @pytest.mark.parametrize(
         'ids, answer, expectation',
@@ -316,8 +304,8 @@ class TestLadlesRepo(BaseRepoMethodsCheck):
             ids: list[int],
             answer,
             expectation,
-            repo
+            repo_collector
     ):
         """Проверка метода delete_by_ids"""
         with expectation:
-            await super().test_delete_by_ids(repo, ids, answer)
+            await super().test_delete_by_ids(repo_collector.repositories[self.repository], ids, answer)

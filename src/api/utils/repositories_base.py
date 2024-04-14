@@ -5,6 +5,7 @@ import redis
 from redis.commands.json.path import Path
 from pydantic import BaseModel
 from sqlalchemy import insert, delete, update, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from config import settings
@@ -44,7 +45,7 @@ class SqlAlchemyRepo(AbstractRepo):
     model = None
     read_schema = None
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session | AsyncSession):
         self.session = session
 
     async def create_one(self, data_schema: BaseModel):

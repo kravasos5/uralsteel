@@ -40,3 +40,13 @@ class RepoManager:
         """Инициализация всех репозиториев в другом классе"""
         for repo in other_repositories.keys():
             other.repositories[repo] = self.repositories[repo](session)
+
+
+class RepoCollector:
+    """Класс, собирающий репозитории"""
+    repositories = RepoManager.repositories
+    manager = RepoManager
+
+    def __init__(self, session):
+        """Инициализация всех репозиториев с помощью собственного менеджера репозиториев"""
+        self.manager(session=session, other=self, other_repositories=self.repositories)
