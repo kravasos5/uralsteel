@@ -32,6 +32,7 @@ window.addEventListener("load", function(){
     // массив объектов, определяющих разные формы
     const cases = [];
     const carriages = [];
+    const shadows = [];
     // определяем 4 прямоугольника
     cases.push({
         x: 150,
@@ -65,7 +66,6 @@ window.addEventListener("load", function(){
         fill: "#000000",
         isDragging: false
     });
-
     // определяем 4 круга
     carriages.push({
         x: 160,
@@ -103,6 +103,31 @@ window.addEventListener("load", function(){
         is_upper: true,
         with_ladle: false
     });
+    // Определяем 4 тени
+    shadows.push({
+        x: 160,
+        y: 100,
+        r: 4,
+        fill:"#FF0000"
+    });
+    shadows.push({
+        x: 460,
+        y: 100,
+        r: 4,
+        fill: "#FF0000"
+    });
+    shadows.push({
+        x: 510,
+        y: 100,
+        r: 4,
+        fill: "#FF0000"
+    });
+    shadows.push({
+        x: 910,
+        y: 100,
+        r: 4,
+        fill: "#FF0000"
+    });
     // переменные для прямоугольников
     const case1 = cases[0];
     const case2 = cases[1];
@@ -113,6 +138,11 @@ window.addEventListener("load", function(){
     const carriage2 = carriages[1];
     const carriage3 = carriages[2];
     const carriage4 = carriages[3];
+    // переменные для теней
+    const shadow1 = shadows[0];
+    const shadow2 = shadows[1];
+    const shadow3 = shadows[2];
+    const shadow4 = shadows[3];
     // слушаем события мыши
     canvas.onmousedown = myDown;
     canvas.onmouseup = myUp;
@@ -144,6 +174,9 @@ window.addEventListener("load", function(){
         }
         for (let k = 0; k < carriages.length; k++) {
             circle(carriages[k]);
+        }
+        for (let j = 0; j < shadows.length; j++) {
+            circle(shadows[j]);
         }
     }
     // обрабатываем события mousedown
@@ -224,7 +257,7 @@ window.addEventListener("load", function(){
     }
     // обрабатываем движения мыши
     function myMove(e) {
-        // если мы что-то перетаскиваем...
+        // если мы что-то перетаскиваем
         if (dragok) {
             // сообщаем браузеру, что мы обрабатываем это событие мыши
             e.preventDefault();
@@ -423,6 +456,98 @@ window.addEventListener("load", function(){
             span_8.style.color = '#ff0000';
         }
     }
+    // Функция движения тени
+    const moveShadows = setInterval(function() {
+        // Смещение по горизонтали 1 тени
+        if (shadow1.x > carriage1.x){
+            if (Math.abs(shadow1.x - carriage1.x) < 18){
+                shadow1.x -= Math.abs(shadow1.x - carriage1.x);
+            } else {shadow1.x -= 18;}
+        } else if (shadow1.x < carriage1.x){
+            if (Math.abs(shadow1.x - carriage1.x) < 18){
+                shadow1.x += Math.abs(shadow1.x - carriage1.x);
+            } else {shadow1.x += 18;}
+        }
+        // Смещение по горизонтали 2 тени
+        if (shadow2.x > carriage2.x){
+            if (Math.abs(shadow2.x - carriage2.x) < 18){
+                shadow2.x -= Math.abs(shadow2.x - carriage2.x);
+            } else {shadow2.x -= 18;}
+        } else if (shadow2.x < carriage2.x){
+            if (Math.abs(shadow2.x - carriage2.x) < 18){
+                shadow2.x += Math.abs(shadow2.x - carriage2.x);
+            } else {shadow2.x += 18;}
+        }
+        // Смещение по горизонтали 3 тени
+        if (shadow3.x > carriage3.x){
+            if (Math.abs(shadow3.x - carriage3.x) < 18){
+                shadow3.x -= Math.abs(shadow3.x - carriage3.x);
+            } else {shadow3.x -= 18;}
+        } else if (shadow3.x < carriage3.x){
+            if (Math.abs(shadow3.x - carriage3.x) < 18){
+                shadow3.x += Math.abs(shadow3.x - carriage3.x);
+            } else {shadow3.x += 18;}
+        }
+        // Смещение по горизонтали 4 тени
+        if (shadow4.x > carriage4.x){
+            if (Math.abs(shadow4.x - carriage4.x) < 18){
+                shadow4.x -= Math.abs(shadow4.x - carriage4.x);
+            } else {shadow4.x -= 18;}
+        } else if (shadow4.x < carriage4.x){
+            if (Math.abs(shadow4.x - carriage4.x) < 18){
+                shadow4.x += Math.abs(shadow4.x - carriage4.x);
+            } else {shadow4.x += 18;}
+        }
+        // Смещение по вертикали 1 тени
+        if (shadow1.x == carriage1.x){
+            if (shadow1.y > carriage1.y){
+                if (Math.abs(shadow1.y - carriage1.y) < 18){
+                    shadow1.y -= Math.abs(shadow1.y - carriage1.y);
+                } else {shadow1.y -= 18;}
+            } else if (shadow1.y < carriage1.x){
+                if (Math.abs(shadow1.y - carriage1.y) < 18){
+                    shadow1.y += Math.abs(shadow1.y - carriage1.y);
+                } else {shadow1.y += 18;}
+            }
+        }
+        // Смещение по вертикали 2 тени
+        if (shadow2.x == carriage2.x){
+            if (shadow2.y > carriage2.y){
+                if (Math.abs(shadow2.y - carriage2.y) < 18){
+                    shadow2.y -= Math.abs(shadow2.y - carriage2.y);
+                } else {shadow2.y -= 18;}
+            } else if (shadow2.y < carriage2.x){
+                if (Math.abs(shadow2.y - carriage2.y) < 18){
+                    shadow2.y += Math.abs(shadow2.y - carriage2.y);
+                } else {shadow2.y += 18;}
+            }
+        }
+        // Смещение по вертикали 3 тени
+        if (shadow3.x == carriage3.x){
+            if (shadow3.y > carriage3.y){
+                if (Math.abs(shadow3.y - carriage3.y) < 18){
+                    shadow3.y -= Math.abs(shadow3.y - carriage3.y);
+                } else {shadow3.y -= 18;}
+            } else if (shadow3.y < carriage3.x){
+                if (Math.abs(shadow3.y - carriage3.y) < 18){
+                    shadow3.y += Math.abs(shadow3.y - carriage3.y);
+                } else {shadow3.y += 18;}
+            }
+        }
+        // Смещение по вертикали 4 тени
+        if (shadow4.x == carriage4.x){
+            if (shadow4.y > carriage4.y){
+                if (Math.abs(shadow4.y - carriage4.y) < 18){
+                    shadow4.y -= Math.abs(shadow4.y - carriage4.y);
+                } else {shadow4.y -= 18;}
+            } else if (shadow4.y < carriage4.x){
+                if (Math.abs(shadow4.y - carriage4.y) < 18){
+                    shadow4.y += Math.abs(shadow4.y - carriage4.y);
+                } else {shadow4.y += 18;}
+            }
+        }
+        draw();
+    }, 500)
     // Функция получения куки, нужна для получения CSRF-Токена
     function getCookie(name) {
         let cookieValue = null;
@@ -444,43 +569,36 @@ window.addEventListener("load", function(){
     const createData = setInterval(function() {
         let data = {
             "Crane_7": {
-                "position_x": Math.round(carriage1.x/18),
-                "position_y": Math.round((carriage1.y-10)/18),
-                "with_ladle": carriage1.with_ladle,
+                "x": Math.round(shadow1.x/18),
+                "y": Math.round((shadow1.y-10)/18),
+                "is_ladle": carriage1.with_ladle,
                 "is_upper":   carriage1.is_upper
             },
             "Crane_8": {
-                "position_x": Math.round(carriage2.x/18),
-                "position_y": Math.round((carriage2.y-10)/18),
-                "with_ladle": carriage2.with_ladle,
+                "x": Math.round(shadow2.x/18),
+                "y": Math.round((shadow2.y-10)/18),
+                "is_ladle": carriage2.with_ladle,
                 "is_upper":   carriage2.is_upper
             },
             "Crane_9": {
-                "position_x": Math.round(carriage3.x/18),
-                "position_y": Math.round((carriage3.y-10)/18),
-                "with_ladle": carriage3.with_ladle,
+                "x": Math.round(shadow3.x/18),
+                "y": Math.round((shadow3.y-10)/18),
+                "is_ladle": carriage3.with_ladle,
                 "is_upper":   carriage3.is_upper
             },
             "Crane_10": {
-                "position_x": Math.round(carriage4.x/18),
-                "position_y": Math.round((carriage4.y-10)/18),
-                "with_ladle": carriage4.with_ladle,
+                "x": Math.round(shadow4.x/18),
+                "y": Math.round((shadow4.y-10)/18),
+                "is_ladle": carriage4.with_ladle,
                 "is_upper":   carriage4.is_upper
             },
-            /* cranes_info: {
-                "тут информация из базы данных, из модели Cranes, а именно картинки кранов и ковшей, их габариты": "например",
-                "aggregate_title": {
-                    "size_x": 338,
-                    "size_y": 22,
-                    "photo": "photo_url"
-            }, */
         };
         // Создание форм-даты и добавление информации
         let formdata = new FormData();
         formdata.append("cranes_pos", JSON.stringify(data));
         // ajax post запрос
         $.ajax({
-            url: 'http://127.0.0.1:8000/cranes/',         /* Куда отправить запрос */
+            url: '',         /* Куда отправить запрос */
             type: 'POST',             /* Метод запроса (post или get) */
             processData: false,       // Отключаем обработку данных
             contentType: false,       // Отказываемся от автоматического определения типа содержимого
