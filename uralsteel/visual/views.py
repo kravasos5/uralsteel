@@ -1,4 +1,5 @@
 import datetime
+import json
 from http import HTTPStatus
 from typing import Type
 
@@ -285,10 +286,14 @@ class CranesView(LoginRequiredMixin, CraneMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         """Обработка post-запроса"""
         # формирование ответа
+        # coords: dict = {}
+        # if type(request.POST.get('cranes_pos')) is str:
+        #     coords.update(json.loads(request.POST.get('cranes_pos')))
         data: dict = {
-            'cranes_pos': CranesView.get_cranes_pos(),
+            'cranes_pos': CranesView.get_cranes_pos(),#coords
             'cranes_info': CranesView.get_cranes_info()
         }
+        print(data)
         return JsonResponse(data=data, status=HTTPStatus.OK)
 
     @staticmethod

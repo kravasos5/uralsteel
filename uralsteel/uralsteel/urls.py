@@ -23,6 +23,7 @@ from uralsteel import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('visual.urls')),
+    path('simulator/', include('simulator.urls')),
     # дебаг-тул
     path("__debug__/", include("debug_toolbar.urls")),
 ]

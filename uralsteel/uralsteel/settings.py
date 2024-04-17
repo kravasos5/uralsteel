@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'visual.apps.VisualConfig',
+    'simulator.apps.SimulatorConfig',
     'debug_toolbar',
     'django_celery_results',
 ]

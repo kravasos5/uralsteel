@@ -1,0 +1,29 @@
+.canvas {
+    background-image: url('images/workshop.png');
+    width: 1126px;
+    height: 194px;
+    display: block;
+    margin: 0 auto;
+}
+
+.container{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.div__1{
+    padding-right: 50px;
+}
+
+.div__2{
+    padding-right: 50px;
+}
+
+.div__3{
+    padding-right: 50px;
+}
+
+.items {
+   display:inline-block;
+}

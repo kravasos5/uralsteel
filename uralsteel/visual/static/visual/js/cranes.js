@@ -17,8 +17,20 @@ window.addEventListener("load", (event) => {
         // Функция, рисующая краны
         // получаю координаты крана в точках
         let crane_body = cranes_info[`${crane}`];
-        // !!! определить текущее фото каретки
-        let ladle = cranes_info['Ladle_u_wo'];
+        // Опредение текущего фото каретки
+        if (!crane_info['is_upper']){
+            if (crane_info['is_ladle']){
+                var ladle = cranes_info['Ladle_d_w'];
+            } else if (!crane_info['is_ladle']){
+                var ladle = cranes_info['Ladle_d_wo'];
+            }
+        } else if (crane_info['is_upper']){
+            if  (crane_info['is_ladle']){
+                var ladle = cranes_info['Ladle_u_w'];
+            } else if (!crane_info['is_ladle']){
+                var ladle = cranes_info['Ladle_u_wo'];
+            }
+        }
         // Отрисовка корпуса
         // координаты корпуса
         // Формула следующиая:
